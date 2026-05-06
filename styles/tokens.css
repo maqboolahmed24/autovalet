@@ -1,0 +1,114 @@
+:root {
+  color-scheme: dark;
+
+  --bg-main: #070707;
+  --bg-soft: #101010;
+  --bg-card: #151515;
+  --bg-card-raised: #1b1b1b;
+  --bg-elevated: #202020;
+  --bg-glass: rgba(255, 255, 255, 0.06);
+  --bg-overlay: rgba(0, 0, 0, 0.62);
+
+  --text-main: #f5f2ec;
+  --text-muted: #a9a9a9;
+  --text-soft: #d7d2c8;
+  --text-inverse: #070707;
+  --text-danger: #ef8b8b;
+
+  --accent: #c8a96a;
+  --accent-soft: rgba(200, 169, 106, 0.18);
+  --accent-border: rgba(200, 169, 106, 0.28);
+
+  --border-soft: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.2);
+  --border-subtle: rgba(255, 255, 255, 0.07);
+
+  --status-pending: #d6a84f;
+  --status-approved: #8ccf9f;
+  --status-declined: #ef8b8b;
+  --status-paid: #8fb7ff;
+  --status-warning: #f0c56a;
+  --status-neutral: #b7b7b7;
+
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 32px;
+  --radius-xl: 40px;
+  --radius-pill: 999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+  --space-30: 120px;
+
+  --container-sm: 720px;
+  --container-md: 980px;
+  --container-lg: 1180px;
+  --container-xl: 1360px;
+  --page-gutter: clamp(20px, 5vw, 64px);
+
+  --font-sans: Inter, Manrope, Satoshi, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-heading: Inter, Manrope, Satoshi, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  --text-xs: 0.72rem;
+  --text-sm: 0.84rem;
+  --text-md: 0.96rem;
+  --text-lg: 1.08rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.55rem;
+  --text-3xl: 2rem;
+  --text-4xl: clamp(2.4rem, 9vw, 5rem);
+  --text-hero: clamp(3.2rem, 14vw, 7rem);
+
+  --leading-tight: 0.95;
+  --leading-snug: 1.1;
+  --leading-body: 1.6;
+
+  --tracking-heading: -0.05em;
+  --tracking-tight: -0.035em;
+  --tracking-eyebrow: 0.18em;
+
+  --shadow-premium: 0 24px 80px rgba(0, 0, 0, 0.45);
+  --shadow-card: 0 20px 60px rgba(0, 0, 0, 0.35);
+  --shadow-sheet: 0 -24px 80px rgba(0, 0, 0, 0.55);
+  --shadow-button: 0 16px 40px rgba(245, 242, 236, 0.12);
+  --shadow-button-hover: 0 22px 60px rgba(245, 242, 236, 0.18);
+
+  --ease-premium: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-hero: 1200ms;
+  --duration-slow: 800ms;
+  --duration-medium: 420ms;
+  --duration-fast: 220ms;
+  --duration-micro: 160ms;
+  --stagger-default: 80ms;
+
+  --tap-target-min: 44px;
+  --tap-target-primary: 52px;
+  --admin-nav-height: 72px;
+}
+
+:root {
+  --admin-bg: var(--bg-main);
+  --admin-bg-soft: var(--bg-soft);
+  --admin-card: var(--bg-card);
+  --admin-card-raised: var(--bg-card-raised);
+  --admin-text: var(--text-main);
+  --admin-muted: var(--text-muted);
+  --admin-soft: var(--text-soft);
+  --admin-accent: var(--accent);
+  --admin-accent-soft: rgba(200, 169, 106, 0.16);
+  --admin-border: rgba(255, 255, 255, 0.11);
+  --admin-border-strong: rgba(255, 255, 255, 0.18);
+}
+

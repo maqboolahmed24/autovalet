@@ -1,0 +1,103 @@
+@keyframes hero-image-reveal {
+  from {
+    opacity: 0.55;
+    transform: scale(1.08);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+    transform: translateY(28px);
+  }
+
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+@keyframes sheet-enter {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes skeleton-shine {
+  0%,
+  55% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes placeholder-shine {
+  0%,
+  55% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.motion-hero-reveal {
+  animation: hero-image-reveal var(--duration-hero) var(--ease-premium) both;
+}
+
+.motion-fade-up {
+  animation: fade-up var(--duration-slow) var(--ease-premium) both;
+}
+
+.motion-sheet-enter {
+  animation: sheet-enter 450ms var(--ease-premium) both;
+}
+
+.motion-stagger > * {
+  animation: fade-up var(--duration-slow) var(--ease-premium) both;
+}
+
+.motion-stagger > *:nth-child(2) {
+  animation-delay: var(--stagger-default);
+}
+
+.motion-stagger > *:nth-child(3) {
+  animation-delay: calc(var(--stagger-default) * 2);
+}
+
+.motion-stagger > *:nth-child(4) {
+  animation-delay: calc(var(--stagger-default) * 3);
+}
+
+.motion-stagger > *:nth-child(5) {
+  animation-delay: calc(var(--stagger-default) * 4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
