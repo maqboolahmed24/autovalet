@@ -1,4 +1,12 @@
 import Link from "next/link";
+import {
+  addonList,
+  formatMoneyGBP,
+  formatServicePriceRange,
+  servicePackages,
+  vehicleSizeLabels,
+  vehicleSizeOrder,
+} from "../../lib/pricing";
 import { SectionHeading } from "./SectionHeading";
 
 type PricingRow = {
@@ -7,38 +15,30 @@ type PricingRow = {
   duration?: string;
 };
 
-type AddonRow = {
-  name: string;
-  price: string;
-};
-
 type DurationGuidanceItem = {
   title: string;
   text: string;
 };
 
-// TODO: Replace this public display data with the central service catalog once lib/pricing or lib/services exists.
-const maintenanceRows: PricingRow[] = [
-  { label: "Small", price: "£55", duration: "60 mins" },
-  { label: "Medium", price: "£65", duration: "75 mins" },
-  { label: "Large / 4x4", price: "£75", duration: "90 mins" },
-];
+const maintenanceRows: PricingRow[] = vehicleSizeOrder.map((vehicleSize) => {
+  const variant = servicePackages.maintenance.variants[vehicleSize];
 
-const deepCleanRows: PricingRow[] = [
-  { label: "Small", price: "from £160", duration: "Estimated 150 mins" },
-  { label: "Medium", price: "from £165", duration: "Estimated 180 mins" },
-  { label: "Large / 4x4", price: "from £170", duration: "Estimated 210 mins" },
-];
+  return {
+    label: vehicleSizeLabels[vehicleSize],
+    price: formatMoneyGBP(variant.priceMinor),
+    duration: `${variant.durationMinutes} mins`,
+  };
+});
 
-const addons: AddonRow[] = [
-  { name: "Engine bay clean", price: "£30" },
-  { name: "Windscreen repellent", price: "£30" },
-  { name: "Exhaust tips polished", price: "£20" },
-  { name: "Leather deep clean", price: "£50" },
-  { name: "Convertible roof treatment", price: "£40" },
-  { name: "Removal of excess pet hair", price: "£30" },
-  { name: "Liquid decon and clay bar", price: "£50" },
-];
+const deepCleanRows: PricingRow[] = vehicleSizeOrder.map((vehicleSize) => {
+  const variant = servicePackages.deep_clean.variants[vehicleSize];
+
+  return {
+    label: vehicleSizeLabels[vehicleSize],
+    price: `from ${formatMoneyGBP(variant.priceMinor)}`,
+    duration: `Estimated ${variant.durationMinutes} mins`,
+  };
+});
 
 const durationGuidance: DurationGuidanceItem[] = [
   {
@@ -61,7 +61,7 @@ export function ServicesPageContent() {
       <div className="section__inner services-page__inner">
         <div className="services-page__grid motion-stagger">
           <article className="premium-card services-page-card" aria-labelledby="maintenance-clean-title">
-            <p className="eyebrow">Maintenance</p>
+            <p className="eyebrow">{servicePackages.maintenance.label}</p>
             <h2 id="maintenance-clean-title">Maintenance Clean</h2>
             <p>A refined routine clean for vehicles needing regular care.</p>
 
@@ -80,11 +80,11 @@ export function ServicesPageContent() {
             className="premium-card services-page-card services-page-card--featured"
             aria-labelledby="deep-clean-title"
           >
-            <p className="eyebrow">Deep Clean</p>
+            <p className="eyebrow">{servicePackages.deep_clean.label}</p>
             <h2 id="deep-clean-title">Deep Clean</h2>
             <p>A more complete reset for vehicles needing deeper attention.</p>
             <p className="services-page-card__range">
-              Deep Clean pricing ranges from £160 - £170 depending on vehicle size and condition.
+              Deep Clean pricing ranges from {formatServicePriceRange("deep_clean")} depending on vehicle size and condition.
             </p>
 
             <div className="services-page-card__rows" aria-label="Deep Clean pricing and estimated durations">
@@ -105,10 +105,10 @@ export function ServicesPageContent() {
           </SectionHeading>
 
           <div className="services-page__addons motion-stagger">
-            {addons.map((addon) => (
-              <article className="services-page-addon" key={addon.name}>
-                <span>{addon.name}</span>
-                <strong>{addon.price}</strong>
+            {addonList.map((addon) => (
+              <article className="services-page-addon" key={addon.id}>
+                <span>{addon.label}</span>
+                <strong>{formatMoneyGBP(addon.priceMinor)}</strong>
               </article>
             ))}
           </div>

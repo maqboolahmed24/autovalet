@@ -1,4 +1,13 @@
-import type { BookingStepProps, PackageId } from "../BookingStepper";
+import type { PackageId } from "../../../lib/booking/types";
+import {
+  formatServicePriceRange,
+  formatVehicleVariantDuration,
+  formatVehicleVariantPrice,
+  servicePackageList,
+  vehicleSizeLabels,
+  vehicleSizeOrder,
+} from "../../../lib/pricing";
+import type { BookingStepProps } from "../BookingStepper";
 
 type PackageOption = {
   id: PackageId;
@@ -14,25 +23,27 @@ type PackageStepSelectorProps = {
   onChange: (packageId: PackageId) => void;
 };
 
-// TODO: Replace this public display data with the central service catalog once booking services are API-backed.
-const packages: PackageOption[] = [
-  {
-    id: "maintenance",
-    eyebrow: "Maintenance",
-    title: "Regular care, refined finish.",
-    description: "For vehicles needing a routine mobile clean.",
-    price: "Small £55 · Medium £65 · Large / 4x4 £75",
-    duration: "From 60 mins before travel buffer.",
-  },
-  {
-    id: "deep_clean",
-    eyebrow: "Deep Clean",
-    title: "A more complete reset.",
-    description: "For vehicles needing deeper attention inside, outside or both.",
-    price: "£160 - £170",
-    duration: "Estimated duration depends on vehicle size and condition.",
-  },
-];
+const packageBody: Record<PackageId, string> = {
+  maintenance: "For vehicles needing a routine mobile clean.",
+  deep_clean: "For vehicles needing deeper attention inside, outside or both.",
+};
+
+const packages: PackageOption[] = servicePackageList.map((servicePackage) => ({
+  id: servicePackage.id,
+  eyebrow: servicePackage.label,
+  title: servicePackage.description,
+  description: packageBody[servicePackage.id],
+  price:
+    servicePackage.id === "maintenance"
+      ? vehicleSizeOrder
+          .map((vehicleSize) => `${vehicleSizeLabels[vehicleSize]} ${formatVehicleVariantPrice(servicePackage.id, vehicleSize)}`)
+          .join(" · ")
+      : formatServicePriceRange(servicePackage.id),
+  duration:
+    servicePackage.id === "maintenance"
+      ? `From ${formatVehicleVariantDuration(servicePackage.id, "small")} before travel buffer.`
+      : "Estimated duration depends on vehicle size and condition.",
+}));
 
 function PackageStepSelector({ value, onChange }: PackageStepSelectorProps) {
   return (

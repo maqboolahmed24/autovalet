@@ -1,4 +1,5 @@
-import type { BookingDraft, BookingStepProps } from "../BookingStepper";
+import type { BookingDraft } from "../../../lib/booking/types";
+import type { BookingStepProps } from "../BookingStepper";
 
 type CustomerDetailsFields = Pick<BookingDraft, "customer" | "extraNotes" | "marketingPhotoConsent">;
 

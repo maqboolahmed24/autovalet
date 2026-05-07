@@ -1,0 +1,423 @@
+import type {
+  AddonId,
+  BookingDraft,
+  BookingSource,
+  BookingStatus,
+  PackageId,
+  ParkingAvailability,
+  VehicleSize,
+} from "../booking/types";
+import { createBookingReference } from "../booking/references";
+import { assertBookingTransition } from "../booking/lifecycle";
+import type { CalendarBlockingBooking } from "../availability";
+import { createUtcDateFromBusinessTime, generateAvailableSlots } from "../availability";
+import { normalizePostcode } from "../zones/normalize-postcode";
+import { validateServiceZone } from "../zones/validate-zone";
+import type { ZoneValidationResult } from "../zones";
+import { addonDefinitions, calculateBookingDuration, calculateBookingPrice, servicePackages } from "../pricing";
+import type { DurationBreakdown, PriceBreakdown } from "../pricing";
+
+export type ManualBookingSource = Exclude<BookingSource, "public_booking">;
+
+export type ManualBookingStatus = Extract<BookingStatus, "pending_admin_review" | "approved">;
+
+export type ManualDepositStatus = "unpaid" | "paid" | "waived";
+
+export type ManualPaymentMethod =
+  | "cash"
+  | "bank_transfer"
+  | "card_reader"
+  | "online_payment_link"
+  | "other";
+
+export type CreateManualBookingInput = {
+  source: ManualBookingSource;
+  status: ManualBookingStatus;
+  customer: {
+    fullName: string;
+    phone: string;
+    email: string;
+  };
+  vehicle: {
+    make: string;
+    model: string;
+    size: VehicleSize | "";
+  };
+  service: {
+    packageId: PackageId | "";
+    addons: AddonId[];
+    vehicleCount: number;
+  };
+  location: {
+    postcode: string;
+    fullAddress: string;
+    parkingAvailable: ParkingAvailability | "";
+    parkingNotes: string;
+    accessNotes: string;
+  };
+  schedule: {
+    date: string;
+    startTime: string;
+  };
+  payment: {
+    depositStatus: ManualDepositStatus;
+    depositPaidMinor: number;
+    paymentMethod: ManualPaymentMethod;
+    notes: string;
+  };
+};
+
+export type ManualBookingPreview = {
+  bookingReference: string;
+  normalizedPostcode: string;
+  zoneResult: ZoneValidationResult;
+  price: PriceBreakdown;
+  duration: DurationBreakdown;
+  requestedStartAt: string;
+  serviceEndsAt: string;
+  blockedUntil: string;
+  slotAvailable: boolean;
+};
+
+export type CreateManualBookingResult =
+  | {
+      success: true;
+      bookingReference: string;
+      status: BookingStatus;
+    }
+  | {
+      success: false;
+      code: string;
+      message: string;
+      details?: Record<string, unknown>;
+    };
+
+export type CreateManualBookingOptions = {
+  adminAuthenticated?: boolean;
+  canCreateManualBooking?: boolean;
+  persistenceConfigured?: boolean;
+  existingBookings?: CalendarBlockingBooking[];
+};
+
+type ParsedManualBookingInput =
+  | {
+      input: CreateManualBookingInput;
+      errors: string[];
+    }
+  | {
+      input: null;
+      errors: string[];
+    };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
+function readString(value: unknown) {
+  return typeof value === "string" ? value : "";
+}
+
+function readNumber(value: unknown, fallback = 0) {
+  const numberValue = typeof value === "number" ? value : Number(value ?? fallback);
+
+  return Number.isFinite(numberValue) ? numberValue : fallback;
+}
+
+function readStringArray(value: unknown) {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+}
+
+function isVehicleSize(value: unknown): value is VehicleSize {
+  return value === "small" || value === "medium" || value === "large_4x4";
+}
+
+function isPackageId(value: unknown): value is PackageId {
+  return typeof value === "string" && value in servicePackages;
+}
+
+function isAddonId(value: unknown): value is AddonId {
+  return typeof value === "string" && value in addonDefinitions;
+}
+
+function isParkingAvailability(value: unknown): value is ParkingAvailability {
+  return value === "yes" || value === "no" || value === "unknown";
+}
+
+function isManualBookingSource(value: unknown): value is ManualBookingSource {
+  return (
+    value === "admin_manual" ||
+    value === "phone" ||
+    value === "instagram" ||
+    value === "whatsapp" ||
+    value === "referral"
+  );
+}
+
+function isManualBookingStatus(value: unknown): value is ManualBookingStatus {
+  return value === "pending_admin_review" || value === "approved";
+}
+
+function isManualDepositStatus(value: unknown): value is ManualDepositStatus {
+  return value === "unpaid" || value === "paid" || value === "waived";
+}
+
+function isManualPaymentMethod(value: unknown): value is ManualPaymentMethod {
+  return (
+    value === "cash" ||
+    value === "bank_transfer" ||
+    value === "card_reader" ||
+    value === "online_payment_link" ||
+    value === "other"
+  );
+}
+
+function isValidEmail(value: string) {
+  return !value || /\S+@\S+\.\S+/.test(value);
+}
+
+export function parseCreateManualBookingInput(value: unknown): ParsedManualBookingInput {
+  const errors: string[] = [];
+
+  if (!isRecord(value)) {
+    return {
+      input: null,
+      errors: ["Manual booking payload is required."],
+    };
+  }
+
+  const customer = isRecord(value.customer) ? value.customer : {};
+  const vehicle = isRecord(value.vehicle) ? value.vehicle : {};
+  const service = isRecord(value.service) ? value.service : {};
+  const location = isRecord(value.location) ? value.location : {};
+  const schedule = isRecord(value.schedule) ? value.schedule : {};
+  const payment = isRecord(value.payment) ? value.payment : {};
+  const addons = readStringArray(service.addons);
+
+  if (value.source && !isManualBookingSource(value.source)) errors.push("Booking source is invalid.");
+  if (value.status && !isManualBookingStatus(value.status)) errors.push("Manual booking status is invalid.");
+  if (vehicle.size && !isVehicleSize(vehicle.size)) errors.push("Vehicle size is invalid.");
+  if (service.packageId && !isPackageId(service.packageId)) errors.push("Service package is invalid.");
+  if (addons.some((addon) => !isAddonId(addon))) errors.push("One or more add-ons are invalid.");
+  if (location.parkingAvailable && !isParkingAvailability(location.parkingAvailable)) {
+    errors.push("Parking availability is invalid.");
+  }
+  if (payment.depositStatus && !isManualDepositStatus(payment.depositStatus)) {
+    errors.push("Deposit status is invalid.");
+  }
+  if (payment.paymentMethod && !isManualPaymentMethod(payment.paymentMethod)) {
+    errors.push("Payment method is invalid.");
+  }
+
+  return {
+    input: {
+      source: isManualBookingSource(value.source) ? value.source : "admin_manual",
+      status: isManualBookingStatus(value.status) ? value.status : "pending_admin_review",
+      customer: {
+        fullName: readString(customer.fullName),
+        phone: readString(customer.phone),
+        email: readString(customer.email),
+      },
+      vehicle: {
+        make: readString(vehicle.make),
+        model: readString(vehicle.model),
+        size: isVehicleSize(vehicle.size) ? vehicle.size : "",
+      },
+      service: {
+        packageId: isPackageId(service.packageId) ? service.packageId : "",
+        addons: addons.filter(isAddonId),
+        vehicleCount: Math.max(Math.floor(readNumber(service.vehicleCount, 1)), 1),
+      },
+      location: {
+        postcode: readString(location.postcode),
+        fullAddress: readString(location.fullAddress),
+        parkingAvailable: isParkingAvailability(location.parkingAvailable) ? location.parkingAvailable : "",
+        parkingNotes: readString(location.parkingNotes),
+        accessNotes: readString(location.accessNotes),
+      },
+      schedule: {
+        date: readString(schedule.date),
+        startTime: readString(schedule.startTime),
+      },
+      payment: {
+        depositStatus: isManualDepositStatus(payment.depositStatus) ? payment.depositStatus : "unpaid",
+        depositPaidMinor: Math.max(Math.round(readNumber(payment.depositPaidMinor, 0)), 0),
+        paymentMethod: isManualPaymentMethod(payment.paymentMethod) ? payment.paymentMethod : "other",
+        notes: readString(payment.notes),
+      },
+    },
+    errors,
+  };
+}
+
+export function validateManualBookingInput(input: CreateManualBookingInput) {
+  const errors: string[] = [];
+
+  if (!input.customer.fullName.trim()) errors.push("Customer name is required.");
+  if (!input.customer.phone.trim()) errors.push("Customer phone is required.");
+  if (!isValidEmail(input.customer.email.trim())) errors.push("Enter a valid customer email.");
+  if (!input.vehicle.make.trim()) errors.push("Vehicle make is required.");
+  if (!input.vehicle.model.trim()) errors.push("Vehicle model is required.");
+  if (!input.vehicle.size) errors.push("Vehicle size is required.");
+  if (!input.service.packageId) errors.push("Service package is required.");
+  if (input.service.vehicleCount < 1) errors.push("Vehicle count must be at least 1.");
+  if (!input.location.postcode.trim()) errors.push("Postcode is required.");
+  if (!input.location.fullAddress.trim()) errors.push("Full address is required.");
+  if (!input.location.parkingAvailable) errors.push("Parking availability is required.");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.schedule.date)) errors.push("Date must use YYYY-MM-DD.");
+  if (!/^\d{2}:\d{2}$/.test(input.schedule.startTime)) errors.push("Start time must use HH:mm.");
+
+  return errors;
+}
+
+export function buildManualBookingDraft(input: CreateManualBookingInput): BookingDraft {
+  return {
+    packageId: input.service.packageId,
+    vehicles: [
+      {
+        id: "manual-vehicle-1",
+        make: input.vehicle.make,
+        model: input.vehicle.model,
+        size: input.vehicle.size,
+        addons: input.service.addons,
+      },
+    ],
+    postcode: input.location.postcode,
+    fullAddress: input.location.fullAddress,
+    parkingAvailable: input.location.parkingAvailable,
+    parkingNotes: input.location.parkingNotes,
+    accessNotes: input.location.accessNotes,
+    zoneCheckStatus: "unchecked",
+    vehicleCount: input.service.vehicleCount,
+    selectedDate: input.schedule.date,
+    selectedSlotStart: input.schedule.startTime,
+    customer: input.customer,
+    extraNotes: "",
+    marketingPhotoConsent: false,
+  };
+}
+
+export function calculateManualBookingPreview(
+  input: CreateManualBookingInput,
+  existingBookings: CalendarBlockingBooking[] = [],
+): ManualBookingPreview {
+  const draft = buildManualBookingDraft(input);
+  const normalizedPostcode = normalizePostcode(input.location.postcode);
+  const zoneResult = validateServiceZone({
+    postcode: normalizedPostcode,
+    vehicleCount: input.service.vehicleCount,
+  });
+  const price = calculateBookingPrice(draft);
+  const duration = calculateBookingDuration(draft);
+  const requestedStart = createUtcDateFromBusinessTime(input.schedule.date, input.schedule.startTime);
+  const serviceEndsAt = new Date(requestedStart.getTime() + duration.serviceDurationMinutes * 60_000);
+  const blockedUntil = new Date(requestedStart.getTime() + duration.blockedDurationMinutes * 60_000);
+  const availableSlots = generateAvailableSlots({
+    date: input.schedule.date,
+    serviceDurationMinutes: duration.serviceDurationMinutes,
+    travelBufferMinutes: duration.travelBufferMinutes,
+    existingBookings,
+  });
+
+  return {
+    bookingReference: createBookingReference(),
+    normalizedPostcode,
+    zoneResult,
+    price,
+    duration,
+    requestedStartAt: requestedStart.toISOString(),
+    serviceEndsAt: serviceEndsAt.toISOString(),
+    blockedUntil: blockedUntil.toISOString(),
+    slotAvailable: availableSlots.some((slot) => slot.label === input.schedule.startTime),
+  };
+}
+
+export async function createManualBooking(
+  input: CreateManualBookingInput,
+  options: CreateManualBookingOptions = {},
+): Promise<CreateManualBookingResult> {
+  if (!options.adminAuthenticated) {
+    return {
+      success: false,
+      code: "ADMIN_AUTH_NOT_CONFIGURED",
+      message: "Admin authentication is not configured yet.",
+    };
+  }
+
+  if (!options.canCreateManualBooking) {
+    return {
+      success: false,
+      code: "ADMIN_PERMISSION_REQUIRED",
+      message: "The admin account cannot create manual bookings.",
+    };
+  }
+
+  const validationErrors = validateManualBookingInput(input);
+
+  if (validationErrors.length > 0) {
+    return {
+      success: false,
+      code: "MANUAL_BOOKING_VALIDATION_FAILED",
+      message: "Check the manual booking details.",
+      details: { errors: validationErrors },
+    };
+  }
+
+  let preview: ManualBookingPreview;
+
+  try {
+    preview = calculateManualBookingPreview(input, options.existingBookings ?? []);
+  } catch (error) {
+    return {
+      success: false,
+      code: "MANUAL_BOOKING_PREVIEW_FAILED",
+      message: error instanceof Error ? error.message : "Manual booking preview could not be calculated.",
+    };
+  }
+
+  if (!preview.zoneResult.allowed) {
+    return {
+      success: false,
+      code: "OUTSIDE_SERVICE_AREA",
+      message: preview.zoneResult.message,
+      details: { zoneResult: preview.zoneResult },
+    };
+  }
+
+  if (!preview.slotAvailable) {
+    return {
+      success: false,
+      code: "SLOT_UNAVAILABLE",
+      message: "This time conflicts with working hours, blocked time or another booking.",
+      details: {
+        requestedStartAt: preview.requestedStartAt,
+        blockedUntil: preview.blockedUntil,
+      },
+    };
+  }
+
+  if (input.status === "approved") {
+    assertBookingTransition("pending_admin_review", "approved", {
+      actor: "admin",
+      reason: "manual booking created as approved",
+    });
+  }
+
+  if (!options.persistenceConfigured) {
+    return {
+      success: false,
+      code: "MANUAL_BOOKING_PERSISTENCE_NOT_CONFIGURED",
+      message: "Manual booking creation is not connected to database persistence yet.",
+      details: {
+        preview,
+        plannedWrites: ["customers", "bookings", "vehicles", "booking_addons", "payments", "audit_logs"],
+      },
+    };
+  }
+
+  // TODO: Create customer, booking, vehicle, add-ons, payment records and audit log in one transaction.
+  return {
+    success: true,
+    bookingReference: preview.bookingReference,
+    status: input.status,
+  };
+}

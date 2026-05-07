@@ -1,4 +1,6 @@
-import type { AddonId, BookingStepProps } from "../BookingStepper";
+import type { AddonId } from "../../../lib/booking/types";
+import { addonList, formatMoneyGBP } from "../../../lib/pricing";
+import type { BookingStepProps } from "../BookingStepper";
 
 type AddonOption = {
   id: AddonId;
@@ -12,51 +14,22 @@ type AddonsStepSelectorProps = {
   onChange: (selectedAddonIds: AddonId[]) => void;
 };
 
-// TODO: Replace this local booking display data with the central add-on catalog once lib/pricing exists.
-const addonOptions: AddonOption[] = [
-  {
-    id: "engine_bay_clean",
-    label: "Engine bay clean",
-    price: "£30",
-    note: "Focused engine bay presentation.",
-  },
-  {
-    id: "windscreen_repellent",
-    label: "Windscreen repellent",
-    price: "£30",
-    note: "Repellent treatment for clearer glass.",
-  },
-  {
-    id: "exhaust_tips_polished",
-    label: "Exhaust tips polished",
-    price: "£20",
-    note: "Sharper finish for visible exhaust tips.",
-  },
-  {
-    id: "leather_deep_clean",
-    label: "Leather deep clean",
-    price: "£50",
-    note: "Focused clean for leather surfaces.",
-  },
-  {
-    id: "convertible_roof_treatment",
-    label: "Convertible roof treatment",
-    price: "£40",
-    note: "Extra care for convertible roof material.",
-  },
-  {
-    id: "excess_pet_hair_removal",
-    label: "Removal of excess pet hair",
-    price: "£30",
-    note: "Additional attention for heavier pet hair.",
-  },
-  {
-    id: "liquid_decon_clay_bar",
-    label: "Liquid decon and clay bar",
-    price: "£50",
-    note: "Paint preparation for a smoother exterior.",
-  },
-];
+const addonNotes: Record<AddonId, string> = {
+  engine_bay_clean: "Focused engine bay presentation.",
+  windscreen_repellent: "Repellent treatment for clearer glass.",
+  exhaust_tips_polished: "Sharper finish for visible exhaust tips.",
+  leather_deep_clean: "Focused clean for leather surfaces.",
+  convertible_roof_treatment: "Extra care for convertible roof material.",
+  excess_pet_hair_removal: "Additional attention for heavier pet hair.",
+  liquid_decon_clay_bar: "Paint preparation for a smoother exterior.",
+};
+
+const addonOptions: AddonOption[] = addonList.map((addon) => ({
+  id: addon.id,
+  label: addon.label,
+  price: formatMoneyGBP(addon.priceMinor),
+  note: addonNotes[addon.id],
+}));
 
 function AddonsStepSelector({ selectedAddonIds, onChange }: AddonsStepSelectorProps) {
   const toggleAddon = (addonId: AddonId) => {

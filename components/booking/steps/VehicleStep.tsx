@@ -1,4 +1,5 @@
-import type { BookingStepProps, BookingVehicle, VehicleSize } from "../BookingStepper";
+import type { BookingVehicle, VehicleSize } from "../../../lib/booking/types";
+import type { BookingStepProps } from "../BookingStepper";
 
 type VehicleSizeOption = {
   id: VehicleSize;

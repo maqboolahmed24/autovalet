@@ -1,0 +1,25 @@
+export const galleryItemsTable = {
+  name: "gallery_items",
+  columns: {
+    id: { type: "uuid", primaryKey: true, default: "gen_random_uuid()" },
+    bookingId: { name: "booking_id", type: "uuid", references: "bookings.id", nullable: true },
+    title: { type: "text", nullable: false },
+    description: { type: "text", nullable: true },
+    beforeImageUrl: { name: "before_image_url", type: "text", nullable: true },
+    afterImageUrl: { name: "after_image_url", type: "text", nullable: true },
+    singleImageUrl: { name: "single_image_url", type: "text", nullable: true },
+    altText: { name: "alt_text", type: "text", nullable: true },
+    vehicleType: { name: "vehicle_type", type: "text", nullable: true },
+    serviceType: { name: "service_type", type: "text", nullable: true },
+    hasMarketingConsent: { name: "has_marketing_consent", type: "boolean", nullable: false, default: false },
+    isFeatured: { name: "is_featured", type: "boolean", nullable: false, default: false },
+    active: { type: "boolean", nullable: false, default: true },
+    displayOrder: { name: "display_order", type: "integer", nullable: false, default: 0 },
+    createdAt: { name: "created_at", type: "timestamptz", nullable: false, default: "now()" },
+  },
+  indexes: [
+    { name: "gallery_items_booking_id_idx", columns: ["booking_id"] },
+    { name: "gallery_items_featured_active_idx", columns: ["is_featured", "active"] },
+    { name: "gallery_items_display_order_idx", columns: ["display_order"] },
+  ],
+} as const;

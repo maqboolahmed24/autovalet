@@ -1,4 +1,8 @@
-import type { BookingDraft, BookingStepProps } from "../BookingStepper";
+"use client";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { AddonId, BookingDraft, PackageId, VehicleSize } from "../../../lib/booking/types";
+import type { BookingStepProps } from "../BookingStepper";
 
 type DateOption = {
   value: string;
@@ -10,35 +14,48 @@ type DateOption = {
 type AvailableSlot = {
   start: string;
   label: string;
-  serviceEnd?: string;
-  blockedUntil?: string;
+  serviceEndsAt: string;
+  blockedUntil: string;
+  serviceDurationMinutes: number;
+  travelBufferMinutes: number;
 };
 
-type SlotStepSelectorProps = Pick<BookingDraft, "selectedDate" | "selectedSlotStart"> & {
+type AvailableSlotsResponse =
+  | {
+      success: true;
+      data: {
+        date: string;
+        timezone: string;
+        serviceDurationMinutes: number;
+        travelBufferMinutes: number;
+        slots: AvailableSlot[];
+      };
+      message?: string;
+    }
+  | {
+      success: false;
+      error: {
+        code: string;
+        message: string;
+        details: Record<string, unknown>;
+      };
+    };
+
+type SlotStepSelectorProps = {
+  packageId: PackageId | "";
+  primaryVehicleSize: VehicleSize | "";
+  selectedAddonIds: AddonId[];
+  vehicleCount: number;
+  selectedDate: string;
+  selectedSlotStart: string;
   onChange: (patch: Partial<Pick<BookingDraft, "selectedDate" | "selectedSlotStart">>) => void;
 };
 
-const placeholderSlots: AvailableSlot[] = [
-  {
-    start: "09:00",
-    label: "09:00",
-  },
-  {
-    start: "11:45",
-    label: "11:45",
-  },
-  {
-    start: "14:15",
-    label: "14:15",
-  },
-];
-
-// TODO: Replace this placeholder source with /api/available-slots when the availability engine exists.
 function getDatePart(parts: Intl.DateTimeFormatPart[], type: string) {
   return parts.find((part) => part.type === type)?.value ?? "";
 }
 
-function createPlaceholderDates() {
+function createDateOptions() {
   const dates: DateOption[] = [];
   const displayFormatter = new Intl.DateTimeFormat("en-GB", {
     day: "2-digit",
@@ -76,8 +93,116 @@ function createPlaceholderDates() {
   return dates;
 }
 
-function SlotStepSelector({ selectedDate, selectedSlotStart, onChange }: SlotStepSelectorProps) {
-  const dateOptions = createPlaceholderDates();
+function getSlotFetchError(payload: AvailableSlotsResponse, fallbackMessage: string) {
+  return payload.success ? fallbackMessage : payload.error.message;
+}
+
+function SlotLoadingState() {
+  return (
+    <div className="booking-slot-loading" role="status" aria-live="polite">
+      <span>Checking available request times...</span>
+      <div className="loading-skeleton" aria-hidden="true" />
+      <div className="loading-skeleton" aria-hidden="true" />
+      <div className="loading-skeleton" aria-hidden="true" />
+    </div>
+  );
+}
+
+function SlotStepSelector({
+  packageId,
+  primaryVehicleSize,
+  selectedAddonIds,
+  vehicleCount,
+  selectedDate,
+  selectedSlotStart,
+  onChange,
+}: SlotStepSelectorProps) {
+  const dateOptions = useMemo(() => createDateOptions(), []);
+  const addonSignature = useMemo(() => selectedAddonIds.join("|"), [selectedAddonIds]);
+  const canLoadSlots = Boolean(packageId && primaryVehicleSize && selectedDate);
+  const [slots, setSlots] = useState<AvailableSlot[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    if (!selectedDate || !packageId || !primaryVehicleSize) {
+      setSlots([]);
+      setIsLoading(false);
+      setErrorMessage("");
+      return;
+    }
+
+    const abortController = new AbortController();
+
+    async function loadSlots() {
+      setIsLoading(true);
+      setErrorMessage("");
+
+      try {
+        const response = await fetch("/api/available-slots", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            date: selectedDate,
+            packageId,
+            vehicles: [
+              {
+                size: primaryVehicleSize,
+                addons: selectedAddonIds,
+              },
+            ],
+            vehicleCount,
+          }),
+          cache: "no-store",
+          signal: abortController.signal,
+        });
+        const payload = (await response.json()) as AvailableSlotsResponse;
+
+        if (!response.ok || !payload.success) {
+          throw new Error(getSlotFetchError(payload, "Available request times could not be loaded."));
+        }
+
+        setSlots(payload.data.slots);
+
+        if (
+          selectedSlotStart &&
+          !payload.data.slots.some((slot) => slot.label === selectedSlotStart)
+        ) {
+          onChange({ selectedSlotStart: "" });
+        }
+      } catch (error) {
+        if (abortController.signal.aborted) {
+          return;
+        }
+
+        setSlots([]);
+        setErrorMessage(
+          error instanceof Error
+            ? error.message
+            : "Available request times could not be loaded. Please try again.",
+        );
+      } finally {
+        if (!abortController.signal.aborted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadSlots();
+
+    return () => abortController.abort();
+  }, [
+    addonSignature,
+    onChange,
+    packageId,
+    primaryVehicleSize,
+    selectedAddonIds,
+    selectedDate,
+    selectedSlotStart,
+    vehicleCount,
+  ]);
 
   return (
     <div className="booking-step-content">
@@ -102,54 +227,77 @@ function SlotStepSelector({ selectedDate, selectedSlotStart, onChange }: SlotSte
       </div>
 
       <div className="booking-slot-list" aria-label="Requested time options">
-        {selectedDate ? (
-          placeholderSlots.map((slot) => {
-            const isSelected = selectedSlotStart === slot.start;
+        {!selectedDate ? (
+          <div className="empty-state">
+            <h2>Select a date first.</h2>
+            <p>Available requested times will appear here.</p>
+          </div>
+        ) : !canLoadSlots ? (
+          <div className="empty-state">
+            <h2>Complete service and vehicle details first.</h2>
+            <p>Requested times depend on the selected package, vehicle size and extras.</p>
+          </div>
+        ) : isLoading ? (
+          <SlotLoadingState />
+        ) : errorMessage ? (
+          <div className="error-state" role="alert">
+            <h2>Request times could not be loaded.</h2>
+            <p>{errorMessage}</p>
+          </div>
+        ) : slots.length === 0 ? (
+          <div className="empty-state">
+            <h2>No request times are available for this date.</h2>
+            <p>Please choose another day.</p>
+          </div>
+        ) : (
+          slots.map((slot) => {
+            const isSelected = selectedSlotStart === slot.label;
 
             return (
               <button
                 className={`selectable-card booking-slot-card${isSelected ? " is-selected" : ""}`}
                 type="button"
                 aria-pressed={isSelected}
-                onClick={() => onChange({ selectedSlotStart: slot.start })}
+                onClick={() => onChange({ selectedSlotStart: slot.label })}
                 key={slot.start}
               >
                 <strong>{slot.label}</strong>
                 <span>Requested time</span>
-                <p>Includes an internal travel buffer after the visit.</p>
+                <p>
+                  Service estimate: {slot.serviceDurationMinutes} mins. Internal travel buffer is
+                  protected after the visit.
+                </p>
               </button>
             );
           })
-        ) : (
-          <div className="empty-state">
-            <h2>Select a date first.</h2>
-            <p>Available requested times will appear here.</p>
-          </div>
         )}
       </div>
 
       <p className="booking-step-note">
         Your selected time is a request. AUTO VALET will confirm after review.
       </p>
-
-      <p className="booking-inline-note">
-        Placeholder requested times are shown for now. Live availability will replace these when the slot
-        engine is connected.
-      </p>
     </div>
   );
 }
 
 export function SlotStep({ draft, updateDraft }: BookingStepProps) {
-  const updateSlotSelection = (patch: Partial<Pick<BookingDraft, "selectedDate" | "selectedSlotStart">>) => {
-    updateDraft((currentDraft) => ({
-      ...currentDraft,
-      ...patch,
-    }));
-  };
+  const primaryVehicle = draft.vehicles[0];
+  const updateSlotSelection = useCallback(
+    (patch: Partial<Pick<BookingDraft, "selectedDate" | "selectedSlotStart">>) => {
+      updateDraft((currentDraft) => ({
+        ...currentDraft,
+        ...patch,
+      }));
+    },
+    [updateDraft],
+  );
 
   return (
     <SlotStepSelector
+      packageId={draft.packageId}
+      primaryVehicleSize={primaryVehicle?.size ?? ""}
+      selectedAddonIds={primaryVehicle?.addons ?? []}
+      vehicleCount={draft.vehicleCount}
       selectedDate={draft.selectedDate}
       selectedSlotStart={draft.selectedSlotStart}
       onChange={updateSlotSelection}

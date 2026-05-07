@@ -13,61 +13,39 @@ import { PackageStep } from "./steps/PackageStep";
 import { ReviewPaymentStep } from "./steps/ReviewPaymentStep";
 import { SlotStep } from "./steps/SlotStep";
 import { VehicleStep } from "./steps/VehicleStep";
-
-export type VehicleSize = "small" | "medium" | "large_4x4";
-
-export type PackageId = "maintenance" | "deep_clean";
-
-export type AddonId =
-  | "engine_bay_clean"
-  | "windscreen_repellent"
-  | "exhaust_tips_polished"
-  | "leather_deep_clean"
-  | "convertible_roof_treatment"
-  | "excess_pet_hair_removal"
-  | "liquid_decon_clay_bar";
-
-export type BookingVehicle = {
-  id: string;
-  make: string;
-  model: string;
-  size: VehicleSize | "";
-  addons: AddonId[];
-};
-
-export type ZoneCheckStatus =
-  | "unchecked"
-  | "standard_zone"
-  | "outside_zone_volume_allowed"
-  | "outside_zone_blocked";
-
-export type BookingDraft = {
-  packageId: PackageId | "";
-  vehicles: BookingVehicle[];
-  postcode: string;
-  fullAddress: string;
-  parkingAvailable: "yes" | "no" | "unknown" | "";
-  parkingNotes: string;
-  accessNotes: string;
-  zoneCheckStatus: ZoneCheckStatus;
-  vehicleCount: number;
-  selectedDate: string;
-  selectedSlotStart: string;
-  customer: {
-    fullName: string;
-    phone: string;
-    email: string;
-  };
-  extraNotes: string;
-  marketingPhotoConsent: boolean;
-};
+import type { BookingDraft } from "../../lib/booking/types";
+import { createIdempotencyKey } from "../../lib/payments/idempotency";
+import { DEFAULT_MIN_OUTSIDE_ZONE_VEHICLE_COUNT } from "../../lib/zones";
 
 export type BookingDraftUpdate = (updater: (draft: BookingDraft) => BookingDraft) => void;
 
 export type BookingStepProps = {
   draft: BookingDraft;
   updateDraft: BookingDraftUpdate;
+  onPaymentSubmit?: () => Promise<void>;
+  isPaymentSubmitting?: boolean;
+  paymentEnabled?: boolean;
+  paymentError?: string;
 };
+
+type CreatePaymentHoldResponse =
+  | {
+      success: true;
+      data: {
+        bookingReference: string;
+        checkoutUrl: string;
+        holdExpiresAt: string;
+      };
+      message?: string;
+    }
+  | {
+      success: false;
+      error: {
+        code: string;
+        message: string;
+        details: Record<string, unknown>;
+      };
+    };
 
 type BookingStepId =
   | "package"
@@ -225,7 +203,10 @@ function validateStep(stepId: BookingStepId, draft: BookingDraft) {
       return "";
     case "vehicles":
       if (draft.vehicleCount < 1) return "Choose at least one vehicle.";
-      if (draft.zoneCheckStatus === "outside_zone_blocked" && draft.vehicleCount < 3) {
+      if (
+        draft.zoneCheckStatus === "outside_zone_blocked" &&
+        draft.vehicleCount < DEFAULT_MIN_OUTSIDE_ZONE_VEHICLE_COUNT
+      ) {
         return "Outside-zone requests need 3+ vehicles at the same address.";
       }
       return "";
@@ -250,6 +231,8 @@ export function BookingStepper() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [draft, setDraft] = useState<BookingDraft>(initialBookingDraft);
   const [completionMessage, setCompletionMessage] = useState("");
+  const [isPaymentSubmitting, setIsPaymentSubmitting] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
 
   const currentStep = bookingSteps[currentStepIndex];
   const ActiveStep = currentStep.component;
@@ -257,14 +240,18 @@ export function BookingStepper() {
   const canContinue = validationMessage.length === 0;
   const isFirstStep = currentStepIndex === 0;
   const isLastStep = currentStepIndex === bookingSteps.length - 1;
+  const showUncheckedZoneWarning = currentStep.id === "review" && draft.zoneCheckStatus === "unchecked";
+  const paymentEnabled = true;
 
   const updateDraft: BookingDraftUpdate = (updater) => {
     setCompletionMessage("");
+    setPaymentError("");
     setDraft((previousDraft) => updater(previousDraft));
   };
 
   const handleBack = () => {
     setCompletionMessage("");
+    setPaymentError("");
     setCurrentStepIndex((stepIndex) => Math.max(stepIndex - 1, 0));
   };
 
@@ -272,11 +259,51 @@ export function BookingStepper() {
     if (!canContinue) return;
 
     if (isLastStep) {
-      setCompletionMessage("This UI shell stops before payment. No booking request has been submitted.");
+      setCompletionMessage("Use the deposit button to submit the booking request.");
       return;
     }
 
     setCurrentStepIndex((stepIndex) => Math.min(stepIndex + 1, bookingSteps.length - 1));
+  };
+
+  const handlePaymentSubmit = async () => {
+    const reviewValidationMessage = validateStep("review", draft);
+
+    if (reviewValidationMessage) {
+      setPaymentError(reviewValidationMessage);
+      return;
+    }
+
+    setIsPaymentSubmitting(true);
+    setPaymentError("");
+    setCompletionMessage("");
+
+    try {
+      const response = await fetch("/api/create-payment-hold", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          draft,
+          idempotencyKey: createIdempotencyKey("booking_hold"),
+        }),
+      });
+      const payload = (await response.json()) as CreatePaymentHoldResponse;
+
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.success ? "Deposit checkout could not be started." : payload.error.message);
+      }
+
+      window.location.href = payload.data.checkoutUrl;
+    } catch (error) {
+      setPaymentError(
+        error instanceof Error
+          ? error.message
+          : "Deposit checkout could not be started. Please try again.",
+      );
+      setIsPaymentSubmitting(false);
+    }
   };
 
   return (
@@ -301,8 +328,21 @@ export function BookingStepper() {
               titleId={`booking-step-${currentStep.id}`}
               description={currentStep.description}
             >
-              <ActiveStep draft={draft} updateDraft={updateDraft} />
+              <ActiveStep
+                draft={draft}
+                updateDraft={updateDraft}
+                onPaymentSubmit={handlePaymentSubmit}
+                isPaymentSubmitting={isPaymentSubmitting}
+                paymentEnabled={paymentEnabled}
+                paymentError={paymentError}
+              />
             </BookingStepShell>
+
+            {showUncheckedZoneWarning ? (
+              <p className="booking-step-note booking-step-note--warning" role="status">
+                Service area has not been checked yet. AUTO VALET will still review your location before approval.
+              </p>
+            ) : null}
 
             <div
               className={`booking-actions${isLastStep ? " booking-actions--review" : ""}`}

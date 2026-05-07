@@ -1,37 +1,19 @@
-import type { AddonId, BookingDraft, BookingStepProps, PackageId, VehicleSize } from "../BookingStepper";
+import type { BookingDraft } from "../../../lib/booking/types";
+import {
+  addonDefinitions,
+  calculateBookingPrice,
+  formatMoneyGBP,
+  servicePackages,
+  vehicleSizeLabels,
+} from "../../../lib/pricing";
+import type { BookingStepProps } from "../BookingStepper";
 
 type ReviewPaymentContentProps = {
   draft: BookingDraft;
-  onSubmit?: () => void;
+  onSubmit?: () => void | Promise<void>;
   isSubmitting?: boolean;
   paymentEnabled?: boolean;
-};
-
-type TemporaryEstimate = {
-  estimatedTotal: string;
-  depositDue: string;
-  remainingBalance: string;
-};
-
-const packageLabels: Record<PackageId, string> = {
-  maintenance: "Maintenance",
-  deep_clean: "Deep Clean",
-};
-
-const vehicleSizeLabels: Record<VehicleSize, string> = {
-  small: "Small",
-  medium: "Medium",
-  large_4x4: "Large / 4x4",
-};
-
-const addonLabels: Record<AddonId, string> = {
-  engine_bay_clean: "Engine bay clean",
-  windscreen_repellent: "Windscreen repellent",
-  exhaust_tips_polished: "Exhaust tips polished",
-  leather_deep_clean: "Leather deep clean",
-  convertible_roof_treatment: "Convertible roof treatment",
-  excess_pet_hair_removal: "Removal of excess pet hair",
-  liquid_decon_clay_bar: "Liquid decon and clay bar",
+  paymentError?: string;
 };
 
 const parkingLabels: Record<Exclude<BookingDraft["parkingAvailable"], "">, string> = {
@@ -40,70 +22,8 @@ const parkingLabels: Record<Exclude<BookingDraft["parkingAvailable"], "">, strin
   unknown: "Not sure",
 };
 
-const maintenancePricesMinor: Record<VehicleSize, number> = {
-  small: 5500,
-  medium: 6500,
-  large_4x4: 7500,
-};
-
-const deepCleanPricesMinor: Record<VehicleSize, number> = {
-  small: 16000,
-  medium: 16500,
-  large_4x4: 17000,
-};
-
-const addonPricesMinor: Record<AddonId, number> = {
-  engine_bay_clean: 3000,
-  windscreen_repellent: 3000,
-  exhaust_tips_polished: 2000,
-  leather_deep_clean: 5000,
-  convertible_roof_treatment: 4000,
-  excess_pet_hair_removal: 3000,
-  liquid_decon_clay_bar: 5000,
-};
-
-const temporaryDepositMinor = 3000;
-
-function formatMoney(minorUnits: number) {
-  return new Intl.NumberFormat("en-GB", {
-    currency: "GBP",
-    maximumFractionDigits: 0,
-    minimumFractionDigits: 0,
-    style: "currency",
-  }).format(minorUnits / 100);
-}
-
-// Temporary UI-only estimate. Backend pricing and deposit settings will be authoritative later.
-function calculateTemporaryEstimate(draft: BookingDraft): TemporaryEstimate {
-  const primaryVehicle = draft.vehicles[0];
-
-  if (!draft.packageId || !primaryVehicle?.size) {
-    return {
-      estimatedTotal: "Complete service details",
-      depositDue: formatMoney(temporaryDepositMinor),
-      remainingBalance: "Calculated after estimate",
-    };
-  }
-
-  const basePrice =
-    draft.packageId === "maintenance"
-      ? maintenancePricesMinor[primaryVehicle.size]
-      : deepCleanPricesMinor[primaryVehicle.size];
-  const addonTotal = primaryVehicle.addons.reduce((total, addonId) => total + addonPricesMinor[addonId], 0);
-  const perVehicleEstimate = basePrice + addonTotal;
-  const estimatedTotal = perVehicleEstimate * Math.max(draft.vehicleCount, 1);
-  const depositDue = Math.min(temporaryDepositMinor, estimatedTotal);
-  const remainingBalance = Math.max(estimatedTotal - depositDue, 0);
-
-  return {
-    estimatedTotal: `${formatMoney(estimatedTotal)} estimate`,
-    depositDue: formatMoney(depositDue),
-    remainingBalance: `${formatMoney(remainingBalance)} estimate`,
-  };
-}
-
 function getPackageLabel(packageId: BookingDraft["packageId"]) {
-  return packageId ? packageLabels[packageId] : "Not selected";
+  return packageId ? servicePackages[packageId].label : "Not selected";
 }
 
 function getVehicleSummary(draft: BookingDraft) {
@@ -118,7 +38,7 @@ function getVehicleSummary(draft: BookingDraft) {
 function getAddonSummary(draft: BookingDraft) {
   const addonIds = draft.vehicles.flatMap((vehicle) => vehicle.addons);
 
-  return addonIds.length ? addonIds.map((addonId) => addonLabels[addonId]).join(", ") : "None selected";
+  return addonIds.length ? addonIds.map((addonId) => addonDefinitions[addonId].label).join(", ") : "None selected";
 }
 
 function getParkingLabel(parkingAvailable: BookingDraft["parkingAvailable"]) {
@@ -130,9 +50,11 @@ function ReviewPaymentContent({
   onSubmit,
   isSubmitting = false,
   paymentEnabled = false,
+  paymentError = "",
 }: ReviewPaymentContentProps) {
-  const estimate = calculateTemporaryEstimate(draft);
+  const estimate = calculateBookingPrice(draft);
   const canStartPayment = paymentEnabled && Boolean(onSubmit) && !isSubmitting;
+  const estimateIsReady = estimate.estimatedTotalMinor > 0;
 
   return (
     <div className="booking-step-content">
@@ -237,15 +159,15 @@ function ReviewPaymentContent({
           <dl>
             <div>
               <dt>Estimated total</dt>
-              <dd>{estimate.estimatedTotal}</dd>
+              <dd>{estimateIsReady ? `${formatMoneyGBP(estimate.estimatedTotalMinor)} estimate` : "Complete service details"}</dd>
             </div>
             <div>
               <dt>Deposit due today</dt>
-              <dd>{estimate.depositDue}</dd>
+              <dd>{estimateIsReady ? formatMoneyGBP(estimate.depositDueMinor) : "Calculated after estimate"}</dd>
             </div>
             <div>
               <dt>Remaining balance</dt>
-              <dd>{estimate.remainingBalance}</dd>
+              <dd>{estimateIsReady ? `${formatMoneyGBP(estimate.remainingBalanceMinor)} estimate` : "Calculated after estimate"}</dd>
             </div>
           </dl>
         </section>
@@ -263,8 +185,10 @@ function ReviewPaymentContent({
         className="primary-button booking-payment-button"
         type="button"
         disabled={!canStartPayment}
-        aria-describedby={!paymentEnabled ? "booking-payment-hint" : undefined}
-        onClick={canStartPayment ? onSubmit : undefined}
+        aria-describedby={
+          paymentError ? "booking-payment-error" : !paymentEnabled ? "booking-payment-hint" : undefined
+        }
+        onClick={canStartPayment ? () => void onSubmit?.() : undefined}
       >
         {paymentEnabled
           ? isSubmitting
@@ -278,10 +202,30 @@ function ReviewPaymentContent({
           Deposit checkout will be connected in the payment integration step.
         </p>
       ) : null}
+
+      {paymentError ? (
+        <p className="form-field__error booking-payment-error" id="booking-payment-error" role="alert">
+          {paymentError}
+        </p>
+      ) : null}
     </div>
   );
 }
 
-export function ReviewPaymentStep({ draft }: BookingStepProps) {
-  return <ReviewPaymentContent draft={draft} />;
+export function ReviewPaymentStep({
+  draft,
+  onPaymentSubmit,
+  isPaymentSubmitting,
+  paymentEnabled,
+  paymentError,
+}: BookingStepProps) {
+  return (
+    <ReviewPaymentContent
+      draft={draft}
+      onSubmit={onPaymentSubmit}
+      isSubmitting={isPaymentSubmitting}
+      paymentEnabled={paymentEnabled}
+      paymentError={paymentError}
+    />
+  );
 }

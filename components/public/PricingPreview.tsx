@@ -1,4 +1,11 @@
 import Link from "next/link";
+import {
+  formatMoneyGBP,
+  formatServicePriceRange,
+  servicePackages,
+  vehicleSizeLabels,
+  vehicleSizeOrder,
+} from "../../lib/pricing";
 import { SectionHeading } from "./SectionHeading";
 
 type MaintenancePrice = {
@@ -6,11 +13,10 @@ type MaintenancePrice = {
   price: string;
 };
 
-const maintenancePrices: MaintenancePrice[] = [
-  { label: "Small", price: "£55" },
-  { label: "Medium", price: "£65" },
-  { label: "Large / 4x4", price: "£75" },
-];
+const maintenancePrices: MaintenancePrice[] = vehicleSizeOrder.map((vehicleSize) => ({
+  label: vehicleSizeLabels[vehicleSize],
+  price: formatMoneyGBP(servicePackages.maintenance.variants[vehicleSize].priceMinor),
+}));
 
 export function PricingPreview() {
   return (
@@ -26,7 +32,7 @@ export function PricingPreview() {
 
         <div className="pricing-preview__grid motion-stagger">
           <article className="premium-card price-card">
-            <p className="eyebrow">Maintenance</p>
+            <p className="eyebrow">{servicePackages.maintenance.label}</p>
 
             <div className="price-card__rows" aria-label="Maintenance prices by vehicle size">
               {maintenancePrices.map((item) => (
@@ -39,8 +45,8 @@ export function PricingPreview() {
           </article>
 
           <article className="premium-card price-card price-card--deep-clean">
-            <p className="eyebrow">Deep Clean</p>
-            <strong className="price-card__large-price">£160 - £170</strong>
+            <p className="eyebrow">{servicePackages.deep_clean.label}</p>
+            <strong className="price-card__large-price">{formatServicePriceRange("deep_clean")}</strong>
             <p>For vehicles needing a more thorough reset.</p>
           </article>
         </div>

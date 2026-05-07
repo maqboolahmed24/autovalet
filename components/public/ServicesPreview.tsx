@@ -1,4 +1,12 @@
 import Link from "next/link";
+import {
+  formatServicePriceRange,
+  formatVehicleVariantDuration,
+  formatVehicleVariantPrice,
+  servicePackages,
+  vehicleSizeLabels,
+  vehicleSizeOrder,
+} from "../../lib/pricing";
 import { SectionHeading } from "./SectionHeading";
 
 type MaintenancePreviewRow = {
@@ -7,13 +15,16 @@ type MaintenancePreviewRow = {
   duration: string;
 };
 
-const maintenancePreviewRows: MaintenancePreviewRow[] = [
-  { label: "Small", price: "£55", duration: "60 mins" },
-  { label: "Medium", price: "£65", duration: "75 mins" },
-  { label: "Large / 4x4", price: "£75", duration: "90 mins" },
-];
+const maintenancePreviewRows: MaintenancePreviewRow[] = vehicleSizeOrder.map((vehicleSize) => ({
+  label: vehicleSizeLabels[vehicleSize],
+  price: formatVehicleVariantPrice("maintenance", vehicleSize),
+  duration: formatVehicleVariantDuration("maintenance", vehicleSize),
+}));
 
 export function ServicesPreview() {
+  const maintenance = servicePackages.maintenance;
+  const deepClean = servicePackages.deep_clean;
+
   return (
     <section className="section services-preview" aria-labelledby="services-preview-title">
       <div className="section__inner">
@@ -23,8 +34,8 @@ export function ServicesPreview() {
 
         <div className="services-preview__grid motion-stagger">
           <article className="premium-card service-preview-card">
-            <p className="eyebrow">Maintenance</p>
-            <h3>Regular care, refined finish.</h3>
+            <p className="eyebrow">{maintenance.label}</p>
+            <h3>{maintenance.description}</h3>
 
             <div className="service-preview-card__rows" aria-label="Maintenance prices and durations">
               {maintenancePreviewRows.map((row) => (
@@ -40,9 +51,9 @@ export function ServicesPreview() {
           </article>
 
           <article className="premium-card service-preview-card service-preview-card--featured">
-            <p className="eyebrow">Deep Clean</p>
-            <h3>A more complete reset.</h3>
-            <p className="service-preview-card__price">£160 - £170</p>
+            <p className="eyebrow">{deepClean.label}</p>
+            <h3>{deepClean.description}</h3>
+            <p className="service-preview-card__price">{formatServicePriceRange("deep_clean")}</p>
             <p className="service-preview-card__note">
               Final price may vary depending on condition on arrival.
             </p>

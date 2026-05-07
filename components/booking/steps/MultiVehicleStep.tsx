@@ -1,4 +1,6 @@
-import type { BookingStepProps, ZoneCheckStatus } from "../BookingStepper";
+import type { ZoneCheckStatus } from "../../../lib/booking/types";
+import { DEFAULT_MIN_OUTSIDE_ZONE_VEHICLE_COUNT } from "../../../lib/zones";
+import type { BookingStepProps } from "../BookingStepper";
 
 type VehicleCountOption = {
   value: number;
@@ -40,8 +42,9 @@ function MultiVehicleStepSelector({
   zoneCheckStatus = "unchecked",
   onChange,
 }: MultiVehicleStepSelectorProps) {
-  const isOutsideBlocked = zoneCheckStatus === "outside_zone_blocked" && vehicleCount < 3;
-  const qualifiesForVolumeReview = vehicleCount >= 3;
+  const isOutsideBlocked =
+    zoneCheckStatus === "outside_zone_blocked" && vehicleCount < DEFAULT_MIN_OUTSIDE_ZONE_VEHICLE_COUNT;
+  const qualifiesForVolumeReview = vehicleCount >= DEFAULT_MIN_OUTSIDE_ZONE_VEHICLE_COUNT;
 
   return (
     <div className="booking-step-content">
@@ -67,8 +70,8 @@ function MultiVehicleStepSelector({
       <div className={`booking-zone-note${isOutsideBlocked ? " booking-zone-note--warning" : ""}`}>
         {isOutsideBlocked ? (
           <p>
-            This location appears outside the usual service area. Outside-zone requests need 3+ vehicles at the
-            same address.
+            This location appears outside the usual service area. Outside-zone requests need 3+ vehicles at the same
+            address.
           </p>
         ) : qualifiesForVolumeReview ? (
           <p>3+ vehicles may qualify for outside-zone review if this location is outside the usual area.</p>
@@ -93,10 +96,29 @@ export function MultiVehicleStep({ draft, updateDraft }: BookingStepProps) {
       vehicleCount={draft.vehicleCount}
       zoneCheckStatus={draft.zoneCheckStatus}
       onChange={(vehicleCount) =>
-        updateDraft((currentDraft) => ({
-          ...currentDraft,
-          vehicleCount,
-        }))
+        updateDraft((currentDraft) => {
+          let zoneCheckStatus = currentDraft.zoneCheckStatus;
+
+          if (
+            currentDraft.zoneCheckStatus === "outside_zone_blocked" &&
+            vehicleCount >= DEFAULT_MIN_OUTSIDE_ZONE_VEHICLE_COUNT
+          ) {
+            zoneCheckStatus = "outside_zone_volume_allowed";
+          }
+
+          if (
+            currentDraft.zoneCheckStatus === "outside_zone_volume_allowed" &&
+            vehicleCount < DEFAULT_MIN_OUTSIDE_ZONE_VEHICLE_COUNT
+          ) {
+            zoneCheckStatus = "outside_zone_blocked";
+          }
+
+          return {
+            ...currentDraft,
+            vehicleCount,
+            zoneCheckStatus,
+          };
+        })
       }
     />
   );
