@@ -1,12 +1,17 @@
 export { Hero } from "./Hero";
+export { HowItWorks } from "./HowItWorks";
 export { MobileMenu } from "./MobileMenu";
 export { PageIntro } from "./PageIntro";
+export { PricingPreview } from "./PricingPreview";
 export { PublicFooter } from "./PublicFooter";
 export { PublicHeader } from "./PublicHeader";
 export { PublicLayout } from "./PublicLayout";
 export { PublicPageShell } from "./PublicPageShell";
 export { PublicPageTransition } from "./PublicPageTransition";
 export { SectionHeading } from "./SectionHeading";
+export { ServicesPreview } from "./ServicesPreview";
 export { SkipLink } from "./SkipLink";
 export { StickyBookingCTA } from "./StickyBookingCTA";
+export { TrustStrip } from "./TrustStrip";
+export { WorkStory } from "./WorkStory";
 export type { PublicNavLink } from "./MobileMenu";
