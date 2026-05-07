@@ -437,3 +437,215 @@
     width: auto;
   }
 }
+
+.addons-preview {
+  border-top: 1px solid var(--border-subtle);
+  background:
+    radial-gradient(circle at bottom left, rgba(200, 169, 106, 0.07), transparent 32%),
+    var(--bg-main);
+}
+
+.addons-preview__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.addon-chip-card {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: 54px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-soft);
+}
+
+.addon-chip-card span {
+  font-size: var(--text-sm);
+  font-weight: 750;
+}
+
+.addon-chip-card strong {
+  color: var(--text-main);
+  font-size: var(--text-sm);
+  font-weight: 900;
+}
+
+.addons-preview__actions {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.addons-preview__actions .primary-button,
+.addons-preview__actions .secondary-button {
+  width: 100%;
+}
+
+@media (max-width: 460px) {
+  .addon-chip-card {
+    width: 100%;
+    border-radius: var(--radius-md);
+  }
+}
+
+@media (min-width: 760px) {
+  .addons-preview__actions {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .addons-preview__actions .primary-button,
+  .addons-preview__actions .secondary-button {
+    width: auto;
+  }
+}
+
+.service-area-notice {
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-main);
+}
+
+.service-area-notice__card {
+  padding: var(--space-6);
+  border-color: var(--accent-border);
+  background:
+    linear-gradient(145deg, rgba(200, 169, 106, 0.12), rgba(255, 255, 255, 0.035)),
+    var(--bg-card);
+}
+
+.service-area-notice__card .section-heading {
+  margin-bottom: 0;
+}
+
+.service-area-notice__grid {
+  display: grid;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+.service-area-notice__item {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.service-area-notice__item h3 {
+  font-size: var(--text-xl);
+}
+
+.service-area-notice__item p {
+  margin-top: var(--space-2);
+}
+
+.service-area-notice__actions {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.service-area-notice__actions .primary-button,
+.service-area-notice__actions .secondary-button {
+  width: 100%;
+}
+
+@media (min-width: 760px) {
+  .service-area-notice__card {
+    padding: var(--space-8);
+  }
+
+  .service-area-notice__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .service-area-notice__actions {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .service-area-notice__actions .primary-button,
+  .service-area-notice__actions .secondary-button {
+    width: auto;
+  }
+}
+
+.final-cta {
+  display: flex;
+  align-items: center;
+  min-height: 82svh;
+  padding: var(--space-24) var(--page-gutter)
+    calc(var(--space-24) + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border-subtle);
+  background:
+    radial-gradient(circle at 50% 20%, rgba(200, 169, 106, 0.16), transparent 34%),
+    linear-gradient(to bottom, #080808, #000);
+}
+
+.final-cta__inner {
+  width: min(100%, var(--container-lg));
+  margin-inline: auto;
+}
+
+.final-cta__card {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-7);
+  border-color: rgba(255, 255, 255, 0.16);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.024)),
+    linear-gradient(180deg, rgba(200, 169, 106, 0.08), transparent 58%),
+    var(--bg-card);
+}
+
+.final-cta__card h2 {
+  max-width: 8ch;
+  font-size: 3rem;
+  letter-spacing: -0.07em;
+}
+
+.final-cta__card p:not(.eyebrow) {
+  max-width: 560px;
+}
+
+.final-cta__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.final-cta__actions .primary-button {
+  width: 100%;
+}
+
+.final-cta__note {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+@media (min-width: 760px) {
+  .final-cta {
+    min-height: 88svh;
+    padding-block: var(--space-30);
+  }
+
+  .final-cta__card {
+    padding: var(--space-10);
+  }
+
+  .final-cta__card h2 {
+    font-size: 5.6rem;
+  }
+
+  .final-cta__actions .primary-button {
+    width: auto;
+  }
+}
+
+@media (min-width: 1180px) {
+  .final-cta__card h2 {
+    font-size: 7rem;
+  }
+}
