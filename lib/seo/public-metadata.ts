@@ -12,6 +12,10 @@ export type PublicRouteKey =
   | "booking"
   | "faq"
   | "policies"
+  | "privacy"
+  | "terms"
+  | "depositCancellation"
+  | "cookies"
   | "contact"
   | "bookingSuccess"
   | "paymentFailed"
@@ -62,6 +66,30 @@ export const publicRouteMetadata: Record<
     title: "Policies | AUTO VALET",
     description: "AUTO VALET terms, privacy, deposit and cancellation policy, service area policy, and photo consent.",
     purpose: "Terms, privacy, deposit/cancellation, service area, cookie, and photo consent policies.",
+  },
+  privacy: {
+    path: "/policies/privacy",
+    title: "Privacy Policy | AUTO VALET",
+    description: "How AUTO VALET handles customer data for mobile detailing booking requests.",
+    purpose: "Privacy and customer data handling.",
+  },
+  terms: {
+    path: "/policies/terms",
+    title: "Terms & Conditions | AUTO VALET",
+    description: "Plain-language terms for AUTO VALET mobile detailing booking requests.",
+    purpose: "Booking request terms and customer responsibilities.",
+  },
+  depositCancellation: {
+    path: "/policies/deposit-cancellation",
+    title: "Deposit & Cancellation Policy | AUTO VALET",
+    description: "Deposit, cancellation, no-show, reschedule, and remaining balance rules for AUTO VALET.",
+    purpose: "Deposit and cancellation policy.",
+  },
+  cookies: {
+    path: "/policies/cookies",
+    title: "Cookie Policy | AUTO VALET",
+    description: "How AUTO VALET uses essential cookies and how analytics cookies will be handled if added later.",
+    purpose: "Cookie and tracking policy.",
   },
   contact: {
     path: "/contact",
@@ -115,4 +143,3 @@ export function createPublicMetadata(route: PublicRouteKey): Metadata {
     },
   };
 }
-
