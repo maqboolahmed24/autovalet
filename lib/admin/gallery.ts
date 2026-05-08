@@ -48,43 +48,10 @@ export type GalleryMutationOptions = {
   persistenceConfigured?: boolean;
 };
 
-const mockGalleryItems: AdminGalleryItem[] = [
-  toAdminGalleryItem({
-    id: "gallery-demo-before-after",
-    title: "Deep clean interior reset",
-    description: "Approved before/after example ready for the future public gallery feed.",
-    serviceType: "Deep Clean",
-    vehicleType: "Large / 4x4",
-    beforeImageUrl: createMockImageDataUrl("Before"),
-    afterImageUrl: createMockImageDataUrl("After"),
-    altText: "Interior deep clean before and after result",
-    hasMarketingConsent: true,
-    registrationPlateChecked: true,
-    isFeatured: false,
-    active: false,
-    displayOrder: 1,
-  }),
-  toAdminGalleryItem({
-    id: "gallery-demo-draft",
-    title: "Finished exterior gloss",
-    description: "Draft item waiting for consent and final image upload.",
-    serviceType: "Maintenance",
-    vehicleType: "Medium",
-    singleImageUrl: "",
-    altText: "Finished exterior maintenance detail",
-    hasMarketingConsent: false,
-    registrationPlateChecked: false,
-    isFeatured: false,
-    active: false,
-    displayOrder: 2,
-  }),
-];
-
 export async function getAdminGalleryItems(): Promise<AdminGalleryData> {
-  // TODO: Replace mock items with database-backed gallery_items and media storage records.
   return {
-    isMockData: true,
-    items: mockGalleryItems,
+    isMockData: false,
+    items: [],
   };
 }
 

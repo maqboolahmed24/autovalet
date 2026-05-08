@@ -1,6 +1,9 @@
 import { getAdminBookingStatusLabel } from "../booking/status-labels";
 import type { BookingStatus } from "../booking/types";
 import { arePaymentsEnabled } from "../config/features";
+import { isDatabaseConfigured } from "../db/postgres";
+import { listBookingRecords, type BookingListRecord } from "../db/booking-repository";
+import { getServicePackage } from "../pricing/catalog";
 import { getWorkingHoursForDate, parseTimeToMinutes, formatMinutesToTime } from "../availability/working-hours";
 import type { DayAvailability } from "../availability/types";
 
@@ -65,7 +68,7 @@ type BusyWindow = {
   end: number;
 };
 
-export const adminCalendarUsesMockData = true;
+export const adminCalendarUsesMockData = false;
 const businessTimeZone = "Europe/London";
 const minimumDisplayedGapMinutes = 15;
 const paymentsEnabled = arePaymentsEnabled();
@@ -91,16 +94,16 @@ export function parseAdminCalendarDate(value: string | null | undefined) {
   return getTodayInBusinessTimezone();
 }
 
-export function buildAdminCalendarWeek(selectedDate: string): AdminCalendarWeekDay[] {
+export async function buildAdminCalendarWeek(selectedDate: string): Promise<AdminCalendarWeekDay[]> {
   const selected = createUtcNoonDate(selectedDate);
   const weekday = selected.getUTCDay();
   const daysSinceMonday = (weekday + 6) % 7;
   const monday = addDays(selectedDate, -daysSinceMonday);
+  const records = isDatabaseConfigured() ? await listBookingRecords() : [];
 
   return Array.from({ length: 7 }, (_, index) => {
     const date = addDays(monday, index);
-    const availability = getWorkingHoursForDate({ date });
-    const summary = getMockWeekSummary(date, availability);
+    const summary = getCalendarSummary(records.filter((record) => getBusinessDate(record.requestedStartAt) === date));
 
     return {
       date,
@@ -116,10 +119,14 @@ export function buildAdminCalendarWeek(selectedDate: string): AdminCalendarWeekD
 export async function getAdminCalendarDay(input: { date: string }): Promise<AdminCalendarDay> {
   const date = parseAdminCalendarDate(input.date);
   const availability = getWorkingHoursForDate({ date });
-  const bookings = getMockCalendarBookings(date, availability).filter(
-    (booking) => paymentsEnabled || booking.status !== "payment_hold",
-  );
-  const blockedTimes = getMockBlockedTimes(date, availability);
+  const records = isDatabaseConfigured()
+    ? (await listBookingRecords()).filter((record) => getBusinessDate(record.requestedStartAt) === date)
+    : [];
+  const bookings = records
+    .filter((record) => paymentsEnabled || record.status !== "payment_hold")
+    .map(toCalendarBooking);
+  const blockedTimes: BlockedTime[] = [];
+  const summary = getCalendarSummary(records);
 
   return {
     date,
@@ -131,9 +138,9 @@ export async function getAdminCalendarDay(input: { date: string }): Promise<Admi
     }),
     isClosed: availability.isClosed,
     summary: {
-      approvedCount: bookings.filter((booking) => isApprovedJobStatus(booking.status)).length,
-      pendingCount: bookings.filter((booking) => booking.status === "pending_admin_review").length,
-      holdCount: paymentsEnabled ? bookings.filter((booking) => booking.status === "payment_hold").length : 0,
+      approvedCount: summary.approvedCount,
+      pendingCount: summary.pendingCount,
+      holdCount: paymentsEnabled ? summary.holdCount : 0,
     },
     items: buildTimelineItems({
       date,
@@ -334,116 +341,54 @@ function isApprovedJobStatus(status: BookingStatus) {
   return status === "approved" || status === "on_the_way" || status === "arrived" || status === "in_progress";
 }
 
-function getMockWeekSummary(date: string, availability: DayAvailability) {
-  if (availability.isClosed) {
-    return {
-      approvedCount: 0,
-      pendingCount: 0,
-      holdCount: 0,
-    };
-  }
-
-  const weekday = createUtcNoonDate(date).getUTCDay();
-
+function getCalendarSummary(records: BookingListRecord[]) {
   return {
-    approvedCount: weekday === 6 ? 1 : 2,
-    pendingCount: weekday === 1 || weekday === 3 ? 1 : 0,
-    holdCount: paymentsEnabled && weekday === 4 ? 1 : 0,
+    approvedCount: records.filter((record) => isApprovedJobStatus(record.status)).length,
+    pendingCount: records.filter((record) => record.status === "pending_admin_review").length,
+    holdCount: records.filter((record) => record.status === "payment_hold").length,
   };
 }
 
-function getMockCalendarBookings(date: string, availability: DayAvailability): CalendarBooking[] {
-  // TODO: Replace safe mock bookings with database-backed calendar queries.
-  if (availability.isClosed) {
-    return [];
-  }
+function toCalendarBooking(record: BookingListRecord): CalendarBooking {
+  const vehicleLabel = [record.vehicleMake, record.vehicleModel].filter(Boolean).join(" ")
+    || `${record.vehicleCount} vehicle${record.vehicleCount === 1 ? "" : "s"}`;
+  const href = record.status === "pending_admin_review" || record.status === "payment_hold"
+    ? `/admin/requests/${encodeURIComponent(record.id)}`
+    : `/admin/bookings/${encodeURIComponent(record.id)}`;
 
-  const weekday = createUtcNoonDate(date).getUTCDay();
-
-  if (weekday === 6) {
-    return [
-      {
-        id: "mock-calendar-sat-job",
-        reference: "AV-2026-CAL1",
-        status: "approved",
-        startTime: "09:00",
-        serviceEndTime: "10:15",
-        blockedUntilTime: "11:00",
-        serviceLabel: "Maintenance",
-        customerName: "Example customer",
-        vehicleLabel: "Volkswagen Golf",
-        href: "/admin/bookings/mock-request-5",
-      },
-    ];
-  }
-
-  return [
-    {
-      id: "mock-calendar-job-1",
-      reference: "AV-2026-CAL1",
-      status: "approved",
-      startTime: "09:00",
-      serviceEndTime: "10:00",
-      blockedUntilTime: "10:45",
-      serviceLabel: "Maintenance",
-      customerName: "Example customer",
-      vehicleLabel: "Audi A3",
-      href: "/admin/bookings/mock-request-5",
-    },
-    {
-      id: "mock-calendar-request-1",
-      reference: "AV-2026-CAL2",
-      status: "pending_admin_review",
-      startTime: "11:45",
-      serviceEndTime: "13:45",
-      blockedUntilTime: "14:30",
-      serviceLabel: "Deep Clean",
-      customerName: "Example customer",
-      vehicleLabel: "BMW 3 Series",
-      href: "/admin/requests/mock-request-1",
-    },
-    {
-      id: "mock-calendar-hold-1",
-      reference: "AV-2026-CAL3",
-      status: "payment_hold",
-      startTime: "15:15",
-      serviceEndTime: "16:00",
-      blockedUntilTime: "16:45",
-      serviceLabel: "Maintenance",
-      customerName: "Example customer",
-      vehicleLabel: "Ford Puma",
-      href: "/admin/requests/mock-request-3",
-    },
-  ];
+  return {
+    id: record.id,
+    reference: record.reference,
+    status: record.status,
+    startTime: formatBusinessTime(record.requestedStartAt),
+    serviceEndTime: formatBusinessTime(record.serviceEndsAt),
+    blockedUntilTime: formatBusinessTime(record.blockedUntil),
+    serviceLabel: getServicePackage(record.packageId).label,
+    customerName: record.customerName,
+    vehicleLabel,
+    href,
+  };
 }
 
-function getMockBlockedTimes(date: string, availability: DayAvailability): BlockedTime[] {
-  // TODO: Replace safe mock blocked time with admin-managed availability overrides.
-  if (availability.isClosed) {
-    return [];
-  }
+function getBusinessDate(value: Date | string) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: businessTimeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date(value));
+  const getPart = (type: string) => parts.find((part) => part.type === type)?.value ?? "";
 
-  const weekday = createUtcNoonDate(date).getUTCDay();
+  return `${getPart("year")}-${getPart("month")}-${getPart("day")}`;
+}
 
-  if (weekday === 6) {
-    return [
-      {
-        id: "mock-saturday-block",
-        startTime: "12:00",
-        endTime: "13:00",
-        reason: "Van restock.",
-      },
-    ];
-  }
-
-  return [
-    {
-      id: "mock-weekday-block",
-      startTime: "10:45",
-      endTime: "11:15",
-      reason: "Van prep and admin catch-up.",
-    },
-  ];
+function formatBusinessTime(value: Date | string) {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: businessTimeZone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(value));
 }
 
 function formatDatePart(date: string, options: Intl.DateTimeFormatOptions) {

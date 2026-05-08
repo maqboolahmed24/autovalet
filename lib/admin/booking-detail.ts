@@ -93,7 +93,7 @@ export type AdminBookingDetailData = {
   };
 };
 
-export const adminBookingDetailUsesMockData = !isDatabaseConfigured();
+export const adminBookingDetailUsesMockData = false;
 
 type MockBookingSeed = {
   id: string;
@@ -670,12 +670,10 @@ export async function getAdminBookingDetail(id: string): Promise<AdminBookingDet
     return record ? buildDetailFromRecord(record) : null;
   }
 
-  const seed = getMockSeed(id);
+  return null;
+}
 
-  if (!seed) {
-    return null;
-  }
-
+function buildMockBookingDetail(seed: MockBookingSeed): AdminBookingDetailData {
   const service = getServicePackage(seed.packageId);
   return {
     id: seed.id,

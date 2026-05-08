@@ -1,5 +1,5 @@
 import { getDefaultWorkingHoursRules } from "../availability/default-availability";
-import type { AvailabilityOverride, AvailabilityOverrideType, Weekday } from "../availability/types";
+import type { AvailabilityOverrideType, Weekday } from "../availability/types";
 import { isValidDateString, parseTimeToMinutes } from "../availability/working-hours";
 
 export type AdminAvailabilityData = {
@@ -93,7 +93,6 @@ export const blockedTimeReasonSuggestions = [
 ] as const;
 
 export async function getAdminAvailabilitySettings(): Promise<AdminAvailabilityData> {
-  // TODO: Replace default rules and mock overrides with admin-managed database records.
   const workingHours = getDefaultWorkingHoursRules()
     .sort((a, b) => normalizeWeekdaySort(a.weekday) - normalizeWeekdaySort(b.weekday))
     .map((rule) => ({
@@ -105,9 +104,9 @@ export async function getAdminAvailabilitySettings(): Promise<AdminAvailabilityD
     }));
 
   return {
-    isMockData: true,
+    isMockData: false,
     workingHours,
-    upcomingOverrides: getMockUpcomingOverrides().map(formatAvailabilityOverride),
+    upcomingOverrides: [],
   };
 }
 
@@ -293,73 +292,4 @@ function isDateString(value: string) {
 
 function normalizeWeekdaySort(weekday: Weekday) {
   return weekday === 0 ? 7 : weekday;
-}
-
-function formatAvailabilityOverride(override: AvailabilityOverride): AdminAvailabilityData["upcomingOverrides"][number] {
-  return {
-    id: override.id,
-    dateLabel: formatDateLabel(override.date),
-    typeLabel: override.type === "closed_day" ? "Closed day" : "Blocked time",
-    timeLabel: override.type === "closed_day" ? "Full day" : `${override.startTime} - ${override.endTime}`,
-    reason: override.reason,
-  };
-}
-
-function getMockUpcomingOverrides(): AvailabilityOverride[] {
-  const today = getTodayInBusinessTimezone();
-
-  return [
-    {
-      id: "mock-closed-weather",
-      date: addDays(today, 4),
-      type: "closed_day",
-      reason: "Weather watch",
-    },
-    {
-      id: "mock-blocked-van",
-      date: addDays(today, 7),
-      type: "blocked_time",
-      startTime: "12:00",
-      endTime: "14:00",
-      reason: "Van maintenance",
-    },
-    {
-      id: "mock-closed-holiday",
-      date: addDays(today, 11),
-      type: "closed_day",
-      reason: "Holiday",
-    },
-  ];
-}
-
-function getTodayInBusinessTimezone() {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Europe/London",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(new Date());
-
-  const getPart = (type: string) => parts.find((part) => part.type === type)?.value ?? "";
-
-  return `${getPart("year")}-${getPart("month")}-${getPart("day")}`;
-}
-
-function addDays(date: string, days: number) {
-  const [year, month, day] = date.split("-").map(Number);
-  const result = new Date(Date.UTC(year, month - 1, day + days, 12, 0, 0, 0));
-
-  return result.toISOString().slice(0, 10);
-}
-
-function formatDateLabel(date: string) {
-  const [year, month, day] = date.split("-").map(Number);
-
-  return new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Europe/London",
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(Date.UTC(year, month - 1, day, 12, 0, 0, 0)));
 }

@@ -26,7 +26,7 @@ export default async function AdminCalendarRoute({ searchParams }: AdminCalendar
     : resolvedSearchParams.date;
   const selectedDate = parseAdminCalendarDate(dateParam);
   const day = await getAdminCalendarDay({ date: selectedDate });
-  const weekDays = buildAdminCalendarWeek(selectedDate);
+  const weekDays = await buildAdminCalendarWeek(selectedDate);
 
   return <AdminCalendarPage day={day} isMockData={adminCalendarUsesMockData} weekDays={weekDays} />;
 }

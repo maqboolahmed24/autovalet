@@ -1,7 +1,8 @@
-import type { BookingStatus, VehicleSize } from "../booking/types";
+import type { BookingStatus, PackageId, VehicleSize } from "../booking/types";
 import { getAdminBookingStatusLabel } from "../booking/status-labels";
-import { vehicleSizeLabels } from "../pricing/catalog";
+import { getServicePackage, vehicleSizeLabels } from "../pricing/catalog";
 import { formatMoneyGBP } from "../pricing/format-money";
+import { isDatabaseConfigured, query } from "../db/postgres";
 
 export type AdminCustomersSearchInput = {
   search?: string;
@@ -96,6 +97,47 @@ export type CustomerNoteMutationOptions = {
 
 type MockCustomerRecord = Omit<AdminCustomerProfileData, "isMockData"> & {
   searchText: string;
+};
+
+type CustomerListRow = {
+  id: string;
+  full_name: string;
+  phone: string;
+  email: string;
+  total_bookings: string | number;
+  last_requested_start_at: Date | string | null;
+  latest_postcode: string | null;
+  vehicle_summary: string | null;
+};
+
+type CustomerRow = {
+  id: string;
+  full_name: string;
+  phone: string;
+  email: string;
+  total_bookings: string | number;
+  last_requested_start_at: Date | string | null;
+  latest_postcode: string | null;
+};
+
+type CustomerVehicleRow = {
+  id: string;
+  make: string;
+  model: string;
+  size: string;
+  booking_count: string | number;
+  last_package_id: string | null;
+};
+
+type CustomerBookingRow = {
+  id: string;
+  reference: string;
+  status: string;
+  package_id: string;
+  requested_start_at: Date | string;
+  estimated_total_minor: number;
+  final_total_minor: number | null;
+  vehicle_label: string | null;
 };
 
 const mockCustomers: MockCustomerRecord[] = [
@@ -245,33 +287,146 @@ const mockCustomers: MockCustomerRecord[] = [
 ];
 
 export async function getAdminCustomers(input: AdminCustomersSearchInput): Promise<AdminCustomersData> {
-  // TODO: Replace mock customer search with database-backed customer, vehicle and booking queries.
+  if (!isDatabaseConfigured()) {
+    return {
+      isMockData: false,
+      customers: [],
+    };
+  }
+
+  const result = await query<CustomerListRow>(`
+    SELECT
+      c.id,
+      c.full_name,
+      c.phone,
+      c.email,
+      count(b.id) AS total_bookings,
+      max(b.requested_start_at) AS last_requested_start_at,
+      (array_agg(b.postcode ORDER BY b.requested_start_at DESC NULLS LAST))[1] AS latest_postcode,
+      (array_agg(trim(concat_ws(' ', v.make, v.model)) ORDER BY b.requested_start_at DESC NULLS LAST))[1] AS vehicle_summary
+    FROM customers c
+    LEFT JOIN bookings b ON b.customer_id = c.id
+    LEFT JOIN LATERAL (
+      SELECT make, model
+      FROM vehicles
+      WHERE booking_id = b.id
+      ORDER BY is_primary DESC, created_at ASC
+      LIMIT 1
+    ) v ON true
+    GROUP BY c.id, c.full_name, c.phone, c.email, c.created_at
+    ORDER BY max(b.created_at) DESC NULLS LAST, c.created_at DESC
+    LIMIT 250
+  `);
   const search = input.search?.trim().toLowerCase();
-  const customers = (search
-    ? mockCustomers.filter((customer) => customer.searchText.includes(search))
-    : mockCustomers
-  ).map(toCustomerListItem);
+  const customers = result.rows.map(toDatabaseCustomerListItem).filter((customer) => {
+    if (!search) return true;
+
+    return [
+      customer.fullName,
+      customer.phone,
+      customer.email,
+      customer.vehicleSummary,
+      customer.locationSummary,
+    ].filter(Boolean).join(" ").toLowerCase().includes(search);
+  });
 
   return {
-    isMockData: true,
+    isMockData: false,
     customers,
   };
 }
 
 export async function getAdminCustomerProfile(id: string): Promise<AdminCustomerProfileData | null> {
-  // TODO: Replace mock lookup with a database-backed customer profile query.
-  const record = mockCustomers.find((customer) => customer.customer.id === id);
-
-  if (!record) {
+  if (!isDatabaseConfigured()) {
     return null;
   }
 
+  const customerResult = await query<CustomerRow>(
+    `
+      SELECT
+        c.id,
+        c.full_name,
+        c.phone,
+        c.email,
+        count(b.id) AS total_bookings,
+        max(b.requested_start_at) AS last_requested_start_at,
+        (array_agg(b.postcode ORDER BY b.requested_start_at DESC NULLS LAST))[1] AS latest_postcode
+      FROM customers c
+      LEFT JOIN bookings b ON b.customer_id = c.id
+      WHERE c.id = $1
+      GROUP BY c.id, c.full_name, c.phone, c.email
+      LIMIT 1
+    `,
+    [id],
+  );
+  const customer = customerResult.rows[0];
+
+  if (!customer) {
+    return null;
+  }
+
+  const [vehiclesResult, bookingsResult] = await Promise.all([
+    query<CustomerVehicleRow>(
+      `
+        SELECT
+          v.id,
+          v.make,
+          v.model,
+          v.size,
+          count(DISTINCT b.id) AS booking_count,
+          (array_agg(b.package_id ORDER BY b.requested_start_at DESC))[1] AS last_package_id
+        FROM vehicles v
+        INNER JOIN bookings b ON b.id = v.booking_id
+        WHERE b.customer_id = $1
+        GROUP BY v.id, v.make, v.model, v.size
+        ORDER BY max(b.requested_start_at) DESC
+        LIMIT 50
+      `,
+      [id],
+    ),
+    query<CustomerBookingRow>(
+      `
+        SELECT
+          b.id,
+          b.reference,
+          b.status,
+          b.package_id,
+          b.requested_start_at,
+          b.estimated_total_minor,
+          b.final_total_minor,
+          trim(concat_ws(' ', v.make, v.model)) AS vehicle_label
+        FROM bookings b
+        LEFT JOIN LATERAL (
+          SELECT make, model
+          FROM vehicles
+          WHERE booking_id = b.id
+          ORDER BY is_primary DESC, created_at ASC
+          LIMIT 1
+        ) v ON true
+        WHERE b.customer_id = $1
+        ORDER BY b.requested_start_at DESC
+        LIMIT 100
+      `,
+      [id],
+    ),
+  ]);
+
   return {
-    isMockData: true,
-    customer: record.customer,
-    vehicles: record.vehicles,
-    bookingHistory: record.bookingHistory,
-    notes: record.notes,
+    isMockData: false,
+    customer: {
+      id: customer.id,
+      fullName: customer.full_name,
+      phone: customer.phone,
+      email: customer.email,
+      totalBookings: toNumber(customer.total_bookings),
+      lastBookingLabel: customer.last_requested_start_at
+        ? formatDateLabel(customer.last_requested_start_at)
+        : undefined,
+      latestLocationLabel: customer.latest_postcode ?? undefined,
+    },
+    vehicles: vehiclesResult.rows.map(toDatabaseCustomerVehicle),
+    bookingHistory: bookingsResult.rows.map(toDatabaseBookingHistoryItem),
+    notes: [],
   };
 }
 
@@ -330,6 +485,81 @@ function toCustomerListItem(record: MockCustomerRecord): AdminCustomerListItem {
     locationSummary: record.customer.latestLocationLabel,
     href: `/admin/customers/${record.customer.id}`,
   };
+}
+
+function toDatabaseCustomerListItem(row: CustomerListRow): AdminCustomerListItem {
+  return {
+    id: row.id,
+    fullName: row.full_name,
+    phone: row.phone,
+    email: row.email,
+    lastBookingLabel: row.last_requested_start_at ? formatDateLabel(row.last_requested_start_at) : undefined,
+    totalBookings: toNumber(row.total_bookings),
+    vehicleSummary: row.vehicle_summary || undefined,
+    locationSummary: row.latest_postcode ?? undefined,
+    href: `/admin/customers/${encodeURIComponent(row.id)}`,
+  };
+}
+
+function toDatabaseCustomerVehicle(row: CustomerVehicleRow): AdminCustomerVehicle {
+  const size = toVehicleSize(row.size);
+
+  return {
+    id: row.id,
+    make: row.make,
+    model: row.model,
+    size,
+    sizeLabel: vehicleSizeLabels[size],
+    lastServiceLabel: row.last_package_id ? getServicePackage(toPackageId(row.last_package_id)).label : undefined,
+    bookingCount: toNumber(row.booking_count),
+  };
+}
+
+function toDatabaseBookingHistoryItem(row: CustomerBookingRow): AdminCustomerBookingHistoryItem {
+  const status = row.status as BookingStatus;
+  const href = status === "pending_admin_review" || status === "payment_hold"
+    ? `/admin/requests/${encodeURIComponent(row.id)}`
+    : `/admin/bookings/${encodeURIComponent(row.id)}`;
+
+  return {
+    id: row.id,
+    reference: row.reference,
+    status,
+    statusLabel: getAdminBookingStatusLabel(status),
+    dateLabel: formatDateLabel(row.requested_start_at),
+    serviceLabel: getServicePackage(toPackageId(row.package_id)).label,
+    vehicleLabel: row.vehicle_label || "Vehicle",
+    estimatedTotalLabel: formatMoneyGBP(row.estimated_total_minor),
+    finalTotalLabel: typeof row.final_total_minor === "number"
+      ? formatMoneyGBP(row.final_total_minor)
+      : undefined,
+    href,
+  };
+}
+
+function toNumber(value: string | number) {
+  return typeof value === "number" ? value : Number(value);
+}
+
+function toVehicleSize(value: string): VehicleSize {
+  if (value === "small" || value === "medium" || value === "large_4x4") {
+    return value;
+  }
+
+  return "small";
+}
+
+function toPackageId(value: string): PackageId {
+  return value === "deep_clean" ? "deep_clean" : "maintenance";
+}
+
+function formatDateLabel(value: Date | string) {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/London",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(value));
 }
 
 function createBookingHistoryItem(input: {

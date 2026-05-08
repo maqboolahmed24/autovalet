@@ -41,7 +41,7 @@ export type AdminRequestsInboxData = {
   }[];
 };
 
-export const adminRequestsInboxUsesMockData = !isDatabaseConfigured();
+export const adminRequestsInboxUsesMockData = false;
 
 const baseAdminRequestFilters = [
   "needs_review",
@@ -365,7 +365,7 @@ export async function getAdminRequestsInboxData(input: {
   filter: AdminRequestFilter;
   search?: string;
 }): Promise<AdminRequestsInboxData> {
-  const items = isDatabaseConfigured() ? await getDatabaseRequestItems() : getVisibleMockRequests();
+  const items = isDatabaseConfigured() ? await getDatabaseRequestItems() : [];
   const filteredItems = items.filter(
     (item) => matchesFilter(item, input.filter) && matchesSearch(item, input.search),
   );
