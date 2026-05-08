@@ -4,6 +4,7 @@ import {
 } from "../../../../../../lib/admin/decline-booking";
 import { getAdminBookingDetail } from "../../../../../../lib/admin/booking-detail";
 import { adminGuardErrorResponse, requireAdmin } from "../../../../../../lib/auth/route-guards";
+import { isDatabaseConfigured } from "../../../../../../lib/db/postgres";
 import { isDepositAction } from "../../../../../../lib/policies";
 
 export const runtime = "nodejs";
@@ -91,7 +92,7 @@ export async function POST(request: Request, context: RouteContext) {
     {
       adminAuthenticated: true,
       canDeclineBooking: true,
-      persistenceConfigured: false,
+      persistenceConfigured: isDatabaseConfigured(),
       booking,
     },
   );

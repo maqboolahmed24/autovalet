@@ -138,8 +138,8 @@ export function ServicesPageContent() {
           <div>
             <h2 id="services-notice-title">Before you request a slot</h2>
             <p>
-              Prices may vary depending on vehicle condition on arrival. A deposit is required to
-              submit a booking request. Appointments are confirmed only after manual approval.
+              Prices may vary depending on vehicle condition on arrival. No online payment is taken
+              when you submit a booking request. Appointments are confirmed only after manual approval.
             </p>
           </div>
 

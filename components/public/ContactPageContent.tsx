@@ -49,7 +49,7 @@ export function ContactPageContent() {
           <div>
             <p className="eyebrow">Booking</p>
             <h2>Ready to request a slot?</h2>
-            <p>A deposit is required. AUTO VALET reviews every request before confirming the appointment.</p>
+            <p>No online payment is taken. AUTO VALET reviews every request before confirming the appointment.</p>
           </div>
           <div className="public-info-actions">
             <Link className="primary-button" href="/booking">

@@ -10,6 +10,7 @@ import { FinalPriceAdjustmentCard } from "./FinalPriceAdjustmentCard";
 import { InfoCard } from "./InfoCard";
 import { InfoRow } from "./InfoRow";
 import type { AdminBookingDetailData } from "../../lib/admin/booking-detail";
+import { arePaymentsEnabled } from "../../lib/config/features";
 import { vehicleSizeLabels } from "../../lib/pricing";
 
 type AdminBookingDetailProps = {
@@ -29,6 +30,7 @@ export function AdminBookingDetail({
   backLabel = "Back to requests",
   isMockData = false,
 }: AdminBookingDetailProps) {
+  const paymentsEnabled = arePaymentsEnabled();
   const addonSummary =
     booking.addons.length > 0
       ? booking.addons.map((addon) => `${addon.label} (${addon.priceLabel})`).join(", ")
@@ -96,12 +98,12 @@ export function AdminBookingDetail({
             <InfoRow label="Access notes" value={booking.location.accessNotes} />
           </InfoCard>
 
-          <InfoCard eyebrow="Payment" title="Payment">
-            <InfoRow label="Deposit paid" value={booking.payment.depositPaidLabel} />
+          <InfoCard eyebrow={paymentsEnabled ? "Payment" : "Estimate"} title={paymentsEnabled ? "Payment" : "Estimate"}>
+            {paymentsEnabled ? <InfoRow label="Deposit paid" value={booking.payment.depositPaidLabel} /> : null}
             <InfoRow label="Estimated total" value={booking.payment.estimatedTotalLabel} />
             <InfoRow label="Final total" value={booking.payment.finalTotalLabel ?? "Not set"} />
-            <InfoRow label="Balance due" value={booking.payment.balanceDueLabel} />
-            <InfoRow label="Payment status" value={booking.payment.paymentStatusLabel} />
+            <InfoRow label={paymentsEnabled ? "Balance due" : "Due on completion"} value={booking.payment.balanceDueLabel} />
+            {paymentsEnabled ? <InfoRow label="Payment status" value={booking.payment.paymentStatusLabel} /> : null}
           </InfoCard>
 
           <InfoCard eyebrow="Notes" title="Customer notes">
@@ -118,11 +120,12 @@ export function AdminBookingDetail({
               depositPaidMinor={booking.financials.depositPaidMinor}
               estimatedTotalMinor={booking.financials.estimatedTotalMinor}
               finalTotalMinor={booking.financials.finalTotalMinor}
+              paymentsEnabled={paymentsEnabled}
               status={booking.status}
             />
           ) : null}
 
-          {booking.actions.canMarkBalancePaid ? (
+          {paymentsEnabled && booking.actions.canMarkBalancePaid ? (
             <BalancePaymentCard
               balanceDueMinor={booking.financials.balanceDueMinor}
               balancePaidMinor={booking.financials.balancePaidMinor}

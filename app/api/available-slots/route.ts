@@ -1,11 +1,12 @@
 import type { AddonId, BookingDraft, PackageId, VehicleSize } from "../../../lib/booking/types";
-import type { CalendarBlockingBooking } from "../../../lib/availability";
 import {
   BUSINESS_TIMEZONE,
   generateAvailableSlots,
   isPastBusinessDate,
   isValidDateString,
 } from "../../../lib/availability";
+import { getBlockingBookingRecords } from "../../../lib/db/booking-repository";
+import { isDatabaseConfigured } from "../../../lib/db/postgres";
 import { addonDefinitions, calculateBookingDuration, servicePackages } from "../../../lib/pricing";
 
 type ApiSuccessResponse<TData> = {
@@ -193,8 +194,7 @@ export async function POST(request: Request) {
     );
   }
 
-  // TODO: Replace this empty list with blocking bookings from PostgreSQL before payment holds are enabled.
-  const existingBookings: CalendarBlockingBooking[] = [];
+  const existingBookings = isDatabaseConfigured() ? await getBlockingBookingRecords() : [];
   const now = Date.now();
   const slots = generateAvailableSlots({
     date: draft.selectedDate,

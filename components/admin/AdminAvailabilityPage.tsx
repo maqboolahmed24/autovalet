@@ -44,7 +44,7 @@ export function AdminAvailabilityPage({ data }: AdminAvailabilityPageProps) {
 
       <section className="availability-notice" aria-label="Availability notice">
         <strong>Availability controls which requested times customers can choose.</strong>
-        <p>Approved bookings and paid requests still block the calendar separately.</p>
+        <p>Approved bookings and pending requests still block the calendar separately.</p>
       </section>
 
       <div className="availability-page__grid">

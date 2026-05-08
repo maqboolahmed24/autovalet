@@ -123,7 +123,7 @@ function getExistingZoneMessage(zoneCheckStatus: ZoneCheckStatus): ZoneCheckUiSt
 
   return {
     status: "idle",
-    message: "Check your postcode before payment so AUTO VALET can review the service area.",
+    message: "Check your postcode before submitting so AUTO VALET can review the service area.",
   };
 }
 
@@ -221,11 +221,11 @@ function LocationStepForm({
             aria-describedby="booking-postcode-hint"
           />
           <p className="form-field__hint" id="booking-postcode-hint">
-            We check your service area before payment.
+            We check your service area before the request is submitted.
           </p>
           {showPostcodeFormatHint ? (
             <p className="form-field__hint booking-field-warning" role="status">
-              This postcode format looks unusual. AUTO VALET will check the service area before payment.
+              This postcode format looks unusual. AUTO VALET will check the service area before submission.
             </p>
           ) : null}
           <button

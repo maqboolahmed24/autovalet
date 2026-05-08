@@ -124,7 +124,7 @@ export function DataRequestForm() {
           placeholder="Add any detail that helps AUTO VALET identify the records."
         />
         <p className="form-field__hint">
-          Do not include payment card details. AUTO VALET only needs enough information to identify the records.
+          Do not include sensitive card or account details. AUTO VALET only needs enough information to identify the records.
         </p>
       </div>
 

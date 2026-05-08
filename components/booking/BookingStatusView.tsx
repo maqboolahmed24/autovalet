@@ -29,8 +29,8 @@ export function BookingStatusView({ reference }: BookingStatusViewProps) {
 
           <div className="booking-outcome__body">
             <p>
-              Online booking status is not connected yet. No payment or appointment status can be
-              confirmed from this page.
+              Online booking status is not connected yet. Appointment status cannot be confirmed
+              from this page.
             </p>
           </div>
 

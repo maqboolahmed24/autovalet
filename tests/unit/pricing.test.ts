@@ -109,6 +109,19 @@ describe("booking pricing", () => {
     expect(calculateDepositDue(Number.NaN)).toBe(0);
   });
 
+  it("sets booking-request deposit to zero when payments are disabled", () => {
+    const result = calculateBookingPrice(draft(), { paymentsEnabled: false });
+
+    expect(result.depositDueMinor).toBe(0);
+    expect(result.remainingBalanceMinor).toBe(result.estimatedTotalMinor);
+  });
+
+  it("calculates a deposit when payments are explicitly enabled", () => {
+    const result = calculateBookingPrice(draft(), { paymentsEnabled: true });
+
+    expect(result.depositDueMinor).toBeGreaterThan(0);
+  });
+
   it("formats GBP pence without exposing decimal pence", () => {
     expect(formatMoneyGBP(5500)).toBe("£55");
   });

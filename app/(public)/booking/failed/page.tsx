@@ -7,8 +7,8 @@ export default function BookingFailedPage() {
   return (
     <BookingOutcomeCard
       variant="failed"
-      eyebrow="Payment failed"
-      title="Payment could not be completed."
+      eyebrow="Request failed"
+      title="Booking request could not be submitted."
       primaryAction={{
         href: "/booking",
         label: "Try again",

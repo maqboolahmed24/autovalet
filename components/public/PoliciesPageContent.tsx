@@ -10,7 +10,7 @@ const policyLinks: PolicyLink[] = [
   {
     href: "/policies/privacy",
     title: "Privacy Policy",
-    text: "How customer, booking, payment reference and vehicle data is handled.",
+    text: "How customer, booking and vehicle data is handled.",
   },
   {
     href: "/policies/terms",
@@ -19,8 +19,8 @@ const policyLinks: PolicyLink[] = [
   },
   {
     href: "/policies/deposit-cancellation",
-    title: "Deposit & Cancellation Policy",
-    text: "Deposit, cancellation, no-show, refund, transfer and reschedule rules.",
+    title: "Cancellation Policy",
+    text: "Cancellation, no-show, review and reschedule rules.",
   },
   {
     href: "/policies/cookies",

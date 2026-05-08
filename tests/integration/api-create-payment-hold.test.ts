@@ -54,7 +54,11 @@ describe("POST /api/create-payment-hold", () => {
 
     expect(response.status).toBe(503);
     expect(body.success).toBe(false);
-    expect(["PAYMENT_HOLD_PERSISTENCE_NOT_CONFIGURED", "PAYMENT_PROVIDER_NOT_CONFIGURED"]).toContain(
+    expect([
+      "INVALID_DEPOSIT_AMOUNT",
+      "PAYMENT_HOLD_PERSISTENCE_NOT_CONFIGURED",
+      "PAYMENT_PROVIDER_NOT_CONFIGURED",
+    ]).toContain(
       body.error.code,
     );
   });

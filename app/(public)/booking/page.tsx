@@ -12,8 +12,8 @@ export default function BookingPage() {
     <>
       <JsonLdScript data={createBreadcrumbJsonLd(publicBreadcrumbs.booking)} />
       <PageIntro eyebrow="Booking" title="Request your AUTO VALET booking." variant="compact">
-        Choose your service, preferred time and details. A deposit is required before your request
-        is sent for manual approval.
+        Choose your service, preferred time and details. No online payment is taken when your
+        request is sent for manual approval.
       </PageIntro>
 
       <BookingStepper />

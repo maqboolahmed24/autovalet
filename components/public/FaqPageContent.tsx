@@ -13,9 +13,9 @@ export const faqGroups: FaqGroup[] = [
     title: "Booking requests",
     items: [
       {
-        question: "Is my appointment confirmed when I pay the deposit?",
+        question: "Is my appointment confirmed when I submit the request?",
         answer:
-          "No. Your deposit submits a booking request. AUTO VALET reviews your location, vehicle details and selected service before confirming.",
+          "No. Submitting the form sends a booking request. AUTO VALET reviews your location, vehicle details and selected service before confirming.",
       },
       {
         question: "Why do bookings need approval?",
@@ -30,20 +30,15 @@ export const faqGroups: FaqGroup[] = [
     ],
   },
   {
-    title: "Deposit and payment",
+    title: "Payment",
     items: [
       {
-        question: "Why is a deposit required?",
-        answer: "The deposit protects the requested slot and reduces last-minute cancellations.",
+        question: "Do I pay online when booking?",
+        answer: "No. The booking form sends a request for review and no online payment is taken.",
       },
       {
-        question: "Is the deposit refundable?",
-        answer:
-          "If AUTO VALET declines or cannot fulfil the booking, the deposit can be refunded or transferred according to policy. Customer cancellations and no-shows follow the deposit and cancellation policy.",
-      },
-      {
-        question: "How do I pay the remaining balance?",
-        answer: "The remaining balance is paid on completion using the payment methods AUTO VALET accepts.",
+        question: "How do I pay?",
+        answer: "Payment is arranged after approval and paid on completion using the methods AUTO VALET accepts.",
       },
     ],
   },

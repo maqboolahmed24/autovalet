@@ -6,17 +6,21 @@
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
+    "db:maintenance": "tsx scripts/database-maintenance.ts",
     "start": "next start --hostname 127.0.0.1"
   },
   "dependencies": {
     "next": "16.2.6",
+    "pg": "^8.20.0",
     "react": "19.2.6",
     "react-dom": "19.2.6"
   },
   "devDependencies": {
     "@types/node": "latest",
+    "@types/pg": "^8.20.0",
     "@types/react": "latest",
     "@types/react-dom": "latest",
+    "tsx": "^4.21.0",
     "typescript": "latest"
   }
 }

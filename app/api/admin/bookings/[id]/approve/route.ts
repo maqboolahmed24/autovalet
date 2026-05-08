@@ -1,6 +1,8 @@
 import { approveBooking } from "../../../../../../lib/admin/approve-booking";
 import { getAdminBookingDetail } from "../../../../../../lib/admin/booking-detail";
 import { adminGuardErrorResponse, requireAdmin } from "../../../../../../lib/auth/route-guards";
+import { getBlockingBookingRecords } from "../../../../../../lib/db/booking-repository";
+import { isDatabaseConfigured } from "../../../../../../lib/db/postgres";
 
 export const runtime = "nodejs";
 
@@ -78,6 +80,11 @@ export async function POST(request: Request, context: RouteContext) {
     return errorResponse("BOOKING_NOT_FOUND", "Booking was not found.", 404);
   }
 
+  const persistenceConfigured = isDatabaseConfigured();
+  const existingBookings = persistenceConfigured
+    ? await getBlockingBookingRecords({ excludeBookingId: params.id })
+    : [];
+
   const result = await approveBooking(
     {
       bookingId: params.id,
@@ -86,9 +93,9 @@ export async function POST(request: Request, context: RouteContext) {
     {
       adminAuthenticated: true,
       canApproveBooking: true,
-      persistenceConfigured: false,
+      persistenceConfigured,
       booking,
-      existingBookings: [],
+      existingBookings,
     },
   );
 

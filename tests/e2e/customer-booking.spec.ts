@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("customer booking flow", () => {
-  test("reaches review with manual approval and safe payment messaging", async ({ page }) => {
+  test("reaches review with manual approval and no-payment submission", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("link", { name: /request a booking/i }).first().click();
 
@@ -37,6 +37,6 @@ test.describe("customer booking flow", () => {
 
     await expect(page.getByText(/this is a booking request/i)).toBeVisible();
     await expect(page.getByText(/appointment is confirmed only after manual approval/i)).toBeVisible();
-    await expect(page.getByRole("button", { name: /payment integration coming next|pay deposit/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /submit booking request/i })).toBeVisible();
   });
 });

@@ -10,6 +10,8 @@ export const metadata = {
   description: "AUTO VALET admin booking request detail.",
 };
 
+export const dynamic = "force-dynamic";
+
 type AdminRequestDetailPageProps = {
   params: Promise<{ id: string }>;
 };

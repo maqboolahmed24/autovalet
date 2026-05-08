@@ -37,8 +37,8 @@ export default async function BookingSuccessPage({ searchParams }: BookingSucces
   return (
     <BookingOutcomeCard
       variant="status"
-      eyebrow="Payment return"
-      title="Booking status unavailable."
+      eyebrow="Booking request"
+      title="Booking request received."
       primaryAction={statusAction}
       secondaryAction={{
         href: "/",
@@ -47,12 +47,12 @@ export default async function BookingSuccessPage({ searchParams }: BookingSucces
     >
       {reference ? <p>Reference: {reference}</p> : null}
       <p>
-        Online booking confirmation is not connected yet. No payment or appointment status can be
-        confirmed from this page.
+        Your request has been sent to AUTO VALET for manual review. No online payment has been
+        taken.
       </p>
       <div className="booking-outcome__notice">
         <strong>Your appointment is not confirmed yet.</strong>
-        <p>AUTO VALET must verify the deposit and approve the request before any appointment is confirmed.</p>
+        <p>AUTO VALET must approve the request before any appointment is confirmed.</p>
       </div>
     </BookingOutcomeCard>
   );

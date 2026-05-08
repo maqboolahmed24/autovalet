@@ -1,4 +1,9 @@
 import type { BookingStatus } from "../booking/types";
+import { arePaymentsEnabled } from "../config/features";
+import { listBookingRecords } from "../db/booking-repository";
+import { isDatabaseConfigured } from "../db/postgres";
+import { getAdminBookingStatusLabel } from "../booking/status-labels";
+import { getServicePackage } from "../pricing";
 
 export type AdminRequestFilter =
   | "needs_review"
@@ -36,17 +41,30 @@ export type AdminRequestsInboxData = {
   }[];
 };
 
-export const adminRequestsInboxUsesMockData = true;
+export const adminRequestsInboxUsesMockData = !isDatabaseConfigured();
 
-export const adminRequestFilters = [
+const baseAdminRequestFilters = [
   "needs_review",
   "outside_zone",
-  "payment_hold",
   "reschedule",
   "approved",
   "declined",
   "all",
 ] as const satisfies readonly AdminRequestFilter[];
+
+export const adminRequestFilters = (
+  arePaymentsEnabled()
+    ? [
+        "needs_review",
+        "outside_zone",
+        "payment_hold",
+        "reschedule",
+        "approved",
+        "declined",
+        "all",
+      ]
+    : baseAdminRequestFilters
+) as readonly AdminRequestFilter[];
 
 export const adminRequestFilterLabels: Record<AdminRequestFilter, string> = {
   needs_review: "Needs review",
@@ -72,8 +90,8 @@ const mockRequests: AdminRequestListItem[] = [
     locationLabel: "Croydon",
     zoneLabel: "Standard service zone",
     isOutsideZone: false,
-    depositLabel: "Deposit paid",
-    createdAtLabel: "Paid 18 mins ago",
+    depositLabel: "Awaiting review",
+    createdAtLabel: "Submitted 18 mins ago",
     href: "/admin/requests/mock-request-1",
   },
   {
@@ -89,8 +107,8 @@ const mockRequests: AdminRequestListItem[] = [
     locationLabel: "Outside-zone review",
     zoneLabel: "Outside-zone request",
     isOutsideZone: true,
-    depositLabel: "Deposit paid",
-    createdAtLabel: "Paid 42 mins ago",
+    depositLabel: "Awaiting review",
+    createdAtLabel: "Submitted 42 mins ago",
     href: "/admin/requests/mock-request-2",
     warning: "Outside-zone request - check vehicle count and location.",
   },
@@ -125,7 +143,7 @@ const mockRequests: AdminRequestListItem[] = [
     locationLabel: "Croydon",
     zoneLabel: "Standard service zone",
     isOutsideZone: false,
-    depositLabel: "Deposit paid",
+    depositLabel: "Reschedule review",
     createdAtLabel: "Updated yesterday",
     href: "/admin/requests/mock-request-4",
     warning: "New time suggested.",
@@ -143,7 +161,7 @@ const mockRequests: AdminRequestListItem[] = [
     locationLabel: "Croydon",
     zoneLabel: "Standard service zone",
     isOutsideZone: false,
-    depositLabel: "Deposit paid",
+    depositLabel: "Approved",
     createdAtLabel: "Approved 2 days ago",
     href: "/admin/requests/mock-request-5",
   },
@@ -160,7 +178,7 @@ const mockRequests: AdminRequestListItem[] = [
     locationLabel: "Outside-zone review",
     zoneLabel: "Outside-zone request",
     isOutsideZone: true,
-    depositLabel: "Refund/transfer review",
+    depositLabel: "Declined",
     createdAtLabel: "Declined last week",
     href: "/admin/requests/mock-request-6",
   },
@@ -225,6 +243,12 @@ function getCounts(items: AdminRequestListItem[]): Record<AdminRequestFilter, nu
   };
 }
 
+function getVisibleMockRequests() {
+  return arePaymentsEnabled()
+    ? mockRequests
+    : mockRequests.filter((request) => request.status !== "payment_hold");
+}
+
 function groupRequests(items: AdminRequestListItem[]) {
   const groupOrder = ["Today", "Tomorrow", "This week", "Older"];
 
@@ -236,18 +260,118 @@ function groupRequests(items: AdminRequestListItem[]) {
     .filter((group) => group.items.length > 0);
 }
 
+function getDateBucket(isoDate: string) {
+  const requestedDate = new Date(isoDate);
+
+  if (Number.isNaN(requestedDate.getTime())) {
+    return "Older";
+  }
+
+  const today = new Date();
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const requestedStart = new Date(
+    requestedDate.getFullYear(),
+    requestedDate.getMonth(),
+    requestedDate.getDate(),
+  );
+  const days = Math.round((requestedStart.getTime() - todayStart.getTime()) / 86_400_000);
+
+  if (days === 0) return "Today";
+  if (days === 1) return "Tomorrow";
+  if (days > 1 && days <= 7) return "This week";
+
+  return "Older";
+}
+
+function formatRequestedTime(isoDate: string) {
+  const date = new Date(isoDate);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Time missing";
+  }
+
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/London",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(date);
+}
+
+function formatSubmittedLabel(isoDate: string) {
+  const date = new Date(isoDate);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Submitted";
+  }
+
+  return `Submitted ${new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/London",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(date)}`;
+}
+
+function getZoneLabel(zoneStatus: string) {
+  if (zoneStatus === "outside_zone_volume_exception") return "Outside-zone request";
+  if (zoneStatus === "outside_service_area") return "Outside service area";
+
+  return "Standard service zone";
+}
+
+function getWorkflowLabel(status: BookingStatus) {
+  if (status === "pending_admin_review") return "Awaiting review";
+  if (status === "reschedule_requested") return "Reschedule review";
+  if (status === "approved") return "Approved";
+  if (status === "declined") return "Declined";
+  if (status === "payment_hold") return "Payment in progress";
+
+  return getAdminBookingStatusLabel(status);
+}
+
+async function getDatabaseRequestItems() {
+  const records = await listBookingRecords();
+
+  return records.map((record): AdminRequestListItem => {
+    const isOutsideZone = record.zoneStatus !== "standard_zone";
+    const vehicleName = [record.vehicleMake, record.vehicleModel].filter(Boolean).join(" ");
+    const vehicleLabel = vehicleName || `${record.vehicleCount} vehicle${record.vehicleCount === 1 ? "" : "s"}`;
+
+    return {
+      id: record.id,
+      reference: record.reference,
+      status: record.status,
+      requestedDateLabel: getDateBucket(record.requestedStartAt),
+      requestedTimeLabel: formatRequestedTime(record.requestedStartAt),
+      serviceLabel: getServicePackage(record.packageId).label,
+      customerName: record.customerName,
+      vehicleLabel,
+      postcode: record.postcode,
+      locationLabel: record.fullAddress || record.postcode,
+      zoneLabel: getZoneLabel(record.zoneStatus),
+      isOutsideZone,
+      depositLabel: getWorkflowLabel(record.status),
+      createdAtLabel: formatSubmittedLabel(record.createdAt),
+      href: `/admin/requests/${encodeURIComponent(record.id)}`,
+      warning: isOutsideZone ? "Outside-zone request - check vehicle count and location." : undefined,
+    };
+  });
+}
+
 export async function getAdminRequestsInboxData(input: {
   filter: AdminRequestFilter;
   search?: string;
 }): Promise<AdminRequestsInboxData> {
-  // TODO: Replace this safe mock source with database-backed request inbox queries.
-  // Mock entries use generic customer labels and must not be treated as production data.
-  const filteredItems = mockRequests.filter(
+  const items = isDatabaseConfigured() ? await getDatabaseRequestItems() : getVisibleMockRequests();
+  const filteredItems = items.filter(
     (item) => matchesFilter(item, input.filter) && matchesSearch(item, input.search),
   );
 
   return {
-    counts: getCounts(mockRequests),
+    counts: getCounts(items),
     groups: groupRequests(filteredItems),
   };
 }

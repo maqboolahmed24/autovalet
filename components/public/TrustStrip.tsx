@@ -5,7 +5,7 @@ type TrustItem = {
 
 const trustItems: TrustItem[] = [
   { label: "Mobile service" },
-  { label: "Deposit required" },
+  { label: "No online payment" },
   { label: "Manual approval" },
   { label: "Premium finish" },
 ];

@@ -7,8 +7,10 @@ import {
 
 export const metadata = {
   title: "Requests | AUTO VALET Admin",
-  description: "AUTO VALET booking requests inbox for paid requests, holds and reschedules.",
+  description: "AUTO VALET booking requests inbox for review, outside-zone decisions and reschedules.",
 };
+
+export const dynamic = "force-dynamic";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 

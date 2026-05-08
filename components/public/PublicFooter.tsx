@@ -13,7 +13,7 @@ const footerLinks = [
 const policyLinks = [
   { href: "/policies/privacy", label: "Privacy Policy" },
   { href: "/policies/terms", label: "Terms & Conditions" },
-  { href: "/policies/deposit-cancellation", label: "Deposit & Cancellation Policy" },
+  { href: "/policies/deposit-cancellation", label: "Cancellation Policy" },
   { href: "/policies/cookies", label: "Cookie Policy" },
   { href: "/policies/data-requests", label: "Data Requests" },
 ];
@@ -37,7 +37,7 @@ export function PublicFooter() {
 
         <div className="public-footer__note">
           <p>AUTO VALET operates within selected service areas.</p>
-          <p>Deposit required. Bookings are confirmed after manual approval.</p>
+          <p>No online payment is taken. Bookings are confirmed after manual approval.</p>
         </div>
 
         <nav className="public-footer__policies" aria-label="Policy links">

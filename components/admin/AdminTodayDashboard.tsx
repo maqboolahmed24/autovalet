@@ -22,7 +22,7 @@ export function AdminTodayDashboard({ data }: AdminTodayDashboardProps) {
         description={
           data.isMockData
             ? "Placeholder operational data while database persistence is being connected."
-            : "Jobs, requests and payment attention for today."
+            : "Jobs, requests and review attention for today."
         }
       />
 
@@ -31,11 +31,6 @@ export function AdminTodayDashboard({ data }: AdminTodayDashboardProps) {
         <div className="admin-summary-grid">
           <SummaryCard label="Pending" value={String(data.summary.pendingCount)} note="Need review" />
           <SummaryCard label="Today" value={String(data.summary.todayJobsCount)} note="Approved jobs" />
-          <SummaryCard
-            label="Deposits"
-            value={formatMoneyGBP(data.summary.depositsThisWeekMinor)}
-            note={data.isMockData ? "Mock this week" : "This week"}
-          />
           <SummaryCard
             label="Estimate"
             value={formatMoneyGBP(data.summary.estimatedRevenueThisWeekMinor)}
@@ -82,7 +77,7 @@ export function AdminTodayDashboard({ data }: AdminTodayDashboardProps) {
         ) : (
           <AdminEmptyState
             title="No requests waiting."
-            description="New paid booking requests will appear here."
+            description="New booking requests will appear here."
           />
         )}
       </section>

@@ -56,7 +56,7 @@ export function Hero({ className, imageAlt = "", imageSrc }: HeroProps) {
         </div>
 
         <p className="hero__note" id="home-hero-note">
-          Deposit required. Bookings confirmed after approval.
+          No online payment. Bookings confirmed after approval.
         </p>
       </div>
     </section>

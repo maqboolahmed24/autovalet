@@ -8,7 +8,7 @@ const termsSections: PolicySection[] = [
   {
     title: "Booking request model",
     paragraphs: [
-      "AUTO VALET does not offer instantly confirmed appointments. Customers submit a booking request and pay a deposit before the request reaches review.",
+      "AUTO VALET does not offer instantly confirmed appointments. Customers submit a booking request before the request reaches review.",
       "A requested slot is not an approved appointment until AUTO VALET manually accepts it.",
     ],
   },
@@ -32,7 +32,7 @@ const termsSections: PolicySection[] = [
   {
     title: "Access and parking",
     paragraphs: [
-      "AUTO VALET is a mobile detailing service, so suitable access and parking are required. If the vehicle cannot be accessed or parking is unsuitable, the job may need to be rescheduled, declined or treated as an access failure under the deposit policy.",
+      "AUTO VALET is a mobile detailing service, so suitable access and parking are required. If the vehicle cannot be accessed or parking is unsuitable, the job may need to be rescheduled, declined or treated as an access failure under the cancellation policy.",
     ],
   },
   {
@@ -53,7 +53,7 @@ const termsSections: PolicySection[] = [
     title: "Weather and rescheduling",
     paragraphs: [
       "AUTO VALET may reschedule due to weather, access issues, operational issues or unsuitable conditions.",
-      "If AUTO VALET cannot fulfil an approved booking, a refund or transfer path applies according to the deposit and cancellation policy.",
+      "If AUTO VALET cannot fulfil an approved booking, AUTO VALET will contact the customer to agree the next step.",
     ],
   },
   {

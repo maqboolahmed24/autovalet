@@ -14,7 +14,7 @@ export function ServiceZoneList({ zones, onAdd, onEdit }: ServiceZoneListProps) 
         <div>
           <p className="eyebrow">Areas</p>
           <h2 id="service-zone-list-title">Service zone list</h2>
-          <p>Postcodes, districts and regions that customers can check before payment.</p>
+          <p>Postcodes, districts and regions that customers can check before submitting.</p>
         </div>
         <button className="ghost-button" type="button" onClick={onAdd}>
           Add zone

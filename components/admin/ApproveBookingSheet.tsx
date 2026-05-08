@@ -84,8 +84,8 @@ export function ApproveBookingSheet({ booking, onClose }: ApproveBookingSheetPro
           <dd>{booking.customer.fullName}</dd>
         </div>
         <div>
-          <dt>Deposit paid</dt>
-          <dd>{booking.payment.depositPaidLabel}</dd>
+          <dt>Estimate</dt>
+          <dd>{booking.payment.estimatedTotalLabel}</dd>
         </div>
         <div>
           <dt>Buffer until</dt>
@@ -95,7 +95,7 @@ export function ApproveBookingSheet({ booking, onClose }: ApproveBookingSheetPro
 
       <form className="admin-sheet-form" onSubmit={handleSubmit}>
         <p className="admin-inline-note">
-          Approval will re-check deposit, conflict, customer, vehicle, zone and duration rules before saving.
+          Approval will re-check conflict, customer, vehicle, zone and duration rules before saving.
         </p>
         <div className="admin-sheet-actions">
           <button className="admin-button admin-button--secondary" type="button" onClick={onClose}>

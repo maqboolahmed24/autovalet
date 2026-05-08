@@ -15,7 +15,7 @@ export const siteConfig = {
   siteUrl: getConfiguredSiteUrlValue(),
   defaultTitle: "AUTO VALET | Premium Mobile Car Detailing",
   defaultDescription:
-    "Premium mobile car detailing at your location. Request maintenance cleans, deep cleans and finishing extras with deposit-secured booking approval.",
+    "Premium mobile car detailing at your location. Request maintenance cleans, deep cleans and finishing extras with manual booking approval.",
   business: {
     name: "AUTO VALET",
     currency: "GBP",

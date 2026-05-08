@@ -38,8 +38,8 @@ export function ServiceAreaNotice() {
             title="Booking requests are reviewed before confirmation."
             titleId="service-area-notice-title"
           >
-            A deposit protects your requested slot while we review your location, vehicle details
-            and selected service.
+            Your requested slot is reviewed alongside your location, vehicle details and selected
+            service before any appointment is confirmed.
           </SectionHeading>
 
           <div className="service-area-notice__grid">

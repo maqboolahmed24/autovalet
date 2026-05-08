@@ -1,5 +1,6 @@
 import { isBalancePaymentMethod, markBalancePaid } from "../../../../../../lib/payments/balance";
 import { requireAdmin, adminGuardErrorResponse } from "../../../../../../lib/auth/route-guards";
+import { arePaymentsEnabled } from "../../../../../../lib/config/features";
 
 export const runtime = "nodejs";
 
@@ -88,6 +89,10 @@ function readIntegerInput(value: unknown) {
 }
 
 export async function POST(request: Request, context: RouteContext) {
+  if (!arePaymentsEnabled()) {
+    return errorResponse("PAYMENTS_DISABLED", "Balance payment actions are hidden while payments are disabled.", 404);
+  }
+
   const guard = await requireAdmin(request, { permission: "mark_balance_paid" });
 
   if (!guard.success) {

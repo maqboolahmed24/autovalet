@@ -46,7 +46,7 @@ const mockNeedsReview: AdminDashboardBooking[] = [
     customerName: "Example customer",
     vehicleLabel: "BMW 3 Series",
     locationLabel: "Croydon",
-    depositLabel: "Deposit paid",
+    depositLabel: "Awaiting review",
     zoneLabel: "Standard service zone",
     href: "/admin/requests",
   },
@@ -59,7 +59,7 @@ const mockNeedsReview: AdminDashboardBooking[] = [
     customerName: "Example customer",
     vehicleLabel: "Range Rover",
     locationLabel: "Outside-zone review",
-    depositLabel: "Deposit paid",
+    depositLabel: "Awaiting review",
     zoneLabel: "3+ vehicle review",
     href: "/admin/requests",
   },
@@ -75,7 +75,7 @@ const mockTodayJobs: AdminDashboardBooking[] = [
     customerName: "Example customer",
     vehicleLabel: "Audi A3",
     locationLabel: "Croydon",
-    depositLabel: "Deposit paid",
+    depositLabel: "Approved",
     href: "/admin/calendar",
   },
   {
@@ -87,7 +87,7 @@ const mockTodayJobs: AdminDashboardBooking[] = [
     customerName: "Example customer",
     vehicleLabel: "Mercedes GLC",
     locationLabel: "Croydon",
-    depositLabel: "Deposit paid",
+    depositLabel: "On the way",
     href: "/admin/calendar",
   },
 ];
@@ -107,7 +107,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
       {
         id: "mock-alert-data-source",
         title: "Dashboard data is placeholder",
-        message: "Connect database persistence before treating counts, deposits or estimates as live.",
+        message: "Connect database persistence before treating counts or estimates as live.",
         variant: "info",
       },
       {
@@ -116,12 +116,6 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
         message: "Review vehicle count and location before approval.",
         variant: "warning",
         href: "/admin/requests",
-      },
-      {
-        id: "mock-alert-payment-hold",
-        title: "Payment hold attention",
-        message: "Payment holds should expire or move to review through verified webhooks.",
-        variant: "warning",
       },
     ],
     nextJob: mockTodayJobs[0],

@@ -52,7 +52,7 @@ export function PricingPreview() {
         </div>
 
         <div className="pricing-preview__notice">
-          <p>A deposit is required to submit a booking request. Appointments are confirmed after approval.</p>
+          <p>No online payment is taken when you submit a booking request. Appointments are confirmed after approval.</p>
         </div>
 
         <div className="pricing-preview__actions">

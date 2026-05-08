@@ -12,7 +12,7 @@ test.describe("admin approval foundations", () => {
     await expect(page.locator("body")).not.toContainText(/pending_admin_review|payment_hold|outside_zone/i);
 
     await page.goto("/admin/requests/mock-request-1");
-    await expect(page.locator("body")).toContainText(/checklist|deposit|service zone|parking/i);
+    await expect(page.locator("body")).toContainText(/checklist|service zone|parking/i);
     await expect(page.locator("body")).not.toContainText(/pending_admin_review|payment_hold|outside_zone/i);
   });
 

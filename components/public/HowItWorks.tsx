@@ -19,8 +19,8 @@ const steps: ProcessStep[] = [
   },
   {
     number: "03",
-    title: "Pay your deposit",
-    text: "Your request is submitted securely after deposit payment.",
+    title: "Submit your request",
+    text: "Your details are sent to AUTO VALET for review without online payment.",
   },
   {
     number: "04",
@@ -34,7 +34,7 @@ export function HowItWorks() {
     <section className="section how-it-works" id="how-it-works" aria-labelledby="how-it-works-title">
       <div className="section__inner">
         <SectionHeading eyebrow="How it works" title="A simple request process." titleId="how-it-works-title">
-          Choose your service, request your preferred time, pay your deposit, and wait for approval.
+          Choose your service, request your preferred time, submit the details, and wait for approval.
         </SectionHeading>
 
         <ol className="how-it-works__list motion-stagger">

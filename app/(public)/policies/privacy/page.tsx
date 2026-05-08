@@ -11,7 +11,7 @@ const privacySections: PolicySection[] = [
       "Name, phone number and email address.",
       "Service address, postcode and access notes.",
       "Vehicle details, selected services, extras and booking notes.",
-      "Booking references, payment references, payment status and amounts.",
+      "Booking references, request status and estimate amounts.",
       "Marketing or photo consent choices where applicable.",
       "Private admin notes where needed for booking and service management.",
     ],
@@ -24,16 +24,9 @@ const privacySections: PolicySection[] = [
     ],
   },
   {
-    title: "Payment handling",
-    paragraphs: [
-      "Card details are not stored directly by AUTO VALET. Deposit and payment processing should be handled by a secure payment provider.",
-      "AUTO VALET may store payment references, status, deposit amount, remaining balance and refund or transfer notes so the booking can be managed correctly.",
-    ],
-  },
-  {
     title: "Data sharing",
     paragraphs: [
-      "Customer data may be shared with service providers needed to run the website, database, booking system, payment processing, email and SMS notifications.",
+      "Customer data may be shared with service providers needed to run the website, database, booking system, email and SMS notifications.",
       "AUTO VALET should only share the details needed for those services to work.",
     ],
   },
@@ -41,7 +34,7 @@ const privacySections: PolicySection[] = [
     title: "Analytics privacy",
     paragraphs: [
       "AUTO VALET analytics is disabled by default unless a privacy-safe provider is configured.",
-      "Analytics events must not include full names, email addresses, phone numbers, full addresses, full postcodes, payment provider IDs, internal booking IDs, vehicle registrations or notes.",
+      "Analytics events must not include full names, email addresses, phone numbers, full addresses, full postcodes, internal booking IDs, vehicle registrations or notes.",
     ],
   },
   {
@@ -54,7 +47,7 @@ const privacySections: PolicySection[] = [
   {
     title: "Data retention",
     paragraphs: [
-      "Booking and payment reference records may be retained for up to 6 years for operational, accounting, support and audit purposes.",
+      "Booking request records may be retained for up to 6 years for operational, accounting, support and audit purposes.",
       "Notification logs, audit logs and gallery consent records should be retained only for the period needed for operational, legal or consent evidence.",
       "Data that is no longer needed should be deleted or anonymised according to the retention process configured for AUTO VALET.",
     ],
@@ -87,11 +80,11 @@ export default function PrivacyPolicyPage() {
   return (
     <>
       <PageIntro eyebrow="Privacy Policy" title="How customer data is handled.">
-        AUTO VALET collects the details needed to manage mobile detailing booking requests, payments,
+        AUTO VALET collects the details needed to manage mobile detailing booking requests,
         communication and consent.
       </PageIntro>
 
-      <PolicyPageContent sections={privacySections} ctaText="A deposit is required before a booking request reaches review." />
+      <PolicyPageContent sections={privacySections} ctaText="No online payment is taken when a booking request reaches review." />
     </>
   );
 }

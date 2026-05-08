@@ -12,7 +12,7 @@ export default function FaqPage() {
     <>
       <JsonLdScript data={[createFaqPageJsonLd(faqSchemaItems), createBreadcrumbJsonLd(publicBreadcrumbs.faq)]} />
       <PageIntro eyebrow="FAQ" title="Questions before you request a booking.">
-        Find answers about deposits, approval, pricing, service areas and mobile detailing access.
+        Find answers about approval, pricing, service areas and mobile detailing access.
       </PageIntro>
 
       <FaqPageContent />

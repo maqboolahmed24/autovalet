@@ -12,7 +12,7 @@ export default function PoliciesPage() {
     <>
       <JsonLdScript data={createBreadcrumbJsonLd(publicBreadcrumbs.policies)} />
       <PageIntro eyebrow="Policies" title="Clear terms for booking requests.">
-        Review how deposits, cancellations, service areas, privacy and customer data are handled.
+        Review how cancellations, service areas, privacy and customer data are handled.
       </PageIntro>
 
       <PoliciesPageContent />

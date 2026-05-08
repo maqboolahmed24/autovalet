@@ -1,4 +1,4 @@
-import { getAdminAuthStatus } from "../../../../../lib/auth/session";
+import { createClearAdminSessionCookie, getAdminAuthStatus } from "../../../../../lib/auth/session";
 
 export const runtime = "nodejs";
 
@@ -23,6 +23,15 @@ export async function POST() {
     return errorResponse(authStatus.code, authStatus.message, 501);
   }
 
-  // TODO: Clear the secure admin session cookie and revoke the persisted session.
-  return errorResponse("ADMIN_AUTH_NOT_IMPLEMENTED", "Admin sign-out is not implemented yet.", 501);
+  const response = Response.json({
+    success: true,
+    data: {
+      signedOut: true,
+    },
+    message: "Signed out.",
+  });
+
+  response.headers.set("Set-Cookie", createClearAdminSessionCookie());
+
+  return response;
 }

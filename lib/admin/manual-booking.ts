@@ -9,6 +9,7 @@ import type {
 } from "../booking/types";
 import { createBookingReference } from "../booking/references";
 import { assertBookingTransition } from "../booking/lifecycle";
+import { arePaymentsEnabled } from "../config/features";
 import type { CalendarBlockingBooking } from "../availability";
 import { createUtcDateFromBusinessTime, generateAvailableSlots } from "../availability";
 import { isValidDateString, isValidTimeString } from "../availability/working-hours";
@@ -309,17 +310,19 @@ export function validateManualBookingInput(input: CreateManualBookingInput) {
   ) {
     errors.push("Choose a future start time.");
   }
-  if (!Number.isInteger(input.payment.depositPaidMinor) || input.payment.depositPaidMinor < 0) {
-    errors.push("Deposit paid must be an integer minor-unit amount of zero or more.");
-  }
-  if (input.payment.depositStatus === "paid" && input.payment.depositPaidMinor <= 0) {
-    errors.push("Enter the deposit amount when the deposit is marked paid.");
-  }
-  if (input.payment.depositStatus !== "paid" && input.payment.depositPaidMinor > 0) {
-    errors.push("Deposit paid amount can only be set when the deposit is marked paid.");
-  }
-  if (input.status === "approved" && input.payment.depositStatus === "unpaid") {
-    errors.push("Approved manual bookings need a paid or waived deposit.");
+  if (arePaymentsEnabled()) {
+    if (!Number.isInteger(input.payment.depositPaidMinor) || input.payment.depositPaidMinor < 0) {
+      errors.push("Deposit paid must be an integer minor-unit amount of zero or more.");
+    }
+    if (input.payment.depositStatus === "paid" && input.payment.depositPaidMinor <= 0) {
+      errors.push("Enter the deposit amount when the deposit is marked paid.");
+    }
+    if (input.payment.depositStatus !== "paid" && input.payment.depositPaidMinor > 0) {
+      errors.push("Deposit paid amount can only be set when the deposit is marked paid.");
+    }
+    if (input.status === "approved" && input.payment.depositStatus === "unpaid") {
+      errors.push("Approved manual bookings need a paid or waived deposit.");
+    }
   }
 
   return errors;
@@ -465,7 +468,9 @@ export async function createManualBooking(
       message: "Manual booking creation is not connected to database persistence yet.",
       details: {
         preview,
-        plannedWrites: ["customers", "bookings", "vehicles", "booking_addons", "payments", "audit_logs"],
+        plannedWrites: arePaymentsEnabled()
+          ? ["customers", "bookings", "vehicles", "booking_addons", "payments", "audit_logs"]
+          : ["customers", "bookings", "vehicles", "booking_addons", "audit_logs"],
       },
     };
   }
@@ -476,7 +481,9 @@ export async function createManualBooking(
     message: "Manual booking creation is not connected to database persistence yet.",
     details: {
       preview,
-      plannedWrites: ["customers", "bookings", "vehicles", "booking_addons", "payments", "audit_logs"],
+      plannedWrites: arePaymentsEnabled()
+        ? ["customers", "bookings", "vehicles", "booking_addons", "payments", "audit_logs"]
+        : ["customers", "bookings", "vehicles", "booking_addons", "audit_logs"],
     },
   };
 }

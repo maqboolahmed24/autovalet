@@ -7,8 +7,8 @@ export default function BookingExpiredPage() {
   return (
     <BookingOutcomeCard
       variant="expired"
-      eyebrow="Hold expired"
-      title="Booking hold expired."
+      eyebrow="Request expired"
+      title="Booking request expired."
       primaryAction={{
         href: "/booking",
         label: "Start again",
@@ -18,7 +18,7 @@ export default function BookingExpiredPage() {
         label: "View services",
       }}
     >
-      <p>Your temporary payment hold has expired, so the requested slot has been released.</p>
+      <p>The requested slot is no longer held. Please choose another time.</p>
     </BookingOutcomeCard>
   );
 }

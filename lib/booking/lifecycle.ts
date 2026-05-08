@@ -21,7 +21,7 @@ export type BookingTransitionResult =
 
 export const allowedBookingStatusTransitions: Record<BookingStatus, readonly BookingStatus[]> = {
   draft: ["zone_validated"],
-  zone_validated: ["payment_hold"],
+  zone_validated: ["payment_hold", "pending_admin_review"],
   payment_hold: ["pending_admin_review", "expired", "payment_failed"],
   pending_admin_review: ["approved", "declined", "reschedule_requested"],
   approved: ["reschedule_requested", "on_the_way", "cancelled_by_admin", "cancelled_by_customer", "no_show"],
@@ -84,6 +84,10 @@ export function canTransitionBookingStatus(
 
   if (from === "payment_hold" && to === "pending_admin_review" && context.actor !== "payment_webhook") {
     return deny(from, to, "Only a verified payment webhook can mark the deposit paid.");
+  }
+
+  if (from === "zone_validated" && to === "pending_admin_review" && context.actor !== "customer") {
+    return deny(from, to, "Only a customer booking request can move directly to review without payment.");
   }
 
   if (from === "payment_hold" && to === "payment_failed" && context.actor !== "payment_webhook") {

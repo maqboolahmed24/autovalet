@@ -14,6 +14,7 @@ type FinalPriceAdjustmentCardProps = {
   depositPaidMinor: number;
   balancePaidMinor: number;
   balanceDueMinor: number;
+  paymentsEnabled?: boolean;
   onUpdated?: (update: { finalTotalMinor: number; balanceDueMinor: number }) => void;
 };
 
@@ -48,6 +49,7 @@ export function FinalPriceAdjustmentCard({
   depositPaidMinor,
   balancePaidMinor,
   balanceDueMinor,
+  paymentsEnabled = false,
   onUpdated,
 }: FinalPriceAdjustmentCardProps) {
   const currentFinalTotalMinor = finalTotalMinor ?? estimatedTotalMinor;
@@ -59,7 +61,7 @@ export function FinalPriceAdjustmentCard({
   const [tone, setTone] = useState<"neutral" | "success" | "warning">("neutral");
   const parsedFinalTotalMinor = poundsToMinor(finalPriceInput);
   const enteredPriceIsBelowDeposit =
-    parsedFinalTotalMinor !== null && parsedFinalTotalMinor < depositPaidMinor;
+    paymentsEnabled && parsedFinalTotalMinor !== null && parsedFinalTotalMinor < depositPaidMinor;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -133,14 +135,18 @@ export function FinalPriceAdjustmentCard({
           <span>Final price</span>
           <strong>{finalTotalMinor === null ? "Not set" : formatMoneyGBP(finalTotalMinor)}</strong>
         </div>
-        <div>
-          <span>Deposit paid</span>
-          <strong>{formatMoneyGBP(depositPaidMinor)}</strong>
-        </div>
-        <div>
-          <span>Balance paid</span>
-          <strong>{formatMoneyGBP(balancePaidMinor)}</strong>
-        </div>
+        {paymentsEnabled ? (
+          <div>
+            <span>Deposit paid</span>
+            <strong>{formatMoneyGBP(depositPaidMinor)}</strong>
+          </div>
+        ) : null}
+        {paymentsEnabled ? (
+          <div>
+            <span>Balance paid</span>
+            <strong>{formatMoneyGBP(balancePaidMinor)}</strong>
+          </div>
+        ) : null}
         <div>
           <span>Balance due</span>
           <strong>{formatMoneyGBP(balanceDueMinor)}</strong>

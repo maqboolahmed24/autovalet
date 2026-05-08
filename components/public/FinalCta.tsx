@@ -19,7 +19,7 @@ export function FinalCta() {
           </div>
 
           <p className="final-cta__note" id="final-cta-note">
-            Deposit required. Bookings confirmed after approval.
+            No online payment. Bookings confirmed after approval.
           </p>
         </div>
       </div>

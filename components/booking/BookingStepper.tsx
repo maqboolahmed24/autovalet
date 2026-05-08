@@ -24,19 +24,19 @@ export type BookingDraftUpdate = (updater: (draft: BookingDraft) => BookingDraft
 export type BookingStepProps = {
   draft: BookingDraft;
   updateDraft: BookingDraftUpdate;
-  onPaymentSubmit?: () => Promise<void>;
-  isPaymentSubmitting?: boolean;
-  paymentEnabled?: boolean;
-  paymentError?: string;
+  onBookingSubmit?: () => Promise<void>;
+  isBookingSubmitting?: boolean;
+  paymentsEnabled?: boolean;
+  bookingSubmitError?: string;
 };
 
-type CreatePaymentHoldResponse =
+type CreateBookingRequestResponse =
   | {
       success: true;
       data: {
         bookingReference: string;
-        checkoutUrl: string;
-        holdExpiresAt: string;
+        status: "pending_admin_review";
+        statusUrl: string;
       };
       message?: string;
     }
@@ -150,7 +150,7 @@ const bookingSteps: BookingStepDefinition[] = [
     id: "review",
     label: "Review",
     title: "Review your booking request.",
-    description: "Check the details before paying your deposit and submitting the request for approval.",
+    description: "Check the details before submitting the request for approval.",
     component: ReviewPaymentStep,
   },
 ];
@@ -236,8 +236,8 @@ export function BookingStepper() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [draft, setDraft] = useState<BookingDraft>(initialBookingDraft);
   const [completionMessage, setCompletionMessage] = useState("");
-  const [isPaymentSubmitting, setIsPaymentSubmitting] = useState(false);
-  const [paymentError, setPaymentError] = useState("");
+  const [isBookingSubmitting, setIsBookingSubmitting] = useState(false);
+  const [bookingSubmitError, setBookingSubmitError] = useState("");
   const [isBookingWindowOpen, setIsBookingWindowOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const bookingStartedTrackedRef = useRef(false);
@@ -252,7 +252,7 @@ export function BookingStepper() {
   const isFirstStep = currentStepIndex === 0;
   const isLastStep = currentStepIndex === bookingSteps.length - 1;
   const showUncheckedZoneWarning = currentStep.id === "review" && draft.zoneCheckStatus === "unchecked";
-  const paymentEnabled = false;
+  const paymentsEnabled = false;
 
   useEffect(() => {
     setIsMounted(true);
@@ -332,7 +332,7 @@ export function BookingStepper() {
 
   const updateDraft: BookingDraftUpdate = (updater) => {
     setCompletionMessage("");
-    setPaymentError("");
+    setBookingSubmitError("");
     setDraft((previousDraft) => {
       const nextDraft = updater(previousDraft);
       const previousVehicle = getPrimaryVehicle(previousDraft);
@@ -378,7 +378,7 @@ export function BookingStepper() {
 
   const handleBack = () => {
     setCompletionMessage("");
-    setPaymentError("");
+    setBookingSubmitError("");
     setCurrentStepIndex((stepIndex) => Math.max(stepIndex - 1, 0));
   };
 
@@ -386,25 +386,25 @@ export function BookingStepper() {
     if (!canContinue) return;
 
     if (isLastStep) {
-      setCompletionMessage("Use the deposit button to submit the booking request.");
+      setCompletionMessage("Use the submit button to send the booking request.");
       return;
     }
 
     setCurrentStepIndex((stepIndex) => Math.min(stepIndex + 1, bookingSteps.length - 1));
   };
 
-  const handlePaymentSubmit = async () => {
+  const handleBookingSubmit = async () => {
     const reviewValidationMessage = validateStep("review", draft);
 
     if (reviewValidationMessage) {
-      setPaymentError(reviewValidationMessage);
+      setBookingSubmitError(reviewValidationMessage);
       return;
     }
 
-    setIsPaymentSubmitting(true);
-    setPaymentError("");
+    setIsBookingSubmitting(true);
+    setBookingSubmitError("");
     setCompletionMessage("");
-    trackAnalyticsEvent("deposit_checkout_started", {
+    trackAnalyticsEvent("booking_request_created", {
       serviceType: draft.packageId || undefined,
       vehicleSize: getPrimaryVehicle(draft)?.size || undefined,
       addonCount: getPrimaryVehicle(draft)?.addons.length ?? 0,
@@ -412,30 +412,30 @@ export function BookingStepper() {
     });
 
     try {
-      const response = await fetch("/api/create-payment-hold", {
+      const response = await fetch("/api/create-booking-request", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           draft,
-          idempotencyKey: createIdempotencyKey("booking_hold"),
+          idempotencyKey: createIdempotencyKey("booking_request"),
         }),
       });
-      const payload = (await response.json()) as CreatePaymentHoldResponse;
+      const payload = (await response.json()) as CreateBookingRequestResponse;
 
       if (!response.ok || !payload.success) {
-        throw new Error(payload.success ? "Deposit checkout could not be started." : payload.error.message);
+        throw new Error(payload.success ? "Booking request could not be submitted." : payload.error.message);
       }
 
-      window.location.href = payload.data.checkoutUrl;
+      window.location.href = `/booking/success?reference=${encodeURIComponent(payload.data.bookingReference)}`;
     } catch (error) {
-      setPaymentError(
+      setBookingSubmitError(
         error instanceof Error
           ? error.message
-          : "Deposit checkout could not be started. Please try again.",
+          : "Booking request could not be submitted. Please try again.",
       );
-      setIsPaymentSubmitting(false);
+      setIsBookingSubmitting(false);
     }
   };
 
@@ -477,10 +477,10 @@ export function BookingStepper() {
                     <ActiveStep
                       draft={draft}
                       updateDraft={updateDraft}
-                      onPaymentSubmit={handlePaymentSubmit}
-                      isPaymentSubmitting={isPaymentSubmitting}
-                      paymentEnabled={paymentEnabled}
-                      paymentError={paymentError}
+                      onBookingSubmit={handleBookingSubmit}
+                      isBookingSubmitting={isBookingSubmitting}
+                      paymentsEnabled={paymentsEnabled}
+                      bookingSubmitError={bookingSubmitError}
                     />
                   </BookingStepShell>
 
@@ -546,7 +546,7 @@ export function BookingStepper() {
               >
                 Start Booking
               </button>
-              <p>Deposit required before the request is sent for review.</p>
+              <p>No online payment is taken. AUTO VALET reviews every request before confirming.</p>
             </div>
           </div>
         </div>

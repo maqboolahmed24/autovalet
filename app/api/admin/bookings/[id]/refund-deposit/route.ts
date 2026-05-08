@@ -1,4 +1,5 @@
 import { requireAdmin, adminGuardErrorResponse } from "../../../../../../lib/auth/route-guards";
+import { arePaymentsEnabled } from "../../../../../../lib/config/features";
 import { refundDeposit } from "../../../../../../lib/payments/refunds";
 
 export const runtime = "nodejs";
@@ -89,6 +90,10 @@ function readIntegerInput(value: unknown) {
 }
 
 export async function POST(request: Request, context: RouteContext) {
+  if (!arePaymentsEnabled()) {
+    return errorResponse("PAYMENTS_DISABLED", "Refund actions are hidden while payments are disabled.", 404);
+  }
+
   const guard = await requireAdmin(request, { permission: "refund_payment" });
 
   if (!guard.success) {

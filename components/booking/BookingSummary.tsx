@@ -39,7 +39,7 @@ export function BookingSummary({ draft }: BookingSummaryProps) {
       <div className="booking-summary__header">
         <p className="eyebrow">Request summary</p>
         <h2 id="booking-summary-title">Draft details</h2>
-        <span className="payment-pill">Deposit required</span>
+        <span className="payment-pill">Review first</span>
       </div>
 
       <dl className="booking-summary__list">
@@ -81,7 +81,7 @@ export function BookingSummary({ draft }: BookingSummaryProps) {
       </dl>
 
       <p className="booking-summary__note">
-        Final price may vary depending on condition on arrival. A deposit is required before the
+        Final price may vary depending on condition on arrival. No online payment is taken when the
         request is sent for review.
       </p>
     </aside>

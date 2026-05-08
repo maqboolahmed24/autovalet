@@ -6,9 +6,10 @@ import {
   declineReasonLabels,
   declineReasons,
   type DeclineReason,
-} from "../../lib/admin/decline-booking";
+} from "../../lib/admin/decline-reasons";
 import type { DepositAction } from "../../lib/policies";
 import { depositActionLabels } from "../../lib/policies";
+import { arePaymentsEnabled } from "../../lib/config/features";
 
 type DeclineBookingSheetProps = {
   booking: AdminBookingDetailData;
@@ -41,9 +42,10 @@ const depositActions: DepositAction[] = [
 ];
 
 export function DeclineBookingSheet({ booking, onClose }: DeclineBookingSheetProps) {
+  const paymentsEnabled = arePaymentsEnabled();
   const [reason, setReason] = useState<DeclineReason>("outside_service_area");
   const [depositAction, setDepositAction] = useState<DepositAction>(
-    booking.financials.depositPaidMinor > 0 ? "refund" : "no_deposit_action_required",
+    paymentsEnabled && booking.financials.depositPaidMinor > 0 ? "refund" : "no_deposit_action_required",
   );
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -64,7 +66,7 @@ export function DeclineBookingSheet({ booking, onClose }: DeclineBookingSheetPro
         },
         body: JSON.stringify({
           reason,
-          depositAction,
+          depositAction: paymentsEnabled ? depositAction : "no_deposit_action_required",
           notes,
         }),
       });
@@ -89,7 +91,7 @@ export function DeclineBookingSheet({ booking, onClose }: DeclineBookingSheetPro
       <div className="admin-action-sheet__header">
         <p className="eyebrow">Decline</p>
         <h2 id="decline-booking-title">Decline request</h2>
-        <p>Declining releases this requested slot. Refund or transfer handling is recorded by policy later.</p>
+        <p>Declining releases this requested slot and records the review decision.</p>
       </div>
 
       <form className="admin-sheet-form" onSubmit={handleSubmit}>
@@ -109,7 +111,8 @@ export function DeclineBookingSheet({ booking, onClose }: DeclineBookingSheetPro
           </div>
         </div>
 
-        <div>
+        {paymentsEnabled ? (
+          <div>
           <span className="admin-choice-label">Deposit action</span>
           <div className="admin-choice-grid">
             {depositActions.map((action) => (
@@ -123,7 +126,8 @@ export function DeclineBookingSheet({ booking, onClose }: DeclineBookingSheetPro
               </button>
             ))}
           </div>
-        </div>
+          </div>
+        ) : null}
 
         <label className="admin-field">
           <span>Notes</span>

@@ -1,4 +1,9 @@
-import { getAdminAuthStatus } from "../../../../../lib/auth/session";
+import {
+  createAdminSessionCookie,
+  getAdminAuthStatus,
+  isConfiguredAdminEmail,
+  verifyAdminPassword,
+} from "../../../../../lib/auth/session";
 
 export const runtime = "nodejs";
 
@@ -64,7 +69,19 @@ export async function POST(request: Request) {
     return errorResponse(authStatus.code, authStatus.message, 501);
   }
 
-  // TODO: Look up admin by email, verify password hash, enforce 2FA when enabled,
-  // create a secure HTTP-only session cookie, and audit the login.
-  return errorResponse("ADMIN_AUTH_NOT_IMPLEMENTED", "Admin sign-in is not implemented yet.", 501);
+  if (!isConfiguredAdminEmail(email) || !verifyAdminPassword(password)) {
+    return errorResponse("INVALID_LOGIN", "Email or password is incorrect.", 401);
+  }
+
+  const response = jsonResponse({
+    success: true,
+    data: {
+      signedIn: true,
+    },
+    message: "Signed in.",
+  });
+
+  response.headers.set("Set-Cookie", await createAdminSessionCookie());
+
+  return response;
 }

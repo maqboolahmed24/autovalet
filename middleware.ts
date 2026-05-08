@@ -1,15 +1,31 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { verifySignedAdminSessionValue } from "./lib/auth/session-cookie";
+
+const adminSessionCookieName = "av_admin_session";
 
 function isAdminLoginPath(pathname: string) {
   return pathname === "/admin/login" || pathname.startsWith("/admin/login/");
 }
 
-export function middleware(request: NextRequest) {
+function getAdminSessionSecret() {
+  return process.env.ADMIN_SESSION_SECRET?.trim() ?? "";
+}
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith("/admin") && !isAdminLoginPath(pathname)) {
-    // TODO: Replace this fail-closed placeholder with signed session verification
-    // once admin session persistence is implemented.
+    const sessionCookie = request.cookies.get(adminSessionCookieName)?.value ?? "";
+    const sessionSecret = getAdminSessionSecret();
+
+    if (sessionCookie && sessionSecret) {
+      const session = await verifySignedAdminSessionValue(sessionCookie, sessionSecret);
+
+      if (session) {
+        return NextResponse.next();
+      }
+    }
+
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/admin/login";
     loginUrl.searchParams.set("next", pathname);

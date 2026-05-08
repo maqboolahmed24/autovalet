@@ -1,3 +1,5 @@
+import { arePaymentsEnabled } from "../../lib/config/features";
+
 export type AdminNavItem = {
   href: string;
   label: string;
@@ -17,7 +19,9 @@ export const adminMobileNavItems: AdminNavItem[] = [
   { href: "/admin/more", label: "More" },
 ];
 
-export const adminSidebarNavItems: AdminNavItem[] = [
+const paymentsEnabled = arePaymentsEnabled();
+
+const baseAdminSidebarNavItems: AdminNavItem[] = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/requests", label: "Requests" },
   { href: "/admin/calendar", label: "Calendar" },
@@ -26,36 +30,49 @@ export const adminSidebarNavItems: AdminNavItem[] = [
   { href: "/admin/availability", label: "Availability" },
   { href: "/admin/service-zones", label: "Service zones" },
   { href: "/admin/services-pricing", label: "Services & pricing" },
-  { href: "/admin/deposit-settings", label: "Deposit settings" },
   { href: "/admin/gallery", label: "Gallery" },
   { href: "/admin/settings", label: "Settings" },
+];
+
+export const adminSidebarNavItems: AdminNavItem[] = paymentsEnabled
+  ? [
+      ...baseAdminSidebarNavItems.slice(0, 8),
+      { href: "/admin/deposit-settings", label: "Deposit settings" },
+      ...baseAdminSidebarNavItems.slice(8),
+    ]
+  : baseAdminSidebarNavItems;
+
+const businessSetupItems: AdminNavItem[] = [
+  {
+    href: "/admin/availability",
+    label: "Availability",
+    description: "Working hours, closed days and blocked time.",
+  },
+  {
+    href: "/admin/service-zones",
+    label: "Service zones",
+    description: "Approved postcode and regional coverage.",
+  },
+  {
+    href: "/admin/services-pricing",
+    label: "Services & pricing",
+    description: "Packages, durations, add-ons and estimates.",
+  },
 ];
 
 export const adminMoreGroups: AdminNavGroup[] = [
   {
     title: "Business setup",
-    items: [
-      {
-        href: "/admin/availability",
-        label: "Availability",
-        description: "Working hours, closed days and blocked time.",
-      },
-      {
-        href: "/admin/service-zones",
-        label: "Service zones",
-        description: "Approved postcode and regional coverage.",
-      },
-      {
-        href: "/admin/services-pricing",
-        label: "Services & pricing",
-        description: "Packages, durations, add-ons and estimates.",
-      },
-      {
-        href: "/admin/deposit-settings",
-        label: "Deposit settings",
-        description: "Deposit rules before booking requests reach review.",
-      },
-    ],
+    items: paymentsEnabled
+      ? [
+          ...businessSetupItems,
+          {
+            href: "/admin/deposit-settings",
+            label: "Deposit settings",
+            description: "Deposit rules before booking requests reach review.",
+          },
+        ]
+      : businessSetupItems,
   },
   {
     title: "Content",

@@ -1,4 +1,5 @@
 import type { AdminBookingDetailData } from "../../lib/admin/booking-detail";
+import { arePaymentsEnabled } from "../../lib/config/features";
 
 type BookingHeroCardProps = {
   booking: AdminBookingDetailData;
@@ -17,6 +18,8 @@ function getStatusTone(status: AdminBookingDetailData["status"]) {
 }
 
 export function BookingHeroCard({ booking }: BookingHeroCardProps) {
+  const paymentsEnabled = arePaymentsEnabled();
+
   return (
     <section className="booking-hero-card" aria-labelledby="booking-detail-title">
       <div className="booking-hero-card__status">
@@ -38,8 +41,17 @@ export function BookingHeroCard({ booking }: BookingHeroCardProps) {
       </div>
 
       <div className="booking-hero-card__footer">
-        <span className="payment-pill">Deposit {booking.payment.depositPaidLabel}</span>
-        <span>{booking.payment.paymentStatusLabel}</span>
+        {paymentsEnabled ? (
+          <>
+            <span className="payment-pill">Deposit {booking.payment.depositPaidLabel}</span>
+            <span>{booking.payment.paymentStatusLabel}</span>
+          </>
+        ) : (
+          <>
+            <span className="payment-pill">No online payment</span>
+            <span>{booking.payment.estimatedTotalLabel} estimate</span>
+          </>
+        )}
       </div>
     </section>
   );

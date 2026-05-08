@@ -21,7 +21,7 @@ export function WeekStrip({ days, selectedDate }: WeekStripProps) {
           <small>
             {day.jobCount > 0 ? `${day.jobCount} job${day.jobCount === 1 ? "" : "s"}` : "No jobs"}
           </small>
-          {day.hasPending ? <i aria-label="Needs review or payment hold" /> : null}
+          {day.hasPending ? <i aria-label="Needs review" /> : null}
         </Link>
       ))}
     </nav>

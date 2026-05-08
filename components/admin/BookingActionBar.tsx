@@ -14,7 +14,7 @@ type ActiveSheet = "approve" | "decline" | "reschedule" | null;
 
 function getUnavailableReason(booking: AdminBookingDetailData) {
   if (booking.status === "payment_hold") {
-    return "Payment is still in progress.";
+    return "This hold is waiting for payment.";
   }
 
   if (booking.status === "declined") {
@@ -87,7 +87,7 @@ export function BookingActionBar({ booking }: BookingActionBarProps) {
 
         <p>
           {canOpenDecision
-            ? "Decision actions open review sheets and fail safely until persistence is connected."
+            ? "Decision actions open review sheets and save when persistence is configured."
             : getUnavailableReason(booking)}
         </p>
       </section>

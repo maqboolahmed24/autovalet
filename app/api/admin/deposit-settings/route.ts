@@ -5,12 +5,17 @@ import {
   type DepositSettings,
 } from "../../../../lib/admin/deposit-settings";
 import { adminGuardErrorResponse, requireAdmin } from "../../../../lib/auth/route-guards";
+import { arePaymentsEnabled } from "../../../../lib/config/features";
 
 export const runtime = "nodejs";
 
 type DepositSettingsBody = Partial<Record<keyof DepositSettings, unknown>>;
 
 export async function GET(request: Request) {
+  if (!arePaymentsEnabled()) {
+    return apiError("PAYMENTS_DISABLED", "Deposit settings are hidden while payments are disabled.", 404);
+  }
+
   const guard = await requireAdmin(request, { permission: "edit_deposit_settings" });
 
   if (!guard.success) {
@@ -30,6 +35,10 @@ export async function GET(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  if (!arePaymentsEnabled()) {
+    return apiError("PAYMENTS_DISABLED", "Deposit settings are hidden while payments are disabled.", 404);
+  }
+
   const guard = await requireAdmin(request, { permission: "edit_deposit_settings" });
 
   if (!guard.success) {

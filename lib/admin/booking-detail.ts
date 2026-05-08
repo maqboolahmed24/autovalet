@@ -1,13 +1,14 @@
 import { hasOverlap } from "../availability/conflicts";
 import type { AddonId, BookingStatus, PackageId, VehicleSize } from "../booking/types";
 import { getAdminBookingStatusLabel } from "../booking/status-labels";
+import { getBookingDetailRecord, type BookingDetailRecord } from "../db/booking-repository";
+import { isDatabaseConfigured } from "../db/postgres";
 import {
   addonDefinitions,
   formatMoneyGBP,
   getServicePackage,
   vehicleSizeLabels,
 } from "../pricing";
-import { getPaymentDisplayStatus } from "../payments/balance";
 
 export type ApprovalCheckState = "success" | "warning" | "danger" | "neutral";
 
@@ -92,7 +93,7 @@ export type AdminBookingDetailData = {
   };
 };
 
-export const adminBookingDetailUsesMockData = true;
+export const adminBookingDetailUsesMockData = !isDatabaseConfigured();
 
 type MockBookingSeed = {
   id: string;
@@ -367,8 +368,7 @@ function buildAddonDetails(addonIds: AddonId[]) {
   });
 }
 
-function getActions(seed: MockBookingSeed) {
-  const status = seed.status;
+function getActionsForStatus(status: BookingStatus, balanceDueMinor: number) {
   const isPending = status === "pending_admin_review";
   const canCancel =
     status === "approved" ||
@@ -376,7 +376,7 @@ function getActions(seed: MockBookingSeed) {
     status === "arrived" ||
     status === "in_progress";
   const canAdjustPrice = canCancel || status === "completed";
-  const canMarkBalancePaid = canAdjustPrice && seed.balanceDueMinor > 0;
+  const canMarkBalancePaid = canAdjustPrice && balanceDueMinor > 0;
 
   return {
     canApprove: isPending,
@@ -404,12 +404,9 @@ function buildApprovalChecks(seed: MockBookingSeed): ApprovalCheck[] {
 
   return [
     {
-      label: "Deposit paid",
-      state: seed.depositPaidMinor > 0 ? "success" : "danger",
-      message:
-        seed.depositPaidMinor > 0
-          ? "Deposit is recorded for this request."
-          : "Deposit is not recorded yet.",
+      label: "Request received",
+      state: "success",
+      message: "Customer submitted this request without online payment.",
     },
     {
       label: "No calendar clash",
@@ -456,9 +453,223 @@ function buildApprovalChecks(seed: MockBookingSeed): ApprovalCheck[] {
   ];
 }
 
+function formatDateLabel(isoDate: string) {
+  const date = new Date(isoDate);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Date missing";
+  }
+
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/London",
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  }).format(date);
+}
+
+function formatTimeLabel(isoDate: string) {
+  const date = new Date(isoDate);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Time missing";
+  }
+
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/London",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(date);
+}
+
+function getZoneLabel(zoneStatus: BookingDetailRecord["zoneStatus"]) {
+  if (zoneStatus === "outside_zone_volume_exception") return "Outside-zone request";
+  if (zoneStatus === "outside_service_area") return "Outside service area";
+
+  return "Standard service zone";
+}
+
+function getParkingLabel(parkingAvailable: BookingDetailRecord["parkingAvailable"]) {
+  if (parkingAvailable === "yes") return "Yes";
+  if (parkingAvailable === "no") return "No";
+
+  return "Unknown";
+}
+
+function buildRecordApprovalChecks(record: BookingDetailRecord): ApprovalCheck[] {
+  const customerComplete = Boolean(
+    record.customerName.trim() && record.customerPhone.trim() && record.customerEmail.trim(),
+  );
+  const vehicleComplete = Boolean(record.vehicleMake.trim() && record.vehicleModel.trim() && record.vehicleSize);
+  const isOutsideZone = record.zoneStatus !== "standard_zone";
+
+  return [
+    {
+      label: "Request received",
+      state: "success",
+      message: "Customer submitted this request without online payment.",
+    },
+    {
+      label: "Calendar re-check",
+      state: "neutral",
+      message: "Approval re-checks live calendar conflicts before saving.",
+    },
+    {
+      label: "Service area",
+      state: isOutsideZone ? "warning" : "success",
+      message: isOutsideZone
+        ? "Outside-zone request: check vehicle count and location before approval."
+        : "Location is inside the standard service zone.",
+    },
+    {
+      label: "Customer details complete",
+      state: customerComplete ? "success" : "danger",
+      message: customerComplete ? "Name, phone and email are present." : "Customer details are incomplete.",
+    },
+    {
+      label: "Vehicle details complete",
+      state: vehicleComplete ? "success" : "danger",
+      message: vehicleComplete ? "Make, model and size are present." : "Vehicle details are incomplete.",
+    },
+    {
+      label: "Service duration calculated",
+      state: record.serviceDurationMinutes > 0 ? "success" : "danger",
+      message: `Service runs until ${formatTimeLabel(record.serviceEndsAt)}; calendar is blocked until ${formatTimeLabel(record.blockedUntil)}.`,
+    },
+    {
+      label: "Parking/access details reviewed",
+      state: record.parkingAvailable === "yes" ? "success" : "warning",
+      message:
+        record.parkingAvailable === "yes"
+          ? "Parking is marked as available."
+          : "Parking or access may need admin review.",
+    },
+    {
+      label: "Price may vary notice",
+      state: "neutral",
+      message: "Customer estimate may change depending on condition on arrival.",
+    },
+  ];
+}
+
+function buildRecordAddonDetails(record: BookingDetailRecord) {
+  const addonIds = [...new Set(record.addons.map((addon) => addon.id))];
+
+  return addonIds.map((addonId) => {
+    const addon = addonDefinitions[addonId];
+
+    return {
+      id: addon.id,
+      label: addon.label,
+      priceLabel: formatMoneyGBP(addon.priceMinor),
+    };
+  });
+}
+
+function buildDetailFromRecord(record: BookingDetailRecord): AdminBookingDetailData {
+  const service = getServicePackage(record.packageId);
+  const primaryVehicle = record.vehicles.find((vehicle) => vehicle.isPrimary) ?? record.vehicles[0];
+  const vehicleMake = primaryVehicle?.make || record.vehicleMake;
+  const vehicleModel = primaryVehicle?.model || record.vehicleModel;
+  const vehicleSize = primaryVehicle?.size || record.vehicleSize;
+  const finalTotalLabel = record.finalTotalMinor === null ? undefined : formatMoneyGBP(record.finalTotalMinor);
+  const zoneLabel = getZoneLabel(record.zoneStatus);
+
+  return {
+    id: record.id,
+    reference: record.reference,
+    status: record.status,
+    statusLabel: getAdminBookingStatusLabel(record.status),
+    requestedDateLabel: formatDateLabel(record.requestedStartAt),
+    requestedTimeLabel: formatTimeLabel(record.requestedStartAt),
+    serviceEndLabel: formatTimeLabel(record.serviceEndsAt),
+    blockedUntilLabel: formatTimeLabel(record.blockedUntil),
+    serviceLabel: service.label,
+    packageId: record.packageId,
+    vehicle: {
+      make: vehicleMake,
+      model: vehicleModel,
+      size: vehicleSize,
+      label: `${vehicleMake} ${vehicleModel} · ${vehicleSizeLabels[vehicleSize]}`,
+    },
+    addons: buildRecordAddonDetails(record),
+    customer: {
+      fullName: record.customerName,
+      phone: record.customerPhone,
+      email: record.customerEmail,
+    },
+    location: {
+      fullAddress: record.fullAddress,
+      postcode: record.postcode,
+      zoneLabel,
+      isOutsideZone: record.zoneStatus !== "standard_zone",
+      parkingAvailable: getParkingLabel(record.parkingAvailable),
+      parkingNotes: record.parkingNotes,
+      accessNotes: record.accessNotes,
+    },
+    payment: {
+      depositPaidLabel: formatMoneyGBP(record.depositPaidMinor),
+      estimatedTotalLabel: formatMoneyGBP(record.estimatedTotalMinor),
+      finalTotalLabel,
+      balanceDueLabel: formatMoneyGBP(record.balanceDueMinor),
+      paymentStatusLabel: "No online payment",
+    },
+    financials: {
+      estimatedTotalMinor: record.estimatedTotalMinor,
+      finalTotalMinor: record.finalTotalMinor,
+      depositPaidMinor: record.depositPaidMinor,
+      balancePaidMinor: record.balancePaidMinor,
+      balanceDueMinor: record.balanceDueMinor,
+    },
+    notes: {
+      customerNotes: record.extraNotes,
+      adminNotes: record.adminNotes,
+    },
+    checks: buildRecordApprovalChecks(record),
+    actions: getActionsForStatus(record.status, record.balanceDueMinor),
+    activity: [
+      {
+        id: "activity-request-created",
+        label: "Booking request submitted",
+        atLabel: formatDateLabel(record.createdAt),
+        actorLabel: "Customer",
+      },
+      ...(record.approvedAt
+        ? [
+            {
+              id: "activity-approved",
+              label: "Booking approved",
+              atLabel: formatDateLabel(record.approvedAt),
+              actorLabel: "Admin",
+            },
+          ]
+        : []),
+      ...(record.declinedAt
+        ? [
+            {
+              id: "activity-declined",
+              label: "Booking declined",
+              atLabel: formatDateLabel(record.declinedAt),
+              actorLabel: "Admin",
+            },
+          ]
+        : []),
+    ],
+    schedule: {
+      requestedStartAt: record.requestedStartAt,
+      blockedUntil: record.blockedUntil,
+    },
+  };
+}
+
 export async function getAdminBookingDetail(id: string): Promise<AdminBookingDetailData | null> {
-  // TODO: Replace this safe mock detail with a database-backed booking lookup.
-  // The mock data is generic and must not be treated as a live customer record.
+  if (isDatabaseConfigured()) {
+    const record = await getBookingDetailRecord(id);
+
+    return record ? buildDetailFromRecord(record) : null;
+  }
+
   const seed = getMockSeed(id);
 
   if (!seed) {
@@ -466,17 +677,6 @@ export async function getAdminBookingDetail(id: string): Promise<AdminBookingDet
   }
 
   const service = getServicePackage(seed.packageId);
-  const paymentStatus = getPaymentDisplayStatus({
-    bookingId: seed.id,
-    status: seed.status,
-    estimatedTotalMinor: seed.estimatedTotalMinor,
-    finalTotalMinor: seed.finalTotalMinor,
-    depositPaidMinor: seed.depositPaidMinor,
-    balanceDueMinor: seed.balanceDueMinor,
-    balancePaidMinor: seed.balancePaidMinor,
-    currency: "GBP",
-  });
-
   return {
     id: seed.id,
     reference: seed.reference,
@@ -514,14 +714,7 @@ export async function getAdminBookingDetail(id: string): Promise<AdminBookingDet
       estimatedTotalLabel: formatMoneyGBP(seed.estimatedTotalMinor),
       finalTotalLabel: seed.finalTotalMinor === null ? undefined : formatMoneyGBP(seed.finalTotalMinor),
       balanceDueLabel: formatMoneyGBP(seed.balanceDueMinor),
-      paymentStatusLabel:
-        paymentStatus === "fully_paid"
-          ? "Fully paid"
-          : paymentStatus === "balance_unpaid"
-            ? "Balance due"
-            : paymentStatus === "deposit_pending"
-              ? "Deposit pending"
-              : "Part paid",
+      paymentStatusLabel: "No online payment",
     },
     financials: {
       estimatedTotalMinor: seed.estimatedTotalMinor,
@@ -537,13 +730,13 @@ export async function getAdminBookingDetail(id: string): Promise<AdminBookingDet
       adminNotes: "Placeholder detail record. Replace with database notes before launch.",
     },
     checks: buildApprovalChecks(seed),
-    actions: getActions(seed),
+    actions: getActionsForStatus(seed.status, seed.balanceDueMinor),
     activity: [
       {
         id: "activity-1",
-        label: seed.status === "payment_hold" ? "Payment hold created" : "Deposit received",
+        label: seed.status === "payment_hold" ? "Payment hold created" : "Booking request submitted",
         atLabel: "Today",
-        actorLabel: "System",
+        actorLabel: "Customer",
       },
       {
         id: "activity-2",

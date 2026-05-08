@@ -29,7 +29,7 @@ function getEmptyState(activeFilter: AdminRequestFilter, search?: string) {
 
   return {
     title: "No requests waiting.",
-    description: "New paid booking requests will appear here.",
+    description: "New booking requests will appear here.",
   };
 }
 
@@ -46,7 +46,7 @@ export function AdminRequestsInbox({
       <AdminPageHeader
         eyebrow="Requests"
         title="Booking requests"
-        description="Review paid requests, outside-zone enquiries and reschedule decisions."
+        description="Review booking requests, outside-zone enquiries and reschedule decisions."
       />
 
       <div className="admin-requests-inbox__controls">

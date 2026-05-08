@@ -1,9 +1,17 @@
 import type { BookingDraft } from "../booking/types";
+import { arePaymentsEnabled } from "../config/features";
 import { addonDefinitions, servicePackages, vehicleSizeLabels } from "./catalog";
 import { calculateDepositDue } from "./deposits";
 import type { PriceBreakdown } from "./types";
 
-export function calculateBookingPrice(draft: BookingDraft): PriceBreakdown {
+export type CalculateBookingPriceOptions = {
+  paymentsEnabled?: boolean;
+};
+
+export function calculateBookingPrice(
+  draft: BookingDraft,
+  options: CalculateBookingPriceOptions = {},
+): PriceBreakdown {
   const primaryVehicle = draft.vehicles[0];
 
   if (!draft.packageId || !primaryVehicle?.size) {
@@ -36,7 +44,8 @@ export function calculateBookingPrice(draft: BookingDraft): PriceBreakdown {
   }
 
   const estimatedTotalMinor = lines.reduce((total, line) => total + line.amountMinor, 0);
-  const depositDueMinor = calculateDepositDue(estimatedTotalMinor);
+  const paymentsEnabled = options.paymentsEnabled ?? arePaymentsEnabled();
+  const depositDueMinor = paymentsEnabled ? calculateDepositDue(estimatedTotalMinor) : 0;
 
   return {
     estimatedTotalMinor,

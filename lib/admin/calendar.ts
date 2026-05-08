@@ -1,5 +1,6 @@
 import { getAdminBookingStatusLabel } from "../booking/status-labels";
 import type { BookingStatus } from "../booking/types";
+import { arePaymentsEnabled } from "../config/features";
 import { getWorkingHoursForDate, parseTimeToMinutes, formatMinutesToTime } from "../availability/working-hours";
 import type { DayAvailability } from "../availability/types";
 
@@ -67,6 +68,7 @@ type BusyWindow = {
 export const adminCalendarUsesMockData = true;
 const businessTimeZone = "Europe/London";
 const minimumDisplayedGapMinutes = 15;
+const paymentsEnabled = arePaymentsEnabled();
 
 export function getTodayInBusinessTimezone() {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -105,7 +107,7 @@ export function buildAdminCalendarWeek(selectedDate: string): AdminCalendarWeekD
       weekdayLabel: formatDatePart(date, { weekday: "short" }),
       dayNumber: formatDatePart(date, { day: "2-digit" }),
       isSelected: date === selectedDate,
-      hasPending: summary.pendingCount > 0 || summary.holdCount > 0,
+      hasPending: summary.pendingCount > 0 || (paymentsEnabled && summary.holdCount > 0),
       jobCount: summary.approvedCount,
     };
   });
@@ -114,7 +116,9 @@ export function buildAdminCalendarWeek(selectedDate: string): AdminCalendarWeekD
 export async function getAdminCalendarDay(input: { date: string }): Promise<AdminCalendarDay> {
   const date = parseAdminCalendarDate(input.date);
   const availability = getWorkingHoursForDate({ date });
-  const bookings = getMockCalendarBookings(date, availability);
+  const bookings = getMockCalendarBookings(date, availability).filter(
+    (booking) => paymentsEnabled || booking.status !== "payment_hold",
+  );
   const blockedTimes = getMockBlockedTimes(date, availability);
 
   return {
@@ -129,7 +133,7 @@ export async function getAdminCalendarDay(input: { date: string }): Promise<Admi
     summary: {
       approvedCount: bookings.filter((booking) => isApprovedJobStatus(booking.status)).length,
       pendingCount: bookings.filter((booking) => booking.status === "pending_admin_review").length,
-      holdCount: bookings.filter((booking) => booking.status === "payment_hold").length,
+      holdCount: paymentsEnabled ? bookings.filter((booking) => booking.status === "payment_hold").length : 0,
     },
     items: buildTimelineItems({
       date,
@@ -344,7 +348,7 @@ function getMockWeekSummary(date: string, availability: DayAvailability) {
   return {
     approvedCount: weekday === 6 ? 1 : 2,
     pendingCount: weekday === 1 || weekday === 3 ? 1 : 0,
-    holdCount: weekday === 4 ? 1 : 0,
+    holdCount: paymentsEnabled && weekday === 4 ? 1 : 0,
   };
 }
 

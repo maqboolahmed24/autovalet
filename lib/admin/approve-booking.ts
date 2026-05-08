@@ -1,6 +1,12 @@
 import type { CalendarBlockingBooking } from "../availability";
 import { hasOverlap, isCalendarBlockingStatus } from "../availability/conflicts";
 import { canTransitionBookingStatus } from "../booking/lifecycle";
+import { arePaymentsEnabled } from "../config/features";
+import {
+  approveBookingRecord,
+  BookingPersistenceError,
+  SlotUnavailableError,
+} from "../db/booking-repository";
 import { dispatchNotification } from "../notifications/dispatcher";
 import type { AdminBookingDetailData } from "./booking-detail";
 
@@ -61,7 +67,7 @@ function validateBookingReadyForApproval(booking: AdminBookingDetailData, existi
     errors.push("Only bookings waiting for approval can be approved.");
   }
 
-  if (booking.financials.depositPaidMinor <= 0) {
+  if (arePaymentsEnabled() && booking.financials.depositPaidMinor <= 0) {
     errors.push("Deposit is not confirmed.");
   }
 
@@ -196,12 +202,37 @@ export async function approveBooking(
     };
   }
 
-  return {
-    success: false,
-    code: "APPROVAL_PERSISTENCE_NOT_CONFIGURED",
-    message: "Booking approval is not connected to database persistence yet.",
-    details: {
-      reason: "Status, approved_at, audit log and notifications require persistence.",
-    },
-  };
+  try {
+    const savedApproval = await approveBookingRecord(input.bookingId, input.adminId);
+    await dispatchApprovalNotification(options.booking);
+
+    return {
+      success: true,
+      bookingId: input.bookingId,
+      status: "approved",
+      approvedAt: savedApproval.approvedAt,
+    };
+  } catch (error) {
+    if (error instanceof SlotUnavailableError) {
+      return {
+        success: false,
+        code: "APPROVAL_CONFLICT",
+        message: error.message,
+      };
+    }
+
+    if (error instanceof BookingPersistenceError) {
+      return {
+        success: false,
+        code: "APPROVAL_VALIDATION_FAILED",
+        message: error.message,
+      };
+    }
+
+    return {
+      success: false,
+      code: "APPROVAL_PERSISTENCE_FAILED",
+      message: "Booking approval could not be saved.",
+    };
+  }
 }

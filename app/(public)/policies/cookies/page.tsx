@@ -24,13 +24,13 @@ const cookieSections: PolicySection[] = [
     title: "Non-essential cookies",
     paragraphs: [
       "Non-essential analytics or marketing cookies must not be activated until a consent mechanism is implemented.",
-      "Analytics events must not include personal booking details such as names, phone numbers, email addresses, full addresses, full postcodes or payment references.",
+      "Analytics events must not include personal booking details such as names, phone numbers, email addresses, full addresses or full postcodes.",
     ],
   },
   {
     title: "Managing cookies",
     paragraphs: [
-      "Customers can manage cookies through their browser settings. Blocking essential cookies may affect booking, payment or status features.",
+      "Customers can manage cookies through their browser settings. Blocking essential cookies may affect booking or status features.",
     ],
   },
   {

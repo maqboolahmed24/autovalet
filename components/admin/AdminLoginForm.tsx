@@ -51,6 +51,7 @@ export function AdminLoginForm({ authConfigured }: AdminLoginFormProps) {
         tone: "success",
         message: "Signed in.",
       });
+      window.location.href = new URLSearchParams(window.location.search).get("next") || "/admin";
     } catch {
       setState({
         tone: "warning",
@@ -93,7 +94,7 @@ export function AdminLoginForm({ authConfigured }: AdminLoginFormProps) {
       </button>
 
       <p className="admin-login-form__helper">
-        Admin access is required to manage bookings, requests and payments.
+        Admin access is required to manage bookings, requests and operations.
       </p>
 
       {state ? (

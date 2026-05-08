@@ -14,6 +14,14 @@ describe("booking lifecycle", () => {
     expect(result.allowed).toBe(true);
   });
 
+  it("allows zone_validated to pending_admin_review for no-payment customer submissions", () => {
+    const result = canTransitionBookingStatus("zone_validated", "pending_admin_review", {
+      actor: "customer",
+    });
+
+    expect(result.allowed).toBe(true);
+  });
+
   it("allows pending_admin_review to approved from admin", () => {
     const result = canTransitionBookingStatus("pending_admin_review", "approved", {
       actor: "admin",

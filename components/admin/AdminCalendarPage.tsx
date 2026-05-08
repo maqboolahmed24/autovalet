@@ -5,6 +5,7 @@ import { CalendarLegend } from "./CalendarLegend";
 import { DayTimeline } from "./DayTimeline";
 import { WeekStrip } from "./WeekStrip";
 import type { AdminCalendarDay, AdminCalendarWeekDay } from "../../lib/admin/calendar";
+import { arePaymentsEnabled } from "../../lib/config/features";
 
 type AdminCalendarPageProps = {
   day: AdminCalendarDay;
@@ -13,6 +14,8 @@ type AdminCalendarPageProps = {
 };
 
 export function AdminCalendarPage({ day, weekDays, isMockData = false }: AdminCalendarPageProps) {
+  const paymentsEnabled = arePaymentsEnabled();
+
   return (
     <div className="admin-page admin-calendar-page">
       <AdminPageHeader
@@ -21,7 +24,7 @@ export function AdminCalendarPage({ day, weekDays, isMockData = false }: AdminCa
         description={
           isMockData
             ? "Placeholder timeline data while booking persistence is being connected."
-            : "Approved jobs, pending requests, holds, buffers and blocked time."
+            : "Approved jobs, pending requests, buffers and blocked time."
         }
       />
 
@@ -41,10 +44,12 @@ export function AdminCalendarPage({ day, weekDays, isMockData = false }: AdminCa
             <span>Needs review</span>
             <strong>{day.summary.pendingCount}</strong>
           </div>
-          <div>
-            <span>Payment holds</span>
-            <strong>{day.summary.holdCount}</strong>
-          </div>
+          {paymentsEnabled ? (
+            <div>
+              <span>Payment holds</span>
+              <strong>{day.summary.holdCount}</strong>
+            </div>
+          ) : null}
         </div>
         <CalendarLegend />
         {day.items.length > 0 ? (

@@ -12,8 +12,8 @@ type ReviewPaymentContentProps = {
   draft: BookingDraft;
   onSubmit?: () => void | Promise<void>;
   isSubmitting?: boolean;
-  paymentEnabled?: boolean;
-  paymentError?: string;
+  paymentsEnabled?: boolean;
+  submitError?: string;
 };
 
 const parkingLabels: Record<Exclude<BookingDraft["parkingAvailable"], "">, string> = {
@@ -49,11 +49,11 @@ function ReviewPaymentContent({
   draft,
   onSubmit,
   isSubmitting = false,
-  paymentEnabled = false,
-  paymentError = "",
+  paymentsEnabled = false,
+  submitError = "",
 }: ReviewPaymentContentProps) {
-  const estimate = calculateBookingPrice(draft);
-  const canStartPayment = paymentEnabled && Boolean(onSubmit) && !isSubmitting;
+  const estimate = calculateBookingPrice(draft, { paymentsEnabled });
+  const canSubmitRequest = Boolean(onSubmit) && !isSubmitting;
   const estimateIsReady = estimate.estimatedTotalMinor > 0;
 
   return (
@@ -162,11 +162,11 @@ function ReviewPaymentContent({
               <dd>{estimateIsReady ? `${formatMoneyGBP(estimate.estimatedTotalMinor)} estimate` : "Complete service details"}</dd>
             </div>
             <div>
-              <dt>Deposit due today</dt>
-              <dd>{estimateIsReady ? formatMoneyGBP(estimate.depositDueMinor) : "Calculated after estimate"}</dd>
+              <dt>Online payment today</dt>
+              <dd>{paymentsEnabled && estimateIsReady ? formatMoneyGBP(estimate.depositDueMinor) : "£0"}</dd>
             </div>
             <div>
-              <dt>Remaining balance</dt>
+              <dt>Balance due on completion</dt>
               <dd>{estimateIsReady ? `${formatMoneyGBP(estimate.remainingBalanceMinor)} estimate` : "Calculated after estimate"}</dd>
             </div>
           </dl>
@@ -175,8 +175,8 @@ function ReviewPaymentContent({
 
       <div className="booking-review-policy">
         <p>Prices may vary depending on vehicle condition on arrival.</p>
-        <p>A deposit is required to submit your booking request.</p>
-        <p>The remaining balance is due after the deposit and paid on completion.</p>
+        <p>No online payment is taken when you submit this request.</p>
+        <p>The balance is arranged after approval and paid on completion.</p>
         <p>Your appointment is confirmed only after manual approval.</p>
         <p>Selected dates and times are requested times until approval.</p>
       </div>
@@ -184,28 +184,24 @@ function ReviewPaymentContent({
       <button
         className="primary-button booking-payment-button"
         type="button"
-        disabled={!canStartPayment}
+        disabled={!canSubmitRequest}
         aria-describedby={
-          paymentError ? "booking-payment-error" : !paymentEnabled ? "booking-payment-hint" : undefined
+          submitError ? "booking-payment-error" : undefined
         }
-        onClick={canStartPayment ? () => void onSubmit?.() : undefined}
+        onClick={canSubmitRequest ? () => void onSubmit?.() : undefined}
       >
-        {paymentEnabled
+        {paymentsEnabled
           ? isSubmitting
             ? "Preparing checkout..."
             : "Pay Deposit & Request Booking"
-          : "Payment integration coming next"}
+          : isSubmitting
+            ? "Submitting request..."
+            : "Submit booking request"}
       </button>
 
-      {!paymentEnabled ? (
-        <p className="form-field__hint" id="booking-payment-hint">
-          Deposit checkout will be connected in the payment integration step.
-        </p>
-      ) : null}
-
-      {paymentError ? (
+      {submitError ? (
         <p className="form-field__error booking-payment-error" id="booking-payment-error" role="alert">
-          {paymentError}
+          {submitError}
         </p>
       ) : null}
     </div>
@@ -214,18 +210,18 @@ function ReviewPaymentContent({
 
 export function ReviewPaymentStep({
   draft,
-  onPaymentSubmit,
-  isPaymentSubmitting,
-  paymentEnabled,
-  paymentError,
+  onBookingSubmit,
+  isBookingSubmitting,
+  paymentsEnabled,
+  bookingSubmitError,
 }: BookingStepProps) {
   return (
     <ReviewPaymentContent
       draft={draft}
-      onSubmit={onPaymentSubmit}
-      isSubmitting={isPaymentSubmitting}
-      paymentEnabled={paymentEnabled}
-      paymentError={paymentError}
+      onSubmit={onBookingSubmit}
+      isSubmitting={isBookingSubmitting}
+      paymentsEnabled={paymentsEnabled}
+      submitError={bookingSubmitError}
     />
   );
 }
