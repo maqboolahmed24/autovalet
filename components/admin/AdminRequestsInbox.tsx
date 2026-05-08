@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AdminEmptyState } from "./AdminEmptyState";
 import { AdminPageHeader } from "./AdminPageHeader";
 import { AdminRequestGroup } from "./AdminRequestGroup";
@@ -47,6 +48,11 @@ export function AdminRequestsInbox({
         eyebrow="Requests"
         title="Booking requests"
         description="Review booking requests, outside-zone enquiries and reschedule decisions."
+        actions={
+          <Link className="ghost-button" href="/admin/bookings/new">
+            Add booking
+          </Link>
+        }
       />
 
       <div className="admin-requests-inbox__controls">

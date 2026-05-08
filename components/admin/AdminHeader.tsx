@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getAdminRouteLabel } from "./adminNavigation";
+import { AdminSignOutButton } from "./AdminSignOutButton";
 
 type AdminHeaderProps = {
   authConfigured: boolean;
@@ -23,9 +23,7 @@ export function AdminHeader({ authConfigured, adminName }: AdminHeaderProps) {
 
       <div className="admin-header__actions">
         {!authConfigured ? <span className="admin-auth-badge">Auth setup needed</span> : null}
-        <Link className="ghost-button admin-header__action" href="/admin/bookings/new">
-          Add booking
-        </Link>
+        {authConfigured ? <AdminSignOutButton /> : null}
       </div>
     </header>
   );
