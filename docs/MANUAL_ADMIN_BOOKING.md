@@ -207,12 +207,12 @@ Database persistence is intentionally not enabled yet. The future implementation
 
 ## Security
 
-Admin auth is not implemented in this repository yet. Therefore `/api/admin/bookings` returns a safe `501 ADMIN_AUTH_NOT_CONFIGURED` response and does not mutate anything.
+The admin auth foundation is present, but database-backed session persistence is not connected yet. Therefore `/api/admin/bookings` returns a safe `501 ADMIN_AUTH_NOT_CONFIGURED` response and does not mutate anything.
 
 Before enabling persistence:
 
-- Add secure admin sessions.
-- Add `create_manual_booking` permission checks.
+- Connect secure admin sessions.
+- Keep the `create_manual_booking` permission guard in place.
 - Add CSRF/session protections appropriate to the chosen auth layer.
 - Write audit logs for every successful manual booking and override.
 

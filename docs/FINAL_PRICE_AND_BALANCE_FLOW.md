@@ -104,7 +104,7 @@ Current foundation behavior:
 
 - Validates request shape and amount.
 - Calls the central final-price domain function.
-- Returns safe 501 responses until admin auth, booking lookup, and database persistence are connected.
+- Uses the admin route guard and returns safe 501 responses until session persistence, booking lookup, and database persistence are connected.
 
 ### Mark Balance Paid
 
@@ -140,7 +140,7 @@ Current foundation behavior:
 
 - Validates amount and payment method.
 - Calls the central balance payment domain function.
-- Returns safe 501 responses until admin auth, booking lookup, and database persistence are connected.
+- Uses the admin route guard and returns safe 501 responses until session persistence, booking lookup, and database persistence are connected.
 
 ## Audit Log Requirements
 

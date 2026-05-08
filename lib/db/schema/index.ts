@@ -6,6 +6,7 @@ import { bookingAddonsTable } from "./booking-addons";
 import { bookingsTable } from "./bookings";
 import { customersTable } from "./customers";
 import { galleryItemsTable } from "./gallery";
+import { notificationLogsTable } from "./notification-logs";
 import { paymentsTable } from "./payments";
 import { serviceZonesTable } from "./service-zones";
 import { serviceVariantsTable, servicesTable } from "./services";
@@ -20,6 +21,7 @@ export * from "./booking-addons";
 export * from "./bookings";
 export * from "./customers";
 export * from "./gallery";
+export * from "./notification-logs";
 export * from "./payments";
 export * from "./service-zones";
 export * from "./services";
@@ -40,6 +42,7 @@ export const databaseSchema = {
   availabilityOverrides: availabilityOverridesTable,
   adminUsers: adminUsersTable,
   galleryItems: galleryItemsTable,
+  notificationLogs: notificationLogsTable,
   auditLogs: auditLogsTable,
   webhookEvents: webhookEventsTable,
 } as const;

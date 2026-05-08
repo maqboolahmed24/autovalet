@@ -217,6 +217,7 @@ export async function markBalancePaid(
   }
 
   // TODO: Create a balance payment row, update booking balance fields, and write an audit log in one transaction.
+  // TODO: Dispatch `balance_payment_recorded` after persistence succeeds.
   return {
     success: true,
     balancePaidMinor: nextBalancePaidMinor,

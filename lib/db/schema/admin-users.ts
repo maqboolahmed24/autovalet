@@ -15,6 +15,6 @@ export const adminUsersTable = {
     { name: "admin_users_role_idx", columns: ["role"] },
   ],
   checks: [
-    "role in ('owner', 'admin', 'staff')",
+    "role in ('owner', 'manager', 'staff', 'read_only')",
   ],
 } as const;

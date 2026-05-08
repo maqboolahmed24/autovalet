@@ -198,8 +198,9 @@ Stores admin login records with future-ready 2FA support.
 Roles:
 
 - `owner`
-- `admin`
+- `manager`
 - `staff`
+- `read_only`
 
 ### gallery_items
 

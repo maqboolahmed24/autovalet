@@ -102,10 +102,10 @@ Admin screens must use `getAdminBookingStatusLabel(status)`.
 | `zone_validated` | `payment_hold` |
 | `payment_hold` | `pending_admin_review`, `expired`, `payment_failed` |
 | `pending_admin_review` | `approved`, `declined`, `reschedule_requested` |
-| `approved` | `on_the_way`, `cancelled_by_admin`, `cancelled_by_customer`, `no_show` |
-| `on_the_way` | `arrived` |
-| `arrived` | `in_progress` |
-| `in_progress` | `completed` |
+| `approved` | `reschedule_requested`, `on_the_way`, `cancelled_by_admin`, `cancelled_by_customer`, `no_show` |
+| `on_the_way` | `arrived`, `cancelled_by_admin`, `no_show` |
+| `arrived` | `in_progress`, `cancelled_by_admin`, `no_show` |
+| `in_progress` | `completed`, `cancelled_by_admin` |
 | `reschedule_requested` | `pending_admin_review`, `approved` |
 | `declined` | `refunded` |
 | `cancelled_by_admin` | `refunded` |
@@ -145,7 +145,7 @@ Before writing `approved`, the future admin route must:
 - Re-check calendar conflicts excluding the booking itself.
 - Write audit logs and notifications.
 
-Admin decline and reschedule also start from `pending_admin_review` and must be transaction-safe.
+Admin decline starts from `pending_admin_review`. Admin reschedule can start from `pending_admin_review` or an already `approved` booking when AUTO VALET needs to propose a new time. Both flows must be transaction-safe.
 
 ## Cancellation And Refund Transitions
 
@@ -156,6 +156,8 @@ Admin decline and reschedule also start from `pending_admin_review` and must be 
 - `cancelled_by_customer -> refunded` requires a clear policy reason in the transition context.
 
 Money-changing actions must create audit logs once persistence is connected.
+
+No-show/access failure can be recorded from `approved`, `on_the_way`, or `arrived`. It must not be used before approval or after completion.
 
 ## Job-Day Transitions
 

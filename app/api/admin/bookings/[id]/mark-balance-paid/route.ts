@@ -1,4 +1,5 @@
 import { isBalancePaymentMethod, markBalancePaid } from "../../../../../../lib/payments/balance";
+import { requireAdmin, adminGuardErrorResponse } from "../../../../../../lib/auth/route-guards";
 
 export const runtime = "nodejs";
 
@@ -67,6 +68,12 @@ function readMoneyMinor(value: unknown) {
 }
 
 export async function POST(request: Request, { params }: RouteContext) {
+  const guard = await requireAdmin(request, { permission: "mark_balance_paid" });
+
+  if (!guard.success) {
+    return adminGuardErrorResponse(guard);
+  }
+
   let body: Record<string, unknown>;
 
   try {
@@ -94,7 +101,11 @@ export async function POST(request: Request, { params }: RouteContext) {
     paymentMethod: body.paymentMethod,
     note: readString(body.note),
     paidAt: readString(body.paidAt) || undefined,
-    adminId: "auth-not-configured",
+    adminId: guard.session.adminId,
+  }, {
+    adminAuthenticated: true,
+    canMarkBalancePaid: true,
+    persistenceConfigured: false,
   });
 
   if (!result.success) {

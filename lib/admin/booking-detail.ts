@@ -1,0 +1,419 @@
+import { hasOverlap } from "../availability/conflicts";
+import type { AddonId, BookingStatus, PackageId, VehicleSize } from "../booking/types";
+import { getAdminBookingStatusLabel } from "../booking/status-labels";
+import {
+  addonDefinitions,
+  formatMoneyGBP,
+  getServicePackage,
+  vehicleSizeLabels,
+} from "../pricing";
+import { getPaymentDisplayStatus } from "../payments/balance";
+
+export type ApprovalCheckState = "success" | "warning" | "danger" | "neutral";
+
+export type ApprovalCheck = {
+  label: string;
+  state: ApprovalCheckState;
+  message?: string;
+};
+
+export type AdminBookingDetailData = {
+  id: string;
+  reference: string;
+  status: BookingStatus;
+  statusLabel: string;
+  requestedDateLabel: string;
+  requestedTimeLabel: string;
+  serviceEndLabel: string;
+  blockedUntilLabel: string;
+  serviceLabel: string;
+  packageId: PackageId;
+  vehicle: {
+    make: string;
+    model: string;
+    size: VehicleSize;
+    label: string;
+  };
+  addons: {
+    id: AddonId;
+    label: string;
+    priceLabel: string;
+  }[];
+  customer: {
+    fullName: string;
+    phone: string;
+    email: string;
+  };
+  location: {
+    fullAddress: string;
+    postcode: string;
+    zoneLabel: string;
+    isOutsideZone: boolean;
+    parkingAvailable: string;
+    parkingNotes?: string;
+    accessNotes?: string;
+  };
+  payment: {
+    depositPaidLabel: string;
+    estimatedTotalLabel: string;
+    finalTotalLabel?: string;
+    balanceDueLabel: string;
+    paymentStatusLabel: string;
+  };
+  financials: {
+    estimatedTotalMinor: number;
+    finalTotalMinor: number | null;
+    depositPaidMinor: number;
+    balancePaidMinor: number;
+    balanceDueMinor: number;
+  };
+  notes: {
+    customerNotes?: string;
+    adminNotes?: string;
+  };
+  checks: ApprovalCheck[];
+  actions: {
+    canApprove: boolean;
+    canDecline: boolean;
+    canReschedule: boolean;
+    canCancel: boolean;
+    canAdjustPrice: boolean;
+    canMarkBalancePaid: boolean;
+  };
+  activity: {
+    id: string;
+    label: string;
+    atLabel: string;
+    actorLabel?: string;
+  }[];
+  schedule: {
+    requestedStartAt: string;
+    blockedUntil: string;
+  };
+};
+
+export const adminBookingDetailUsesMockData = true;
+
+type MockBookingSeed = {
+  id: string;
+  reference: string;
+  status: BookingStatus;
+  packageId: PackageId;
+  vehicleSize: VehicleSize;
+  make: string;
+  model: string;
+  addonIds: AddonId[];
+  requestedDateLabel: string;
+  requestedTimeLabel: string;
+  serviceEndLabel: string;
+  blockedUntilLabel: string;
+  isOutsideZone: boolean;
+  parkingAvailable: "Yes" | "No" | "Unknown";
+  estimatedTotalMinor: number;
+  finalTotalMinor: number | null;
+  depositPaidMinor: number;
+  balancePaidMinor: number;
+  balanceDueMinor: number;
+  requestedStartAt: string;
+  blockedUntil: string;
+};
+
+const mockSeeds: Record<string, MockBookingSeed> = {
+  "mock-request-1": {
+    id: "mock-request-1",
+    reference: "AV-2026-DEMO1",
+    status: "pending_admin_review",
+    packageId: "deep_clean",
+    vehicleSize: "medium",
+    make: "BMW",
+    model: "3 Series",
+    addonIds: ["engine_bay_clean", "excess_pet_hair_removal"],
+    requestedDateLabel: "Mon 18 May",
+    requestedTimeLabel: "11:45",
+    serviceEndLabel: "15:50",
+    blockedUntilLabel: "16:35",
+    isOutsideZone: false,
+    parkingAvailable: "Yes",
+    estimatedTotalMinor: 22500,
+    finalTotalMinor: null,
+    depositPaidMinor: 3000,
+    balancePaidMinor: 0,
+    balanceDueMinor: 19500,
+    requestedStartAt: "2026-05-18T10:45:00.000Z",
+    blockedUntil: "2026-05-18T15:35:00.000Z",
+  },
+  "mock-request-2": {
+    id: "mock-request-2",
+    reference: "AV-2026-DEMO2",
+    status: "pending_admin_review",
+    packageId: "maintenance",
+    vehicleSize: "large_4x4",
+    make: "Range Rover",
+    model: "Sport",
+    addonIds: ["liquid_decon_clay_bar"],
+    requestedDateLabel: "Mon 18 May",
+    requestedTimeLabel: "14:15",
+    serviceEndLabel: "16:35",
+    blockedUntilLabel: "17:20",
+    isOutsideZone: true,
+    parkingAvailable: "Unknown",
+    estimatedTotalMinor: 12500,
+    finalTotalMinor: null,
+    depositPaidMinor: 3000,
+    balancePaidMinor: 0,
+    balanceDueMinor: 9500,
+    requestedStartAt: "2026-05-18T13:15:00.000Z",
+    blockedUntil: "2026-05-18T16:20:00.000Z",
+  },
+  "mock-request-3": {
+    id: "mock-request-3",
+    reference: "AV-2026-DEMO3",
+    status: "payment_hold",
+    packageId: "maintenance",
+    vehicleSize: "small",
+    make: "Audi",
+    model: "A3",
+    addonIds: [],
+    requestedDateLabel: "Tue 19 May",
+    requestedTimeLabel: "09:00",
+    serviceEndLabel: "10:00",
+    blockedUntilLabel: "10:45",
+    isOutsideZone: false,
+    parkingAvailable: "Yes",
+    estimatedTotalMinor: 5500,
+    finalTotalMinor: null,
+    depositPaidMinor: 0,
+    balancePaidMinor: 0,
+    balanceDueMinor: 5500,
+    requestedStartAt: "2026-05-19T08:00:00.000Z",
+    blockedUntil: "2026-05-19T09:45:00.000Z",
+  },
+  "mock-request-5": {
+    id: "mock-request-5",
+    reference: "AV-2026-DEMO5",
+    status: "approved",
+    packageId: "maintenance",
+    vehicleSize: "medium",
+    make: "Volkswagen",
+    model: "Golf",
+    addonIds: ["windscreen_repellent"],
+    requestedDateLabel: "Wed 20 May",
+    requestedTimeLabel: "10:30",
+    serviceEndLabel: "12:00",
+    blockedUntilLabel: "12:45",
+    isOutsideZone: false,
+    parkingAvailable: "Yes",
+    estimatedTotalMinor: 9500,
+    finalTotalMinor: null,
+    depositPaidMinor: 3000,
+    balancePaidMinor: 0,
+    balanceDueMinor: 6500,
+    requestedStartAt: "2026-05-20T09:30:00.000Z",
+    blockedUntil: "2026-05-20T11:45:00.000Z",
+  },
+};
+
+function getMockSeed(id: string) {
+  return mockSeeds[id] ?? {
+    ...mockSeeds["mock-request-1"],
+    id,
+    reference: "AV-2026-DEMO0",
+  };
+}
+
+function buildAddonDetails(addonIds: AddonId[]) {
+  return addonIds.map((addonId) => {
+    const addon = addonDefinitions[addonId];
+
+    return {
+      id: addon.id,
+      label: addon.label,
+      priceLabel: formatMoneyGBP(addon.priceMinor),
+    };
+  });
+}
+
+function getActions(status: BookingStatus) {
+  const isPending = status === "pending_admin_review";
+  const isApprovedOrActive =
+    status === "approved" ||
+    status === "on_the_way" ||
+    status === "arrived" ||
+    status === "in_progress" ||
+    status === "completed";
+
+  return {
+    canApprove: isPending,
+    canDecline: isPending,
+    canReschedule: isPending || status === "approved" || status === "reschedule_requested",
+    canCancel: isApprovedOrActive,
+    canAdjustPrice: isApprovedOrActive,
+    canMarkBalancePaid: isApprovedOrActive,
+  };
+}
+
+function hasMockCalendarClash() {
+  const requestedStart = new Date("2026-05-18T10:45:00.000Z");
+  const blockedUntil = new Date("2026-05-18T15:35:00.000Z");
+  const existingStart = new Date("2026-05-18T07:30:00.000Z");
+  const existingBlockedUntil = new Date("2026-05-18T10:45:00.000Z");
+
+  return hasOverlap(requestedStart, blockedUntil, existingStart, existingBlockedUntil);
+}
+
+function buildApprovalChecks(seed: MockBookingSeed): ApprovalCheck[] {
+  const conflictDetected = hasMockCalendarClash();
+  const customerComplete = true;
+  const vehicleComplete = Boolean(seed.make && seed.model && seed.vehicleSize);
+
+  return [
+    {
+      label: "Deposit paid",
+      state: seed.depositPaidMinor > 0 ? "success" : "danger",
+      message:
+        seed.depositPaidMinor > 0
+          ? "Deposit is recorded for this request."
+          : "Deposit is not recorded yet.",
+    },
+    {
+      label: "No calendar clash",
+      state: conflictDetected ? "danger" : "success",
+      message: conflictDetected
+        ? "This requested time overlaps another blocking booking."
+        : "No clash found in the current placeholder check.",
+    },
+    {
+      label: "Service area",
+      state: seed.isOutsideZone ? "warning" : "success",
+      message: seed.isOutsideZone
+        ? "Outside-zone request: check vehicle count and location before approval."
+        : "Location is inside the standard service zone.",
+    },
+    {
+      label: "Customer details complete",
+      state: customerComplete ? "success" : "danger",
+      message: customerComplete ? "Name, phone and email are present." : "Customer details are incomplete.",
+    },
+    {
+      label: "Vehicle details complete",
+      state: vehicleComplete ? "success" : "danger",
+      message: vehicleComplete ? "Make, model and size are present." : "Vehicle details are incomplete.",
+    },
+    {
+      label: "Service duration calculated",
+      state: "success",
+      message: `Service runs until ${seed.serviceEndLabel}; calendar is blocked until ${seed.blockedUntilLabel}.`,
+    },
+    {
+      label: "Parking/access details reviewed",
+      state: seed.parkingAvailable === "Yes" ? "success" : "warning",
+      message:
+        seed.parkingAvailable === "Yes"
+          ? "Parking is marked as available."
+          : "Parking or access may need admin review.",
+    },
+    {
+      label: "Price may vary notice",
+      state: "neutral",
+      message: "Customer estimate may change depending on condition on arrival.",
+    },
+  ];
+}
+
+export async function getAdminBookingDetail(id: string): Promise<AdminBookingDetailData> {
+  // TODO: Replace this safe mock detail with a database-backed booking lookup.
+  // The mock data is generic and must not be treated as a live customer record.
+  const seed = getMockSeed(id);
+  const service = getServicePackage(seed.packageId);
+  const paymentStatus = getPaymentDisplayStatus({
+    bookingId: seed.id,
+    status: seed.status,
+    estimatedTotalMinor: seed.estimatedTotalMinor,
+    finalTotalMinor: seed.finalTotalMinor,
+    depositPaidMinor: seed.depositPaidMinor,
+    balanceDueMinor: seed.balanceDueMinor,
+    balancePaidMinor: seed.balancePaidMinor,
+    currency: "GBP",
+  });
+
+  return {
+    id: seed.id,
+    reference: seed.reference,
+    status: seed.status,
+    statusLabel: getAdminBookingStatusLabel(seed.status),
+    requestedDateLabel: seed.requestedDateLabel,
+    requestedTimeLabel: seed.requestedTimeLabel,
+    serviceEndLabel: seed.serviceEndLabel,
+    blockedUntilLabel: seed.blockedUntilLabel,
+    serviceLabel: service.label,
+    packageId: seed.packageId,
+    vehicle: {
+      make: seed.make,
+      model: seed.model,
+      size: seed.vehicleSize,
+      label: `${seed.make} ${seed.model} · ${vehicleSizeLabels[seed.vehicleSize]}`,
+    },
+    addons: buildAddonDetails(seed.addonIds),
+    customer: {
+      fullName: "Example customer",
+      phone: "07123 000000",
+      email: "customer@example.com",
+    },
+    location: {
+      fullAddress: seed.isOutsideZone ? "Outside-zone address placeholder" : "10 Example Road, Croydon",
+      postcode: seed.isOutsideZone ? "BR3 3AA" : "CR0 1AA",
+      zoneLabel: seed.isOutsideZone ? "Outside-zone request" : "Standard service zone",
+      isOutsideZone: seed.isOutsideZone,
+      parkingAvailable: seed.parkingAvailable,
+      parkingNotes: seed.parkingAvailable === "Yes" ? "Driveway available." : "Customer is unsure about parking.",
+      accessNotes: seed.isOutsideZone ? "Check travel time and vehicle count before approval." : "Vehicle accessible from driveway.",
+    },
+    payment: {
+      depositPaidLabel: formatMoneyGBP(seed.depositPaidMinor),
+      estimatedTotalLabel: formatMoneyGBP(seed.estimatedTotalMinor),
+      finalTotalLabel: seed.finalTotalMinor === null ? undefined : formatMoneyGBP(seed.finalTotalMinor),
+      balanceDueLabel: formatMoneyGBP(seed.balanceDueMinor),
+      paymentStatusLabel:
+        paymentStatus === "fully_paid"
+          ? "Fully paid"
+          : paymentStatus === "balance_unpaid"
+            ? "Balance due"
+            : paymentStatus === "deposit_pending"
+              ? "Deposit pending"
+              : "Part paid",
+    },
+    financials: {
+      estimatedTotalMinor: seed.estimatedTotalMinor,
+      finalTotalMinor: seed.finalTotalMinor,
+      depositPaidMinor: seed.depositPaidMinor,
+      balancePaidMinor: seed.balancePaidMinor,
+      balanceDueMinor: seed.balanceDueMinor,
+    },
+    notes: {
+      customerNotes: seed.isOutsideZone
+        ? "Customer mentioned 3 vehicles may be available at the same address."
+        : "Customer noted light pet hair in the rear seats.",
+      adminNotes: "Placeholder detail record. Replace with database notes before launch.",
+    },
+    checks: buildApprovalChecks(seed),
+    actions: getActions(seed.status),
+    activity: [
+      {
+        id: "activity-1",
+        label: seed.status === "payment_hold" ? "Payment hold created" : "Deposit received",
+        atLabel: "Today",
+        actorLabel: "System",
+      },
+      {
+        id: "activity-2",
+        label: "Booking request loaded for admin review",
+        atLabel: "Just now",
+        actorLabel: "Admin app",
+      },
+    ],
+    schedule: {
+      requestedStartAt: seed.requestedStartAt,
+      blockedUntil: seed.blockedUntil,
+    },
+  };
+}

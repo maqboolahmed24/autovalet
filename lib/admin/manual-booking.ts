@@ -415,6 +415,8 @@ export async function createManualBooking(
   }
 
   // TODO: Create customer, booking, vehicle, add-ons, payment records and audit log in one transaction.
+  // TODO: Dispatch `manual_booking_created` to admin and optional customer notification
+  // after persistence succeeds, without failing manual booking creation if notification delivery fails.
   return {
     success: true,
     bookingReference: preview.bookingReference,

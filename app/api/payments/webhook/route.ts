@@ -64,6 +64,9 @@ export async function POST(request: Request) {
 
     // TODO: Store webhook event idempotently, update payment rows, and validate every status change
     // through `assertBookingTransition` before moving deposits to pending_admin_review or expiring holds.
+    // TODO: On checkout.session.completed, dispatch customer `booking_request_received`
+    // and admin `admin_new_booking_request` notifications. On payment failure/expiry,
+    // dispatch `payment_failed` or `payment_hold_expired` to the customer when contact data exists.
     return errorResponse(
       "WEBHOOK_PERSISTENCE_NOT_CONFIGURED",
       "Payment webhooks are not connected to booking persistence yet.",

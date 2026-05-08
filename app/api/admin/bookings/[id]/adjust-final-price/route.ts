@@ -1,4 +1,5 @@
 import { adjustFinalPrice } from "../../../../../../lib/admin/final-price";
+import { requireAdmin, adminGuardErrorResponse } from "../../../../../../lib/auth/route-guards";
 
 export const runtime = "nodejs";
 
@@ -67,6 +68,12 @@ function readMoneyMinor(value: unknown) {
 }
 
 export async function PATCH(request: Request, { params }: RouteContext) {
+  const guard = await requireAdmin(request, { permission: "adjust_final_price" });
+
+  if (!guard.success) {
+    return adminGuardErrorResponse(guard);
+  }
+
   let body: Record<string, unknown>;
 
   try {
@@ -88,7 +95,11 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     bookingId: params.id,
     finalTotalMinor,
     reason: readString(body.reason),
-    adminId: "auth-not-configured",
+    adminId: guard.session.adminId,
+  }, {
+    adminAuthenticated: true,
+    canAdjustFinalPrice: true,
+    persistenceConfigured: false,
   });
 
   if (!result.success) {

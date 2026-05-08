@@ -131,6 +131,7 @@ export async function adjustFinalPrice(
   }
 
   // TODO: Update final_total_minor, balance_due_minor, price_adjustment_reason and audit log in one transaction.
+  // TODO: Dispatch `final_price_adjusted` after persistence succeeds.
   return {
     success: true,
     finalTotalMinor: preview.finalTotalMinor,

@@ -2,6 +2,7 @@ import {
   createManualBooking,
   parseCreateManualBookingInput,
 } from "../../../../lib/admin/manual-booking";
+import { requireAdmin, adminGuardErrorResponse } from "../../../../lib/auth/route-guards";
 
 export const runtime = "nodejs";
 
@@ -57,6 +58,12 @@ function statusForManualBookingError(code: string) {
 }
 
 export async function POST(request: Request) {
+  const guard = await requireAdmin(request, { permission: "create_manual_booking" });
+
+  if (!guard.success) {
+    return adminGuardErrorResponse(guard);
+  }
+
   let body: unknown;
 
   try {
@@ -79,10 +86,9 @@ export async function POST(request: Request) {
     });
   }
 
-  // TODO: Replace this safe placeholder with session authentication and `create_manual_booking` permission checks.
   const result = await createManualBooking(parsed.input, {
-    adminAuthenticated: false,
-    canCreateManualBooking: false,
+    adminAuthenticated: true,
+    canCreateManualBooking: true,
     persistenceConfigured: false,
     existingBookings: [],
   });
