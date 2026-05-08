@@ -231,10 +231,8 @@ export function AdminManualBookingForm() {
   }
 
   return (
-    <section className="admin-manual-booking" aria-labelledby="manual-booking-title">
+    <section className="admin-manual-booking" aria-label="Create a manual booking">
       <div className="admin-page-intro">
-        <p className="eyebrow">Add booking</p>
-        <h1 id="manual-booking-title">Create a manual booking.</h1>
         <p>
           Use this for phone, WhatsApp, Instagram or referral bookings. Approved and pending manual
           bookings will block public availability when persistence is connected.

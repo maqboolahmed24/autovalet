@@ -153,23 +153,17 @@
 .admin-page-header {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
   max-width: 920px;
 }
 
-.admin-page-header h1 {
-  max-width: 10ch;
-  font-size: clamp(2.6rem, 12vw, 5.4rem);
-  letter-spacing: -0.075em;
-  line-height: 0.94;
-}
-
-.admin-page-header p:not(.eyebrow) {
+.admin-page-header > p {
   max-width: 640px;
-  margin-top: var(--space-3);
   color: var(--admin-soft);
+  font-size: var(--text-sm);
+  line-height: 1.5;
 }
 
 .admin-page-header__actions {
@@ -265,21 +259,15 @@
 }
 
 .admin-page-intro {
-  display: grid;
-  gap: var(--space-3);
   max-width: 760px;
   margin-bottom: var(--space-6);
 }
 
-.admin-page-intro h1 {
-  font-size: clamp(2.4rem, 13vw, 5.4rem);
-  letter-spacing: -0.07em;
-  line-height: 0.94;
-}
-
-.admin-page-intro p:not(.eyebrow) {
+.admin-page-intro p {
   max-width: 640px;
   color: var(--admin-soft);
+  font-size: var(--text-sm);
+  line-height: 1.5;
 }
 
 .admin-summary-grid {
