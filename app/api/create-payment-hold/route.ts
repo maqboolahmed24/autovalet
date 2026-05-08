@@ -17,6 +17,7 @@ import type {
 import { addonDefinitions, servicePackages } from "../../../lib/pricing";
 import { isValidIdempotencyKey, normalizeIdempotencyKey } from "../../../lib/payments/idempotency";
 import { validateServiceZone, ZoneValidationError } from "../../../lib/zones";
+import { getServiceZoneValidationOptions } from "../../../lib/admin/service-zones";
 import type { ZoneValidationResult } from "../../../lib/zones";
 
 export const runtime = "nodejs";
@@ -240,10 +241,11 @@ export async function POST(request: Request) {
   let zoneValidation: ZoneValidationResult;
 
   try {
+    const zoneOptions = await getServiceZoneValidationOptions();
     zoneValidation = validateServiceZone({
       postcode: parsedDraft.draft.postcode,
       vehicleCount: parsedDraft.draft.vehicleCount,
-    });
+    }, zoneOptions);
   } catch (error) {
     if (error instanceof ZoneValidationError) {
       return errorResponse("BOOKING_VALIDATION_FAILED", "Check the booking details before payment.", 400, {

@@ -1,13 +1,14 @@
 export const serviceZonesTable = {
   name: "service_zones",
   columns: {
-    id: { type: "uuid", primaryKey: true, default: "gen_random_uuid()" },
+    id: { type: "text", primaryKey: true },
     zoneType: { name: "zone_type", type: "text", nullable: false },
     value: { type: "text", nullable: false },
     normalizedValue: { name: "normalized_value", type: "text", nullable: false },
     active: { type: "boolean", nullable: false, default: true },
     notes: { type: "text", nullable: true },
     createdAt: { name: "created_at", type: "timestamptz", nullable: false, default: "now()" },
+    updatedAt: { name: "updated_at", type: "timestamptz", nullable: false, default: "now()" },
   },
   indexes: [
     { name: "service_zones_zone_normalized_idx", columns: ["zone_type", "normalized_value"] },
@@ -19,6 +20,6 @@ export const serviceZonesTable = {
     },
   ],
   checks: [
-    "zone_type in ('exact_postcode', 'outward_code', 'postcode_district', 'region')",
+    "zone_type in ('exact_postcode', 'outward_code', 'district', 'region')",
   ],
 } as const;

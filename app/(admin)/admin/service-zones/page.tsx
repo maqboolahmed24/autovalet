@@ -6,6 +6,8 @@ export const metadata = {
   description: "AUTO VALET service zone management for postcodes, districts and regions.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function ServiceZonesPage() {
   const data = await getAdminServiceZones();
 

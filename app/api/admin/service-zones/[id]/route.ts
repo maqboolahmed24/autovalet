@@ -5,6 +5,7 @@ import {
   type AdminServiceZoneInput,
 } from "../../../../../lib/admin/service-zones";
 import { adminGuardErrorResponse, requireAdmin } from "../../../../../lib/auth/route-guards";
+import { isDatabaseConfigured } from "../../../../../lib/db/postgres";
 
 export const runtime = "nodejs";
 
@@ -43,8 +44,9 @@ export async function PATCH(request: Request, context: RouteContext) {
   const result = await updateServiceZone(params.id, input, {
     adminAuthenticated: true,
     canEditServiceZones: true,
-    persistenceConfigured: false,
+    persistenceConfigured: isDatabaseConfigured(),
     existingZones: data.zones,
+    adminId: guard.session.adminId,
   });
 
   if (!result.success) {
@@ -105,6 +107,7 @@ function getServiceZoneErrorStatus(code: string) {
   if (code === "ADMIN_AUTH_REQUIRED") return 401;
   if (code === "ADMIN_PERMISSION_REQUIRED") return 403;
   if (code === "DUPLICATE_ACTIVE_SERVICE_ZONE") return 409;
+  if (code === "SERVICE_ZONE_NOT_FOUND") return 404;
 
   return 400;
 }

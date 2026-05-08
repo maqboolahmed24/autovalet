@@ -1,4 +1,5 @@
 import { validateServiceZone, ZoneValidationError } from "../../../lib/zones";
+import { getServiceZoneValidationOptions } from "../../../lib/admin/service-zones";
 
 type ApiSuccessResponse<TData> = {
   success: true;
@@ -51,11 +52,12 @@ export async function POST(request: Request) {
   }
 
   try {
+    const zoneOptions = await getServiceZoneValidationOptions();
     const result = validateServiceZone({
       postcode: typeof body.postcode === "string" ? body.postcode : "",
       regionName: typeof body.regionName === "string" ? body.regionName : undefined,
       vehicleCount: typeof body.vehicleCount === "number" ? body.vehicleCount : Number(body.vehicleCount ?? 0),
-    });
+    }, zoneOptions);
 
     return jsonResponse({
       success: true,

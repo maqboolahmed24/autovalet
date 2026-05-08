@@ -1,5 +1,6 @@
 import { addCustomerNote, getAdminCustomerProfile } from "../../../../../../lib/admin/customers";
 import { adminGuardErrorResponse, requireAdmin } from "../../../../../../lib/auth/route-guards";
+import { isDatabaseConfigured } from "../../../../../../lib/db/postgres";
 
 export const runtime = "nodejs";
 
@@ -40,11 +41,12 @@ export async function POST(request: Request, context: RouteContext) {
       customerId: params.id,
       note: body.data.note,
       adminId: guard.session.adminId,
+      adminName: guard.session.fullName,
     },
     {
       adminAuthenticated: true,
       canEditCustomers: true,
-      persistenceConfigured: false,
+      persistenceConfigured: isDatabaseConfigured(),
     },
   );
 
@@ -92,6 +94,7 @@ function getCustomerNoteErrorStatus(code: string) {
   if (code === "PERSISTENCE_NOT_CONFIGURED") return 501;
   if (code === "ADMIN_AUTH_REQUIRED") return 401;
   if (code === "ADMIN_PERMISSION_REQUIRED") return 403;
+  if (code === "CUSTOMER_NOT_FOUND") return 404;
 
   return 400;
 }

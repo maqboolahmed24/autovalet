@@ -1,5 +1,5 @@
 import { ServiceZoneCard } from "./ServiceZoneCard";
-import type { AdminServiceZoneItem } from "../../lib/admin/service-zones";
+import type { AdminServiceZoneItem } from "../../lib/admin/service-zone-types";
 
 type ServiceZoneListProps = {
   zones: AdminServiceZoneItem[];

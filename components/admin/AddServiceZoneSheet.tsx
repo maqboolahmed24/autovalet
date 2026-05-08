@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import {
   adminServiceZoneTypes,
   serviceZoneTypeLabels,
   type AdminServiceZoneType,
-} from "../../lib/admin/service-zones";
+} from "../../lib/admin/service-zone-types";
 
 type AddServiceZoneSheetProps = {
   onClose: () => void;
@@ -30,6 +31,7 @@ type ServiceZoneMutationResponse =
     };
 
 export function AddServiceZoneSheet({ onClose }: AddServiceZoneSheetProps) {
+  const router = useRouter();
   const [zoneType, setZoneType] = useState<AdminServiceZoneType>("district");
   const [value, setValue] = useState("");
   const [notes, setNotes] = useState("");
@@ -66,6 +68,8 @@ export function AddServiceZoneSheet({ onClose }: AddServiceZoneSheetProps) {
 
       setTone("success");
       setMessage("Service zone saved.");
+      router.refresh();
+      onClose();
     } catch (error) {
       setTone("warning");
       setMessage(error instanceof Error ? error.message : "Service zone could not be saved.");
@@ -124,7 +128,7 @@ export function AddServiceZoneSheet({ onClose }: AddServiceZoneSheetProps) {
           </div>
         </div>
 
-        <p className="admin-inline-note">Duplicate active zones must be blocked before these settings go live.</p>
+        <p className="admin-inline-note">Duplicate active zones are blocked automatically.</p>
 
         <div className="admin-sheet-actions">
           <button className="admin-button admin-button--secondary" type="button" onClick={onClose}>

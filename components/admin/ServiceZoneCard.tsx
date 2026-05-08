@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { AdminServiceZoneItem } from "../../lib/admin/service-zones";
+import { useRouter } from "next/navigation";
+import type { AdminServiceZoneItem } from "../../lib/admin/service-zone-types";
 
 type ServiceZoneCardProps = {
   zone: AdminServiceZoneItem;
@@ -27,6 +28,7 @@ type ServiceZoneMutationResponse =
     };
 
 export function ServiceZoneCard({ zone, onEdit }: ServiceZoneCardProps) {
+  const router = useRouter();
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -54,6 +56,7 @@ export function ServiceZoneCard({ zone, onEdit }: ServiceZoneCardProps) {
       }
 
       setMessage("Zone disabled.");
+      router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Zone could not be disabled.");
     } finally {

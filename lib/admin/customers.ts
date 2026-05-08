@@ -1,8 +1,9 @@
+import { randomUUID } from "node:crypto";
 import type { BookingStatus, PackageId, VehicleSize } from "../booking/types";
 import { getAdminBookingStatusLabel } from "../booking/status-labels";
 import { getServicePackage, vehicleSizeLabels } from "../pricing/catalog";
 import { formatMoneyGBP } from "../pricing/format-money";
-import { isDatabaseConfigured, query } from "../db/postgres";
+import { isDatabaseConfigured, query, transaction } from "../db/postgres";
 
 export type AdminCustomersSearchInput = {
   search?: string;
@@ -76,6 +77,7 @@ export type AddCustomerNoteInput = {
   customerId: string;
   note: string;
   adminId: string;
+  adminName?: string;
 };
 
 export type CustomerNoteMutationResult =
@@ -138,6 +140,15 @@ type CustomerBookingRow = {
   estimated_total_minor: number;
   final_total_minor: number | null;
   vehicle_label: string | null;
+};
+
+type CustomerNoteRow = {
+  id: string;
+  note: string;
+  admin_id: string | null;
+  admin_name: string | null;
+  created_at: Date | string;
+  updated_at: Date | string;
 };
 
 const mockCustomers: MockCustomerRecord[] = [
@@ -365,7 +376,7 @@ export async function getAdminCustomerProfile(id: string): Promise<AdminCustomer
     return null;
   }
 
-  const [vehiclesResult, bookingsResult] = await Promise.all([
+  const [vehiclesResult, bookingsResult, notesResult] = await Promise.all([
     query<CustomerVehicleRow>(
       `
         SELECT
@@ -409,6 +420,16 @@ export async function getAdminCustomerProfile(id: string): Promise<AdminCustomer
       `,
       [id],
     ),
+    query<CustomerNoteRow>(
+      `
+        SELECT id, note, admin_id, admin_name, created_at, updated_at
+        FROM customer_notes
+        WHERE customer_id = $1
+        ORDER BY created_at DESC
+        LIMIT 100
+      `,
+      [id],
+    ),
   ]);
 
   return {
@@ -426,7 +447,7 @@ export async function getAdminCustomerProfile(id: string): Promise<AdminCustomer
     },
     vehicles: vehiclesResult.rows.map(toDatabaseCustomerVehicle),
     bookingHistory: bookingsResult.rows.map(toDatabaseBookingHistoryItem),
-    notes: [],
+    notes: notesResult.rows.map(toDatabaseCustomerNote),
   };
 }
 
@@ -456,7 +477,9 @@ export async function addCustomerNote(
     };
   }
 
-  if (!options.persistenceConfigured) {
+  const persistenceConfigured = options.persistenceConfigured ?? isDatabaseConfigured();
+
+  if (!persistenceConfigured) {
     return {
       success: false,
       code: "PERSISTENCE_NOT_CONFIGURED",
@@ -464,11 +487,54 @@ export async function addCustomerNote(
     };
   }
 
-  return {
-    success: false,
-    code: "PERSISTENCE_NOT_CONFIGURED",
-    message: "Customer notes are not connected to database persistence yet.",
-  };
+  const noteId = randomUUID();
+  const note = input.note.trim();
+
+  return transaction(async (client) => {
+    const customerResult = await client.query<{ id: string }>(
+      "SELECT id FROM customers WHERE id = $1 LIMIT 1",
+      [input.customerId],
+    );
+
+    if (!customerResult.rows[0]) {
+      return {
+        success: false,
+        code: "CUSTOMER_NOT_FOUND",
+        message: "Customer was not found.",
+      };
+    }
+
+    await client.query(
+      `
+        INSERT INTO customer_notes (id, customer_id, admin_id, admin_name, note)
+        VALUES ($1, $2, $3, $4, $5)
+      `,
+      [
+        noteId,
+        input.customerId,
+        input.adminId.trim() || null,
+        input.adminName?.trim() || "AUTO VALET Admin",
+        note,
+      ],
+    );
+    await client.query(
+      `
+        INSERT INTO audit_logs (id, admin_id, entity_type, entity_id, action, metadata)
+        VALUES ($1, $2, 'customer', $3, 'customer_note_created', $4::jsonb)
+      `,
+      [
+        randomUUID(),
+        input.adminId.trim() || null,
+        input.customerId,
+        JSON.stringify({ noteId }),
+      ],
+    );
+
+    return {
+      success: true,
+      noteId,
+    };
+  });
 }
 
 function toCustomerListItem(record: MockCustomerRecord): AdminCustomerListItem {
@@ -534,6 +600,19 @@ function toDatabaseBookingHistoryItem(row: CustomerBookingRow): AdminCustomerBoo
       ? formatMoneyGBP(row.final_total_minor)
       : undefined,
     href,
+  };
+}
+
+function toDatabaseCustomerNote(row: CustomerNoteRow): AdminCustomerNote {
+  const createdAtLabel = formatDateLabel(row.created_at);
+  const updatedAtLabel = formatDateLabel(row.updated_at);
+
+  return {
+    id: row.id,
+    note: row.note,
+    createdBy: row.admin_name || "AUTO VALET Admin",
+    createdAtLabel,
+    updatedAtLabel: updatedAtLabel !== createdAtLabel ? updatedAtLabel : undefined,
   };
 }
 

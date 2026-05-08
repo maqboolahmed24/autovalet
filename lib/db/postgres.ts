@@ -135,6 +135,47 @@ async function createSchema() {
     CREATE INDEX IF NOT EXISTS booking_addons_booking_id_idx
       ON booking_addons (booking_id);
 
+    CREATE TABLE IF NOT EXISTS service_zones (
+      id text PRIMARY KEY,
+      zone_type text NOT NULL CHECK (zone_type IN ('exact_postcode', 'outward_code', 'district', 'region')),
+      value text NOT NULL,
+      normalized_value text NOT NULL,
+      active boolean NOT NULL DEFAULT true,
+      notes text,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now()
+    );
+
+    ALTER TABLE service_zones
+      ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
+
+    CREATE INDEX IF NOT EXISTS service_zones_zone_normalized_idx
+      ON service_zones (zone_type, normalized_value);
+    CREATE UNIQUE INDEX IF NOT EXISTS service_zones_active_zone_normalized_unique
+      ON service_zones (zone_type, normalized_value)
+      WHERE active = true;
+
+    CREATE TABLE IF NOT EXISTS customer_notes (
+      id text PRIMARY KEY,
+      customer_id text NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+      admin_id text,
+      admin_name text,
+      note text NOT NULL,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now()
+    );
+
+    ALTER TABLE customer_notes
+      ADD COLUMN IF NOT EXISTS admin_name text,
+      ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
+
+    CREATE INDEX IF NOT EXISTS customer_notes_customer_id_idx
+      ON customer_notes (customer_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS customer_notes_admin_id_idx
+      ON customer_notes (admin_id);
+    CREATE INDEX IF NOT EXISTS customer_notes_created_at_idx
+      ON customer_notes (created_at DESC);
+
     CREATE TABLE IF NOT EXISTS audit_logs (
       id text PRIMARY KEY,
       admin_id text,

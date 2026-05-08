@@ -6,7 +6,7 @@ import { EditServiceZoneSheet } from "./EditServiceZoneSheet";
 import { OutsideZoneSettingsCard } from "./OutsideZoneSettingsCard";
 import { ServiceZoneList } from "./ServiceZoneList";
 import { AdminPageHeader } from "./AdminPageHeader";
-import type { AdminServiceZoneItem, AdminServiceZonesData } from "../../lib/admin/service-zones";
+import type { AdminServiceZoneItem, AdminServiceZonesData } from "../../lib/admin/service-zone-types";
 
 type AdminServiceZonesPageProps = {
   data: AdminServiceZonesData;
@@ -30,9 +30,9 @@ export function AdminServiceZonesPage({ data }: AdminServiceZonesPageProps) {
       />
 
       <section className="settings-notice" aria-label="Service zone notice">
-        <strong>{data.isMockData ? "Current configured defaults" : "Service-zone settings"}</strong>
+        <strong>{data.isMockData ? "Local service-zone defaults" : "Service-zone settings"}</strong>
         <p>
-          These zones feed the public service-area check. Mutations are held until database persistence is connected.
+          These zones feed the public service-area check for new booking requests.
         </p>
       </section>
 

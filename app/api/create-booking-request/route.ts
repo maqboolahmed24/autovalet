@@ -14,6 +14,7 @@ import {
 import { isDatabaseConfigured } from "../../../lib/db/postgres";
 import { isValidIdempotencyKey, normalizeIdempotencyKey } from "../../../lib/payments/idempotency";
 import { validateServiceZone, ZoneValidationError } from "../../../lib/zones";
+import { getServiceZoneValidationOptions } from "../../../lib/admin/service-zones";
 import type { ZoneStatus } from "../../../lib/booking/types";
 import type { ZoneValidationResult } from "../../../lib/zones";
 
@@ -104,10 +105,11 @@ export async function POST(request: Request) {
   let zoneValidation: ZoneValidationResult;
 
   try {
+    const zoneOptions = await getServiceZoneValidationOptions();
     zoneValidation = validateServiceZone({
       postcode: parsedDraft.draft.postcode,
       vehicleCount: parsedDraft.draft.vehicleCount,
-    });
+    }, zoneOptions);
   } catch (error) {
     if (error instanceof ZoneValidationError) {
       return errorResponse("BOOKING_VALIDATION_FAILED", "Check the booking details before submitting.", 400, {

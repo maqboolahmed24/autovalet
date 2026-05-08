@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 
 type EditCustomerNoteSheetProps = {
   customerId: string;
@@ -25,6 +26,7 @@ type CustomerNoteResponse =
     };
 
 export function EditCustomerNoteSheet({ customerId, onClose }: EditCustomerNoteSheetProps) {
+  const router = useRouter();
   const [note, setNote] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
@@ -53,6 +55,8 @@ export function EditCustomerNoteSheet({ customerId, onClose }: EditCustomerNoteS
 
       setTone("success");
       setMessage("Customer note saved.");
+      router.refresh();
+      onClose();
     } catch (error) {
       setTone("warning");
       setMessage(error instanceof Error ? error.message : "Customer note could not be saved.");

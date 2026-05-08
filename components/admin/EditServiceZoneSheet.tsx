@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import {
   adminServiceZoneTypes,
   serviceZoneTypeLabels,
   type AdminServiceZoneItem,
   type AdminServiceZoneType,
-} from "../../lib/admin/service-zones";
+} from "../../lib/admin/service-zone-types";
 
 type EditServiceZoneSheetProps = {
   zone: AdminServiceZoneItem;
@@ -32,6 +33,7 @@ type ServiceZoneMutationResponse =
     };
 
 export function EditServiceZoneSheet({ zone, onClose }: EditServiceZoneSheetProps) {
+  const router = useRouter();
   const [zoneType, setZoneType] = useState<AdminServiceZoneType>(zone.zoneType);
   const [value, setValue] = useState(zone.value);
   const [notes, setNotes] = useState(zone.notes ?? "");
@@ -68,6 +70,8 @@ export function EditServiceZoneSheet({ zone, onClose }: EditServiceZoneSheetProp
 
       setTone("success");
       setMessage("Service zone saved.");
+      router.refresh();
+      onClose();
     } catch (error) {
       setTone("warning");
       setMessage(error instanceof Error ? error.message : "Service zone could not be saved.");
@@ -81,7 +85,7 @@ export function EditServiceZoneSheet({ zone, onClose }: EditServiceZoneSheetProp
       <div className="admin-action-sheet__header">
         <p className="eyebrow">Service zones</p>
         <h2 id="edit-service-zone-title">Edit service zone</h2>
-        <p>Changes will affect future public service-area checks once persistence is connected.</p>
+        <p>Changes affect future public service-area checks.</p>
       </div>
 
       <form className="admin-sheet-form" onSubmit={handleSubmit}>
