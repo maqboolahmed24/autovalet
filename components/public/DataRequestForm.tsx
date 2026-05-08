@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { dataRequestTypeLabels, dataRequestTypes } from "../../lib/privacy/data-requests";
+import { dataRequestTypeLabels, dataRequestTypes } from "../../lib/privacy/data-request-types";
 import type { DataRequestType } from "../../lib/privacy/types";
 
 type DataRequestResponse =
@@ -57,10 +57,19 @@ export function DataRequestForm() {
       }
 
       setStatusTone("success");
-      setStatusMessage(payload.message ?? "Your request has been received.");
+      setStatusMessage(
+        payload.data.requestReference
+          ? `Your request has been received. Reference: ${payload.data.requestReference}.`
+          : payload.message ?? "Your request has been received.",
+      );
+      setFullName("");
+      setEmail("");
+      setPhone("");
+      setRequestType("access");
+      setMessage("");
     } catch (error) {
       setStatusTone("warning");
-      setStatusMessage(error instanceof Error ? error.message : "Data request handling is not configured yet.");
+      setStatusMessage(error instanceof Error ? error.message : "Data request could not be submitted. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

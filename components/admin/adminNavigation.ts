@@ -27,6 +27,7 @@ const baseAdminSidebarNavItems: AdminNavItem[] = [
   { href: "/admin/calendar", label: "Calendar" },
   { href: "/admin/bookings/new", label: "Add booking" },
   { href: "/admin/customers", label: "Customers" },
+  { href: "/admin/data-requests", label: "Data requests" },
   { href: "/admin/availability", label: "Availability" },
   { href: "/admin/service-zones", label: "Service zones" },
   { href: "/admin/services-pricing", label: "Services & pricing" },
@@ -85,6 +86,16 @@ export const adminMoreGroups: AdminNavGroup[] = [
     ],
   },
   {
+    title: "Privacy",
+    items: [
+      {
+        href: "/admin/data-requests",
+        label: "Data requests",
+        description: "Access, deletion, correction and consent withdrawal requests.",
+      },
+    ],
+  },
+  {
     title: "Account",
     items: [
       {
@@ -112,6 +123,7 @@ export const adminRouteLabels: Record<string, string> = {
   "/admin/calendar": "Calendar",
   "/admin/bookings/new": "Add booking",
   "/admin/customers": "Customers",
+  "/admin/data-requests": "Data requests",
   "/admin/more": "More",
   "/admin/availability": "Availability",
   "/admin/service-zones": "Service zones",

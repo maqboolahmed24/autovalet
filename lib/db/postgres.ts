@@ -176,6 +176,30 @@ async function createSchema() {
     CREATE INDEX IF NOT EXISTS customer_notes_created_at_idx
       ON customer_notes (created_at DESC);
 
+    CREATE TABLE IF NOT EXISTS privacy_data_requests (
+      id text PRIMARY KEY,
+      reference text NOT NULL UNIQUE,
+      full_name text NOT NULL,
+      email text NOT NULL,
+      phone text,
+      request_type text NOT NULL CHECK (request_type IN ('access', 'deletion', 'correction', 'marketing_consent_withdrawal')),
+      message text,
+      status text NOT NULL DEFAULT 'received' CHECK (status IN ('received', 'in_review', 'completed', 'rejected')),
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now(),
+      completed_at timestamptz,
+      admin_notes text
+    );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS privacy_data_requests_reference_idx
+      ON privacy_data_requests (reference);
+    CREATE INDEX IF NOT EXISTS privacy_data_requests_status_idx
+      ON privacy_data_requests (status);
+    CREATE INDEX IF NOT EXISTS privacy_data_requests_created_at_idx
+      ON privacy_data_requests (created_at DESC);
+    CREATE INDEX IF NOT EXISTS privacy_data_requests_email_idx
+      ON privacy_data_requests (email);
+
     CREATE TABLE IF NOT EXISTS audit_logs (
       id text PRIMARY KEY,
       admin_id text,

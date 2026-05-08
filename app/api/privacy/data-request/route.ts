@@ -30,7 +30,7 @@ export async function POST(request: Request) {
   const result = await submitDataRequest(input);
 
   if (!result.success) {
-    return apiError(result.code, result.message, result.code === "DATA_REQUEST_HANDLING_NOT_CONFIGURED" ? 501 : 400);
+    return apiError(result.code, result.message, getDataRequestErrorStatus(result.code));
   }
 
   return Response.json({
@@ -38,6 +38,13 @@ export async function POST(request: Request) {
     data: result,
     message: "Your request has been received.",
   });
+}
+
+function getDataRequestErrorStatus(code: string) {
+  if (code === "DATA_REQUEST_STORAGE_UNAVAILABLE") return 503;
+  if (code === "DATA_REQUEST_STORAGE_FAILED") return 503;
+
+  return 400;
 }
 
 async function parseJson(request: Request): Promise<
