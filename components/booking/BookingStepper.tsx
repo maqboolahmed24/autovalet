@@ -494,9 +494,6 @@ export function BookingStepper() {
                     className={`booking-actions${isLastStep ? " booking-actions--review" : ""}`}
                     aria-label="Booking step controls"
                   >
-                    <button className="secondary-button" type="button" onClick={handleBack} disabled={isFirstStep}>
-                      Back
-                    </button>
                     {!isLastStep ? (
                       <button
                         className="primary-button"
@@ -509,6 +506,9 @@ export function BookingStepper() {
                         Continue
                       </button>
                     ) : null}
+                    <button className="secondary-button" type="button" onClick={handleBack} disabled={isFirstStep}>
+                      Back
+                    </button>
                   </div>
 
                   {!canContinue ? (
