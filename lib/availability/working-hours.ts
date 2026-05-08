@@ -1,9 +1,47 @@
-import { getDefaultWorkingHoursRules } from "./default-availability";
+import { BUSINESS_TIMEZONE, getDefaultWorkingHoursRules } from "./default-availability";
 import { getBlockedTimeOverrides, getCustomHoursOverrides, hasClosedDayOverride } from "./overrides";
 import type { DayAvailability, GetWorkingHoursForDateInput, TimeWindow, Weekday, WorkingHoursRule } from "./types";
 
-function assertDateString(date: string) {
+export function isValidDateString(date: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return false;
+  }
+
+  const [year, month, day] = date.split("-").map(Number);
+  const parsedDate = new Date(Date.UTC(year, month - 1, day));
+
+  return (
+    parsedDate.getUTCFullYear() === year &&
+    parsedDate.getUTCMonth() === month - 1 &&
+    parsedDate.getUTCDate() === day
+  );
+}
+
+function getDatePart(parts: Intl.DateTimeFormatPart[], type: string) {
+  return parts.find((part) => part.type === type)?.value ?? "";
+}
+
+export function getBusinessDateString(now = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: BUSINESS_TIMEZONE,
+    year: "numeric",
+  }).formatToParts(now);
+
+  return `${getDatePart(parts, "year")}-${getDatePart(parts, "month")}-${getDatePart(parts, "day")}`;
+}
+
+export function isPastBusinessDate(date: string, now = new Date()) {
+  return isValidDateString(date) && date < getBusinessDateString(now);
+}
+
+export function isValidTimeString(time: string) {
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test(time);
+}
+
+function assertDateString(date: string) {
+  if (!isValidDateString(date)) {
     throw new Error(`Invalid date string: ${date}`);
   }
 }
@@ -22,16 +60,13 @@ export function getWeekdayFromDate(date: string): Weekday {
 }
 
 export function parseTimeToMinutes(time: string) {
+  if (!isValidTimeString(time)) {
+    throw new Error(`Invalid time string: ${time}`);
+  }
+
   const [hours, minutes] = time.split(":").map(Number);
 
-  if (
-    Number.isNaN(hours) ||
-    Number.isNaN(minutes) ||
-    hours < 0 ||
-    hours > 23 ||
-    minutes < 0 ||
-    minutes > 59
-  ) {
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
     throw new Error(`Invalid time string: ${time}`);
   }
 

@@ -28,11 +28,11 @@ function readEnvironmentVariable(name: string) {
 }
 
 function getResendApiKey() {
-  return readEnvironmentVariable("RESEND_API_KEY");
+  return readEnvironmentVariable("RESEND_API_KEY").trim();
 }
 
 function getFromEmail() {
-  return readEnvironmentVariable("RESEND_FROM_EMAIL") || "AUTO VALET <no-reply@autovalet.example>";
+  return readEnvironmentVariable("RESEND_FROM_EMAIL").trim();
 }
 
 async function loadResendConstructor() {
@@ -54,13 +54,14 @@ async function loadResendConstructor() {
 }
 
 export function isEmailProviderConfigured() {
-  return Boolean(getResendApiKey());
+  return Boolean(getResendApiKey() && getFromEmail());
 }
 
 export async function sendEmail(input: SendEmailInput): Promise<NotificationProviderResult> {
   const apiKey = getResendApiKey();
+  const fromEmail = getFromEmail();
 
-  if (!apiKey) {
+  if (!apiKey || !fromEmail) {
     return {
       success: false,
       code: "EMAIL_PROVIDER_NOT_CONFIGURED",
@@ -81,7 +82,7 @@ export async function sendEmail(input: SendEmailInput): Promise<NotificationProv
   try {
     const resend = new Resend(apiKey);
     const result = await resend.emails.send({
-      from: getFromEmail(),
+      from: fromEmail,
       to: input.to,
       subject: input.subject,
       text: input.text,

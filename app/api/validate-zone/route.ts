@@ -29,7 +29,13 @@ export async function POST(request: Request) {
   let body: ValidateZoneRequestBody;
 
   try {
-    body = (await request.json()) as ValidateZoneRequestBody;
+    const parsedBody = await request.json();
+
+    if (!parsedBody || typeof parsedBody !== "object" || Array.isArray(parsedBody)) {
+      throw new Error("Invalid request body.");
+    }
+
+    body = parsedBody as ValidateZoneRequestBody;
   } catch {
     return jsonResponse(
       {

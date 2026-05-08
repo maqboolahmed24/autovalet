@@ -62,6 +62,19 @@ Key fields:
 - `created_at timestamptz`
 - `updated_at timestamptz`
 
+### customer_notes
+
+Stores private admin notes against customer profiles. Notes are not customer-facing and must be used only for booking and service management.
+
+Key fields:
+
+- `id uuid primary key`
+- `customer_id uuid references customers(id)`
+- `admin_id uuid nullable references admin_users(id)`
+- `note text not null`
+- `created_at timestamptz`
+- `updated_at timestamptz`
+
 ### vehicles
 
 Stores vehicles attached to a booking. Multi-vehicle bookings use multiple rows with the same `booking_id`.

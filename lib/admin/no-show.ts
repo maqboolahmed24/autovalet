@@ -116,12 +116,9 @@ export async function markNoShow(
     };
   }
 
-  // TODO: Update booking status, record access/no-show reason, keep deposit according to policy, and write audit log.
-  // TODO: Dispatch `no_show_recorded` after persistence succeeds.
   return {
-    success: true,
-    bookingId: input.bookingId,
-    status: "no_show",
-    depositAction: options.booking.depositPaidMinor > 0 ? "keep_according_to_policy" : "no_deposit_action_required",
+    success: false,
+    code: "NO_SHOW_PERSISTENCE_NOT_CONFIGURED",
+    message: "No-show persistence is not connected yet.",
   };
 }

@@ -13,8 +13,152 @@
 .hero__media {
   position: absolute;
   inset: 0;
+  z-index: 0;
   overflow: hidden;
   background: #050505;
+}
+
+.hero__scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, #050505 0%, rgba(7, 7, 7, 0.98) 35%, rgba(10, 8, 6, 0.82) 68%, rgba(5, 5, 5, 0.96) 100%),
+    linear-gradient(180deg, #17120d 0%, #080808 52%, #020202 100%);
+}
+
+.hero__scene::before,
+.hero__scene::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  pointer-events: none;
+}
+
+.hero__scene::before {
+  top: 0;
+  height: 42%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent);
+  opacity: 0.5;
+}
+
+.hero__scene::after {
+  right: 0;
+  bottom: 0;
+  left: 36%;
+  height: 54%;
+  background:
+    linear-gradient(106deg, transparent 0 18%, rgba(200, 169, 106, 0.08) 42%, transparent 72%),
+    linear-gradient(180deg, transparent, rgba(200, 169, 106, 0.08) 54%, transparent);
+  opacity: 0.82;
+}
+
+.hero__road {
+  position: absolute;
+  right: 0;
+  bottom: 9%;
+  left: 24%;
+  z-index: 1;
+  height: 28%;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.04) 34%, transparent 72%),
+    linear-gradient(90deg, transparent, rgba(200, 169, 106, 0.24), transparent);
+  clip-path: polygon(15% 20%, 100% 0, 100% 100%, 0 100%);
+  opacity: 0.72;
+}
+
+.hero__road::before {
+  content: "";
+  position: absolute;
+  top: 28%;
+  right: 0;
+  left: 18%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(245, 242, 236, 0.42), transparent);
+}
+
+.hero__vehicle-stage {
+  position: absolute;
+  top: 76px;
+  right: 0;
+  bottom: 56%;
+  left: 0;
+  z-index: 4;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hero-car {
+  position: absolute;
+  right: -48%;
+  bottom: 0;
+  width: clamp(560px, 138vw, 820px);
+  aspect-ratio: 1362 / 610;
+  opacity: 0;
+  transform: translate3d(74%, 0, 0) scale(0.985);
+  animation: hero-car-drive-in 1850ms cubic-bezier(0.16, 1, 0.3, 1) 260ms forwards;
+  filter: drop-shadow(0 28px 44px rgba(0, 0, 0, 0.62)) brightness(1.14) contrast(1.08) saturate(1.08);
+}
+
+.hero-car__body,
+.hero-car__wheel,
+.hero-car__wheel-image,
+.hero-car__shadow {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+}
+
+.hero-car__body {
+  top: 0;
+  left: 0;
+  z-index: 3;
+  width: 100%;
+  height: auto;
+  transform-origin: 52% 72%;
+  animation: hero-car-free-drive-bounce 3900ms cubic-bezier(0.34, 0, 0.18, 1) 2140ms both;
+}
+
+.hero-car__wheel {
+  top: 51%;
+  z-index: 4;
+  width: 20%;
+  aspect-ratio: 1;
+  animation: hero-wheel-suspension-settle 3900ms cubic-bezier(0.34, 0, 0.18, 1) 2140ms forwards;
+  transform-origin: 50% 78%;
+}
+
+.hero-car__wheel-image {
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  animation: hero-wheel-roll 1850ms cubic-bezier(0.16, 1, 0.3, 1) 260ms forwards;
+  transform-origin: 50% 50%;
+}
+
+.hero-car__wheel--front {
+  left: 6.4%;
+}
+
+.hero-car__wheel--rear {
+  left: 65.6%;
+}
+
+.hero-car__shadow {
+  right: 4%;
+  bottom: 8%;
+  left: 6%;
+  z-index: 1;
+  height: 18%;
+  border-radius: 50%;
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.7) 18% 82%, transparent);
+  filter: blur(18px);
+  opacity: 0.88;
+  transform: skewX(-8deg);
+  transform-origin: 50% 50%;
+  animation: hero-car-shadow-bounce 3900ms cubic-bezier(0.34, 0, 0.18, 1) 2140ms both;
 }
 
 .hero__image,
@@ -68,14 +212,15 @@
 .hero__overlay {
   position: absolute;
   inset: 0;
+  z-index: 3;
   background:
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0.48) 42%, rgba(0, 0, 0, 0.9)),
-    linear-gradient(to right, rgba(0, 0, 0, 0.78), rgba(0, 0, 0, 0.26) 58%, rgba(0, 0, 0, 0.52));
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.4) 38%, rgba(0, 0, 0, 0.9)),
+    linear-gradient(to right, rgba(0, 0, 0, 0.88), rgba(0, 0, 0, 0.48) 46%, rgba(0, 0, 0, 0.14) 72%, rgba(0, 0, 0, 0.46));
 }
 
 .hero__content {
   position: relative;
-  z-index: 2;
+  z-index: 4;
   display: grid;
   max-width: 720px;
   gap: var(--space-4);
@@ -98,7 +243,7 @@
 .hero__title {
   max-width: 11.6ch;
   font-size: 3.05rem;
-  letter-spacing: -0.07em;
+  letter-spacing: 0;
   line-height: 0.92;
   overflow-wrap: break-word;
   animation-delay: 280ms;
@@ -160,6 +305,137 @@
   }
 }
 
+@keyframes hero-car-drive-in {
+  0% {
+    opacity: 0;
+    transform: translate3d(74%, 0, 0) scale(0.985);
+  }
+
+  18% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes hero-wheel-roll {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(-430deg);
+  }
+}
+
+@keyframes hero-car-free-drive-bounce {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scaleY(1);
+  }
+
+  8% {
+    transform: translate3d(0, 7px, 0) rotate(-0.22deg) scaleY(0.976);
+  }
+
+  19% {
+    transform: translate3d(0, -15px, 0) rotate(0.36deg) scaleY(1.024);
+  }
+
+  30% {
+    transform: translate3d(0, 6px, 0) rotate(-0.18deg) scaleY(0.982);
+  }
+
+  43% {
+    transform: translate3d(0, -12px, 0) rotate(0.28deg) scaleY(1.018);
+  }
+
+  55% {
+    transform: translate3d(0, 4px, 0) rotate(-0.14deg) scaleY(0.988);
+  }
+
+  67% {
+    transform: translate3d(0, -8px, 0) rotate(0.18deg) scaleY(1.012);
+  }
+
+  78% {
+    transform: translate3d(0, 3px, 0) rotate(-0.08deg) scaleY(0.994);
+  }
+
+  88% {
+    transform: translate3d(0, -4px, 0) rotate(0.08deg) scaleY(1.006);
+  }
+
+  95% {
+    transform: translate3d(0, 1px, 0) rotate(-0.03deg) scaleY(0.998);
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scaleY(1);
+  }
+}
+
+@keyframes hero-wheel-suspension-settle {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+
+  8%,
+  30%,
+  55%,
+  78%,
+  95% {
+    transform: scaleY(0.972);
+  }
+
+  19%,
+  43%,
+  67%,
+  88% {
+    transform: scaleY(1.018);
+  }
+}
+
+@keyframes hero-car-shadow-bounce {
+  0%,
+  100% {
+    opacity: 0.88;
+    transform: skewX(-8deg) scaleX(1) scaleY(1);
+  }
+
+  8%,
+  30%,
+  55%,
+  78%,
+  95% {
+    opacity: 0.98;
+    transform: skewX(-8deg) scaleX(1.08) scaleY(1.08);
+  }
+
+  19% {
+    opacity: 0.54;
+    transform: skewX(-8deg) scaleX(0.78) scaleY(0.76);
+  }
+
+  43% {
+    opacity: 0.62;
+    transform: skewX(-8deg) scaleX(0.84) scaleY(0.8);
+  }
+
+  67% {
+    opacity: 0.72;
+    transform: skewX(-8deg) scaleX(0.9) scaleY(0.86);
+  }
+
+  88% {
+    opacity: 0.8;
+    transform: skewX(-8deg) scaleX(0.95) scaleY(0.92);
+  }
+}
+
 @keyframes hero-placeholder-shine {
   0%,
   58% {
@@ -174,6 +450,18 @@
 @media (min-width: 760px) {
   .hero {
     padding-bottom: var(--space-16);
+  }
+
+  .hero__vehicle-stage {
+    top: 0;
+    bottom: 0;
+    left: 32%;
+  }
+
+  .hero-car {
+    right: -48%;
+    bottom: clamp(72px, 10svh, 124px);
+    width: min(74vw, 1120px);
   }
 
   .hero__title {
@@ -192,6 +480,16 @@
     padding-left: var(--space-16);
   }
 
+  .hero__vehicle-stage {
+    left: 38%;
+  }
+
+  .hero-car {
+    bottom: clamp(82px, 10svh, 140px);
+    right: -52%;
+    width: min(70vw, 1180px);
+  }
+
   .hero__content {
     max-width: 780px;
   }
@@ -205,6 +503,11 @@
   .hero__image,
   .hero__image-placeholder,
   .hero__image-placeholder::after,
+  .hero-car,
+  .hero-car__body,
+  .hero-car__shadow,
+  .hero-car__wheel,
+  .hero-car__wheel-image,
   .hero__eyebrow,
   .hero__title,
   .hero__text,
@@ -216,4 +519,3 @@
     animation: none !important;
   }
 }
-

@@ -126,6 +126,12 @@ export function createStripePaymentProvider(): PaymentProvider {
             ...input.metadata,
             bookingReference: input.bookingReference,
           },
+          payment_intent_data: {
+            metadata: {
+              ...input.metadata,
+              bookingReference: input.bookingReference,
+            },
+          },
           success_url: input.successUrl,
           cancel_url: input.cancelUrl,
         },

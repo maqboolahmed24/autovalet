@@ -148,13 +148,9 @@ export async function cancelBooking(
     };
   }
 
-  // TODO: Update booking status, cancellation fields, deposit action marker and audit log in one transaction.
-  // TODO: Dispatch `booking_cancelled` after persistence succeeds. If this cancellation is an
-  // admin decline/reschedule path, dispatch the matching decline/reschedule template from that workflow.
   return {
-    success: true,
-    bookingId: input.bookingId,
-    status: decision.recommendedBookingStatus,
-    depositAction,
+    success: false,
+    code: "CANCELLATION_PERSISTENCE_NOT_CONFIGURED",
+    message: "Cancellation persistence is not connected yet.",
   };
 }

@@ -1,23 +1,13 @@
-import { AdminEmptyState } from "../../../../components/admin/AdminEmptyState";
-import { AdminPageHeader } from "../../../../components/admin/AdminPageHeader";
+import { AdminServiceZonesPage } from "../../../../components/admin/AdminServiceZonesPage";
+import { getAdminServiceZones } from "../../../../lib/admin/service-zones";
 
 export const metadata = {
   title: "Service Zones | AUTO VALET Admin",
-  description: "AUTO VALET service zone setup placeholder.",
+  description: "AUTO VALET service zone management for postcodes, districts and regions.",
 };
 
-export default function ServiceZonesPage() {
-  return (
-    <div className="admin-page">
-      <AdminPageHeader
-        eyebrow="Service zones"
-        title="Service zone setup"
-        description="Approved postcodes, districts and regional rules will be managed here."
-      />
-      <AdminEmptyState
-        title="Service-zone management coming next"
-        description="The validation engine exists with placeholder zones. Admin-managed zones will replace them later."
-      />
-    </div>
-  );
+export default async function ServiceZonesPage() {
+  const data = await getAdminServiceZones();
+
+  return <AdminServiceZonesPage data={data} />;
 }

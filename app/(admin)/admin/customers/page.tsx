@@ -1,23 +1,25 @@
-import { AdminEmptyState } from "../../../../components/admin/AdminEmptyState";
-import { AdminPageHeader } from "../../../../components/admin/AdminPageHeader";
+import { AdminCustomersPage } from "../../../../components/admin/AdminCustomersPage";
+import { getAdminCustomers } from "../../../../lib/admin/customers";
 
 export const metadata = {
   title: "Customers | AUTO VALET Admin",
-  description: "AUTO VALET admin customers placeholder.",
+  description: "AUTO VALET admin customer records, vehicles and booking history.",
 };
 
-export default function AdminCustomersPage() {
-  return (
-    <div className="admin-page">
-      <AdminPageHeader
-        eyebrow="Customers"
-        title="Customers"
-        description="Customer records, vehicles and booking history will be managed here."
-      />
-      <AdminEmptyState
-        title="Customer management coming next"
-        description="The customer view will connect to booking records once database persistence is enabled."
-      />
-    </div>
-  );
+type SearchParams = Record<string, string | string[] | undefined>;
+
+type AdminCustomersPageProps = {
+  searchParams?: SearchParams | Promise<SearchParams>;
+};
+
+function getSearchParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function AdminCustomersRoute({ searchParams }: AdminCustomersPageProps) {
+  const resolvedSearchParams = searchParams ? await searchParams : {};
+  const search = getSearchParam(resolvedSearchParams.search)?.trim();
+  const data = await getAdminCustomers({ search });
+
+  return <AdminCustomersPage data={data} search={search} />;
 }

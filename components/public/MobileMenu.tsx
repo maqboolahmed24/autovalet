@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
+import { BrandLogo } from "./BrandLogo";
 
 export type PublicNavLink = {
   href: string;
@@ -43,9 +44,7 @@ export function MobileMenu({ isOpen, links, onClose }: MobileMenuProps) {
     <div id="mobile-menu" className="mobile-menu" role="dialog" aria-modal="true" aria-label="Public navigation">
       <div className="mobile-menu__panel motion-sheet-enter">
         <div className="mobile-menu__top">
-          <Link className="mobile-menu__brand" href="/" onClick={onClose}>
-            AUTO VALET
-          </Link>
+          <BrandLogo className="mobile-menu__brand" onClick={onClose} />
           <button className="mobile-menu__close" type="button" onClick={onClose} aria-label="Close menu">
             Close
           </button>

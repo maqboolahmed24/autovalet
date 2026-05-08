@@ -16,7 +16,7 @@ export function calculateBookingPrice(draft: BookingDraft): PriceBreakdown {
     };
   }
 
-  const vehicleCount = Math.max(draft.vehicleCount, 1);
+  const vehicleCount = Number.isFinite(draft.vehicleCount) ? Math.max(Math.floor(draft.vehicleCount), 1) : 1;
   const servicePackage = servicePackages[draft.packageId];
   const variant = servicePackage.variants[primaryVehicle.size];
   const lines: PriceBreakdown["lines"] = [

@@ -182,13 +182,12 @@ export async function declineBooking(
     };
   }
 
-  // TODO: Lock booking, set status declined, release the slot, record deposit action, and write audit logs.
-  await dispatchDeclineNotification(options.booking, declineReasonLabels[input.reason]);
-
   return {
-    success: true,
-    bookingId: input.bookingId,
-    status: "declined",
-    depositAction: input.depositAction,
+    success: false,
+    code: "DECLINE_PERSISTENCE_NOT_CONFIGURED",
+    message: "Booking decline is not connected to database persistence yet.",
+    details: {
+      reason: "Status, slot release, audit log and deposit action require persistence.",
+    },
   };
 }

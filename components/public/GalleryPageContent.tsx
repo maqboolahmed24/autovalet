@@ -86,28 +86,44 @@ function GalleryMedia({ item }: { item: GalleryItem }) {
   );
 }
 
-export function GalleryPageContent() {
+function getGalleryItemStateLabel(item: GalleryItem) {
+  if (item.isPlaceholder) return "Placeholder";
+  if (!item.hasMarketingConsent) return "Consent pending";
+
+  return item.isFeatured ? "Featured" : "Selected";
+}
+
+type GalleryPageContentProps = {
+  items?: GalleryItem[];
+};
+
+export function GalleryPageContent({ items = placeholderGalleryItems }: GalleryPageContentProps = {}) {
+  const hasRealItems = items.some((item) => !item.isPlaceholder);
+
   return (
     <section className="section gallery-page" aria-labelledby="gallery-page-title">
       <div className="section__inner">
         <div className="gallery-page__heading">
-          <p className="eyebrow">Placeholder gallery</p>
-          <h2 id="gallery-page-title">Image spaces ready for approved customer work.</h2>
+          <p className="eyebrow">{hasRealItems ? "Gallery" : "Placeholder gallery"}</p>
+          <h2 id="gallery-page-title">
+            {hasRealItems ? "Recent finishes from mobile detailing work." : "Image spaces ready for approved customer work."}
+          </h2>
           <p>
-            Placeholder cards are shown until real gallery images are uploaded with customer photo
-            consent.
+            {hasRealItems
+              ? "Exterior angles and cabin details show the finish, trim and interior reset after a careful clean."
+              : "Placeholder cards are shown until real gallery images are uploaded with customer photo consent."}
           </p>
         </div>
 
         <div className="gallery-page__grid motion-stagger">
-          {placeholderGalleryItems.map((item) => (
+          {items.map((item) => (
             <article className="premium-card gallery-card" key={item.id}>
               <GalleryMedia item={item} />
 
               <div className="gallery-card__body">
                 <div className="gallery-card__meta">
                   <p className="eyebrow">{item.serviceType}</p>
-                  <span>Placeholder</span>
+                  <span>{getGalleryItemStateLabel(item)}</span>
                 </div>
                 <h3>{item.title}</h3>
                 <p>{item.description}</p>
@@ -116,13 +132,15 @@ export function GalleryPageContent() {
           ))}
         </div>
 
-        <aside className="gallery-page__future-note" aria-label="Future gallery support">
-          <p>
-            Future gallery items can support a single finished image, before and after images, a
-            comparison slider, service and vehicle tags, featured homepage placement, alt text, and
-            marketing consent and registration plate checks.
-          </p>
-        </aside>
+        {!hasRealItems ? (
+          <aside className="gallery-page__future-note" aria-label="Future gallery support">
+            <p>
+              Future gallery items can support a single finished image, before and after images, a
+              comparison slider, service and vehicle tags, featured homepage placement, alt text, and
+              marketing consent and registration plate checks.
+            </p>
+          </aside>
+        ) : null}
 
         <section className="premium-card gallery-page__cta" aria-labelledby="gallery-cta-title">
           <div>

@@ -1,6 +1,11 @@
 import type { AddonId, BookingDraft, PackageId, VehicleSize } from "../../../lib/booking/types";
 import type { CalendarBlockingBooking } from "../../../lib/availability";
-import { BUSINESS_TIMEZONE, generateAvailableSlots } from "../../../lib/availability";
+import {
+  BUSINESS_TIMEZONE,
+  generateAvailableSlots,
+  isPastBusinessDate,
+  isValidDateString,
+} from "../../../lib/availability";
 import { addonDefinitions, calculateBookingDuration, servicePackages } from "../../../lib/pricing";
 
 type ApiSuccessResponse<TData> = {
@@ -104,8 +109,12 @@ function getBookingDraftForDuration(body: AvailableSlotsRequestBody): BookingDra
 }
 
 function validateSlotRequest(body: AvailableSlotsRequestBody) {
-  if (typeof body.date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(body.date)) {
+  if (typeof body.date !== "string" || !isValidDateString(body.date)) {
     return "Choose a valid request date.";
+  }
+
+  if (isPastBusinessDate(body.date)) {
+    return "Choose a current or future request date.";
   }
 
   if (!isPackageId(body.packageId)) {
@@ -130,7 +139,13 @@ export async function POST(request: Request) {
   let body: AvailableSlotsRequestBody;
 
   try {
-    body = (await request.json()) as AvailableSlotsRequestBody;
+    const parsedBody = await request.json();
+
+    if (!parsedBody || typeof parsedBody !== "object" || Array.isArray(parsedBody)) {
+      throw new Error("Invalid request body.");
+    }
+
+    body = parsedBody as AvailableSlotsRequestBody;
   } catch {
     return jsonResponse(
       {
@@ -180,12 +195,13 @@ export async function POST(request: Request) {
 
   // TODO: Replace this empty list with blocking bookings from PostgreSQL before payment holds are enabled.
   const existingBookings: CalendarBlockingBooking[] = [];
+  const now = Date.now();
   const slots = generateAvailableSlots({
     date: draft.selectedDate,
     serviceDurationMinutes: duration.serviceDurationMinutes,
     travelBufferMinutes: duration.travelBufferMinutes,
     existingBookings,
-  });
+  }).filter((slot) => Date.parse(slot.start) > now);
 
   return jsonResponse({
     success: true,

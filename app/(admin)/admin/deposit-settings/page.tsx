@@ -1,23 +1,13 @@
-import { AdminEmptyState } from "../../../../components/admin/AdminEmptyState";
-import { AdminPageHeader } from "../../../../components/admin/AdminPageHeader";
+import { AdminDepositSettingsPage } from "../../../../components/admin/AdminDepositSettingsPage";
+import { getDepositSettings } from "../../../../lib/admin/deposit-settings";
 
 export const metadata = {
   title: "Deposit Settings | AUTO VALET Admin",
-  description: "AUTO VALET deposit settings placeholder.",
+  description: "AUTO VALET deposit settings and deposit preview.",
 };
 
-export default function DepositSettingsPage() {
-  return (
-    <div className="admin-page">
-      <AdminPageHeader
-        eyebrow="Deposit"
-        title="Deposit settings"
-        description="Deposit amount, transfer policy and payment handling rules will be managed here."
-      />
-      <AdminEmptyState
-        title="Deposit controls coming next"
-        description="The current foundation uses a fixed deposit estimate until admin-managed settings are connected."
-      />
-    </div>
-  );
+export default async function DepositSettingsPage() {
+  const settings = await getDepositSettings();
+
+  return <AdminDepositSettingsPage settings={settings} />;
 }

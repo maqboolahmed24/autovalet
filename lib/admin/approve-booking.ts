@@ -196,16 +196,12 @@ export async function approveBooking(
     };
   }
 
-  // TODO: Lock the booking row, re-check conflicts in the same transaction, update status and approved_at, and write audit logs.
-  const approvedAt = new Date().toISOString();
-
-  // Notification failure must not roll back a persisted approval; surface it later through admin logs.
-  await dispatchApprovalNotification(options.booking);
-
   return {
-    success: true,
-    bookingId: input.bookingId,
-    status: "approved",
-    approvedAt,
+    success: false,
+    code: "APPROVAL_PERSISTENCE_NOT_CONFIGURED",
+    message: "Booking approval is not connected to database persistence yet.",
+    details: {
+      reason: "Status, approved_at, audit log and notifications require persistence.",
+    },
   };
 }

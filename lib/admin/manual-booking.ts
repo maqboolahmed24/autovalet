@@ -11,6 +11,7 @@ import { createBookingReference } from "../booking/references";
 import { assertBookingTransition } from "../booking/lifecycle";
 import type { CalendarBlockingBooking } from "../availability";
 import { createUtcDateFromBusinessTime, generateAvailableSlots } from "../availability";
+import { isValidDateString, isValidTimeString } from "../availability/working-hours";
 import { normalizePostcode } from "../zones/normalize-postcode";
 import { validateServiceZone } from "../zones/validate-zone";
 import type { ZoneValidationResult } from "../zones";
@@ -123,6 +124,26 @@ function readNumber(value: unknown, fallback = 0) {
   return Number.isFinite(numberValue) ? numberValue : fallback;
 }
 
+function readIntegerOrNull(value: unknown) {
+  if (typeof value === "number") {
+    return Number.isSafeInteger(value) ? value : null;
+  }
+
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = value.trim();
+
+  if (!/^-?\d+$/.test(normalized)) {
+    return null;
+  }
+
+  const numberValue = Number(normalized);
+
+  return Number.isSafeInteger(numberValue) ? numberValue : null;
+}
+
 function readStringArray(value: unknown) {
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 }
@@ -172,7 +193,15 @@ function isManualPaymentMethod(value: unknown): value is ManualPaymentMethod {
 }
 
 function isValidEmail(value: string) {
-  return !value || /\S+@\S+\.\S+/.test(value);
+  return /\S+@\S+\.\S+/.test(value);
+}
+
+function isScheduledStartInPast(date: string, time: string, now = new Date()) {
+  if (!isValidDateString(date) || !isValidTimeString(time)) {
+    return false;
+  }
+
+  return createUtcDateFromBusinessTime(date, time).getTime() <= now.getTime();
 }
 
 export function parseCreateManualBookingInput(value: unknown): ParsedManualBookingInput {
@@ -192,6 +221,7 @@ export function parseCreateManualBookingInput(value: unknown): ParsedManualBooki
   const schedule = isRecord(value.schedule) ? value.schedule : {};
   const payment = isRecord(value.payment) ? value.payment : {};
   const addons = readStringArray(service.addons);
+  const depositPaidMinor = readIntegerOrNull(payment.depositPaidMinor);
 
   if (value.source && !isManualBookingSource(value.source)) errors.push("Booking source is invalid.");
   if (value.status && !isManualBookingStatus(value.status)) errors.push("Manual booking status is invalid.");
@@ -206,6 +236,9 @@ export function parseCreateManualBookingInput(value: unknown): ParsedManualBooki
   }
   if (payment.paymentMethod && !isManualPaymentMethod(payment.paymentMethod)) {
     errors.push("Payment method is invalid.");
+  }
+  if (payment.depositPaidMinor !== undefined && depositPaidMinor === null) {
+    errors.push("Deposit paid must be an integer minor-unit amount.");
   }
 
   return {
@@ -240,7 +273,7 @@ export function parseCreateManualBookingInput(value: unknown): ParsedManualBooki
       },
       payment: {
         depositStatus: isManualDepositStatus(payment.depositStatus) ? payment.depositStatus : "unpaid",
-        depositPaidMinor: Math.max(Math.round(readNumber(payment.depositPaidMinor, 0)), 0),
+        depositPaidMinor: Math.max(depositPaidMinor ?? 0, 0),
         paymentMethod: isManualPaymentMethod(payment.paymentMethod) ? payment.paymentMethod : "other",
         notes: readString(payment.notes),
       },
@@ -254,7 +287,11 @@ export function validateManualBookingInput(input: CreateManualBookingInput) {
 
   if (!input.customer.fullName.trim()) errors.push("Customer name is required.");
   if (!input.customer.phone.trim()) errors.push("Customer phone is required.");
-  if (!isValidEmail(input.customer.email.trim())) errors.push("Enter a valid customer email.");
+  if (!input.customer.email.trim()) {
+    errors.push("Customer email is required.");
+  } else if (!isValidEmail(input.customer.email.trim())) {
+    errors.push("Enter a valid customer email.");
+  }
   if (!input.vehicle.make.trim()) errors.push("Vehicle make is required.");
   if (!input.vehicle.model.trim()) errors.push("Vehicle model is required.");
   if (!input.vehicle.size) errors.push("Vehicle size is required.");
@@ -263,8 +300,27 @@ export function validateManualBookingInput(input: CreateManualBookingInput) {
   if (!input.location.postcode.trim()) errors.push("Postcode is required.");
   if (!input.location.fullAddress.trim()) errors.push("Full address is required.");
   if (!input.location.parkingAvailable) errors.push("Parking availability is required.");
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.schedule.date)) errors.push("Date must use YYYY-MM-DD.");
-  if (!/^\d{2}:\d{2}$/.test(input.schedule.startTime)) errors.push("Start time must use HH:mm.");
+  if (!isValidDateString(input.schedule.date)) errors.push("Choose a valid date.");
+  if (!isValidTimeString(input.schedule.startTime)) errors.push("Choose a valid start time.");
+  if (
+    isValidDateString(input.schedule.date) &&
+    isValidTimeString(input.schedule.startTime) &&
+    isScheduledStartInPast(input.schedule.date, input.schedule.startTime)
+  ) {
+    errors.push("Choose a future start time.");
+  }
+  if (!Number.isInteger(input.payment.depositPaidMinor) || input.payment.depositPaidMinor < 0) {
+    errors.push("Deposit paid must be an integer minor-unit amount of zero or more.");
+  }
+  if (input.payment.depositStatus === "paid" && input.payment.depositPaidMinor <= 0) {
+    errors.push("Enter the deposit amount when the deposit is marked paid.");
+  }
+  if (input.payment.depositStatus !== "paid" && input.payment.depositPaidMinor > 0) {
+    errors.push("Deposit paid amount can only be set when the deposit is marked paid.");
+  }
+  if (input.status === "approved" && input.payment.depositStatus === "unpaid") {
+    errors.push("Approved manual bookings need a paid or waived deposit.");
+  }
 
   return errors;
 }
@@ -414,12 +470,13 @@ export async function createManualBooking(
     };
   }
 
-  // TODO: Create customer, booking, vehicle, add-ons, payment records and audit log in one transaction.
-  // TODO: Dispatch `manual_booking_created` to admin and optional customer notification
-  // after persistence succeeds, without failing manual booking creation if notification delivery fails.
   return {
-    success: true,
-    bookingReference: preview.bookingReference,
-    status: input.status,
+    success: false,
+    code: "MANUAL_BOOKING_PERSISTENCE_NOT_CONFIGURED",
+    message: "Manual booking creation is not connected to database persistence yet.",
+    details: {
+      preview,
+      plannedWrites: ["customers", "bookings", "vehicles", "booking_addons", "payments", "audit_logs"],
+    },
   };
 }

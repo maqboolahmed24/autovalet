@@ -61,11 +61,17 @@ async function parseJson(request: Request): Promise<
     }
 > {
   try {
-    const data = (await request.json()) as BlockedTimeBody;
+    const data = await request.json();
+
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+      return {
+        success: false,
+      };
+    }
 
     return {
       success: true,
-      data,
+      data: data as BlockedTimeBody,
     };
   } catch {
     return {

@@ -21,9 +21,9 @@ type ApiErrorResponse = {
 };
 
 type RouteContext = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
 function jsonResponse<TData>(body: ApiSuccessResponse<TData> | ApiErrorResponse, status = 200) {
@@ -85,7 +85,7 @@ function isCancellationReason(value: unknown): value is CancellationReason {
   );
 }
 
-export async function POST(request: Request, { params }: RouteContext) {
+export async function POST(request: Request, context: RouteContext) {
   const guard = await requireAdmin(request, { permission: "cancel_booking" });
 
   if (!guard.success) {
@@ -115,6 +115,7 @@ export async function POST(request: Request, { params }: RouteContext) {
     ? body.depositAction
     : undefined;
 
+  const params = await context.params;
   const result = await cancelBooking({
     bookingId: params.id,
     adminId: guard.session.adminId,

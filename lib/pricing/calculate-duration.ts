@@ -16,7 +16,7 @@ export function calculateBookingDuration(draft: BookingDraft): DurationBreakdown
     };
   }
 
-  const vehicleCount = Math.max(draft.vehicleCount, 1);
+  const vehicleCount = Number.isFinite(draft.vehicleCount) ? Math.max(Math.floor(draft.vehicleCount), 1) : 1;
   const servicePackage = servicePackages[draft.packageId];
   const variant = servicePackage.variants[primaryVehicle.size];
   const lines: DurationBreakdown["lines"] = [

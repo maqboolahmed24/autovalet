@@ -131,6 +131,32 @@
   margin-top: var(--space-6);
 }
 
+.data-request-form {
+  gap: var(--space-5);
+}
+
+.data-request-form .primary-button {
+  width: 100%;
+}
+
+.data-request-form__message {
+  padding: var(--space-4);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  color: var(--text-soft);
+  font-size: var(--text-sm);
+}
+
+.data-request-form__message--success {
+  border-color: rgba(140, 207, 159, 0.28);
+  background: rgba(140, 207, 159, 0.1);
+}
+
+.data-request-form__message--warning {
+  border-color: rgba(240, 197, 106, 0.28);
+  background: rgba(240, 197, 106, 0.1);
+}
+
 @media (min-width: 760px) {
   .public-info-page__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

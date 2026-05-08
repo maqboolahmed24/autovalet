@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { AdminBookingDetail } from "../../../../../components/admin/AdminBookingDetail";
 import {
   adminBookingDetailUsesMockData,
@@ -10,12 +11,16 @@ export const metadata = {
 };
 
 type AdminRequestDetailPageProps = {
-  params: { id: string } | Promise<{ id: string }>;
+  params: Promise<{ id: string }>;
 };
 
 export default async function AdminRequestDetailPage({ params }: AdminRequestDetailPageProps) {
   const resolvedParams = await params;
   const booking = await getAdminBookingDetail(resolvedParams.id);
+
+  if (!booking) {
+    return notFound();
+  }
 
   return (
     <AdminBookingDetail

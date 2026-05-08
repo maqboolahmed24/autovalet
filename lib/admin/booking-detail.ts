@@ -211,14 +211,148 @@ const mockSeeds: Record<string, MockBookingSeed> = {
     requestedStartAt: "2026-05-20T09:30:00.000Z",
     blockedUntil: "2026-05-20T11:45:00.000Z",
   },
+  "mock-request-4": {
+    id: "mock-request-4",
+    reference: "AV-2026-DEMO4",
+    status: "reschedule_requested",
+    packageId: "deep_clean",
+    vehicleSize: "large_4x4",
+    make: "Mercedes",
+    model: "GLC",
+    addonIds: ["leather_deep_clean"],
+    requestedDateLabel: "Fri 22 May",
+    requestedTimeLabel: "15:00",
+    serviceEndLabel: "19:30",
+    blockedUntilLabel: "20:15",
+    isOutsideZone: false,
+    parkingAvailable: "Yes",
+    estimatedTotalMinor: 22000,
+    finalTotalMinor: null,
+    depositPaidMinor: 3000,
+    balancePaidMinor: 0,
+    balanceDueMinor: 19000,
+    requestedStartAt: "2026-05-22T14:00:00.000Z",
+    blockedUntil: "2026-05-22T19:15:00.000Z",
+  },
+  "mock-request-6": {
+    id: "mock-request-6",
+    reference: "AV-2026-DEMO6",
+    status: "declined",
+    packageId: "deep_clean",
+    vehicleSize: "large_4x4",
+    make: "Ford",
+    model: "Kuga",
+    addonIds: [],
+    requestedDateLabel: "Mon 11 May",
+    requestedTimeLabel: "13:00",
+    serviceEndLabel: "16:30",
+    blockedUntilLabel: "17:15",
+    isOutsideZone: true,
+    parkingAvailable: "Unknown",
+    estimatedTotalMinor: 17000,
+    finalTotalMinor: null,
+    depositPaidMinor: 3000,
+    balancePaidMinor: 0,
+    balanceDueMinor: 14000,
+    requestedStartAt: "2026-05-11T12:00:00.000Z",
+    blockedUntil: "2026-05-11T16:15:00.000Z",
+  },
+  "booking-demo-1": {
+    id: "booking-demo-1",
+    reference: "AV-2026-DEMO1",
+    status: "pending_admin_review",
+    packageId: "deep_clean",
+    vehicleSize: "large_4x4",
+    make: "Range Rover",
+    model: "Evoque",
+    addonIds: ["engine_bay_clean"],
+    requestedDateLabel: "Mon 18 May",
+    requestedTimeLabel: "11:45",
+    serviceEndLabel: "15:35",
+    blockedUntilLabel: "16:20",
+    isOutsideZone: false,
+    parkingAvailable: "Yes",
+    estimatedTotalMinor: 22000,
+    finalTotalMinor: null,
+    depositPaidMinor: 3000,
+    balancePaidMinor: 0,
+    balanceDueMinor: 19000,
+    requestedStartAt: "2026-05-18T10:45:00.000Z",
+    blockedUntil: "2026-05-18T15:20:00.000Z",
+  },
+  "booking-demo-2": {
+    id: "booking-demo-2",
+    reference: "AV-2026-DEMO2",
+    status: "approved",
+    packageId: "maintenance",
+    vehicleSize: "medium",
+    make: "BMW",
+    model: "3 Series",
+    addonIds: ["windscreen_repellent"],
+    requestedDateLabel: "Wed 20 May",
+    requestedTimeLabel: "10:30",
+    serviceEndLabel: "12:00",
+    blockedUntilLabel: "12:45",
+    isOutsideZone: true,
+    parkingAvailable: "Unknown",
+    estimatedTotalMinor: 9500,
+    finalTotalMinor: null,
+    depositPaidMinor: 3000,
+    balancePaidMinor: 0,
+    balanceDueMinor: 6500,
+    requestedStartAt: "2026-05-20T09:30:00.000Z",
+    blockedUntil: "2026-05-20T11:45:00.000Z",
+  },
+  "booking-demo-3": {
+    id: "booking-demo-3",
+    reference: "AV-2026-DEMO3",
+    status: "expired",
+    packageId: "deep_clean",
+    vehicleSize: "large_4x4",
+    make: "Audi",
+    model: "Q5",
+    addonIds: [],
+    requestedDateLabel: "Tue 12 May",
+    requestedTimeLabel: "09:00",
+    serviceEndLabel: "12:30",
+    blockedUntilLabel: "13:15",
+    isOutsideZone: true,
+    parkingAvailable: "Unknown",
+    estimatedTotalMinor: 17000,
+    finalTotalMinor: null,
+    depositPaidMinor: 0,
+    balancePaidMinor: 0,
+    balanceDueMinor: 17000,
+    requestedStartAt: "2026-05-12T08:00:00.000Z",
+    blockedUntil: "2026-05-12T12:15:00.000Z",
+  },
+  "booking-demo-4": {
+    id: "booking-demo-4",
+    reference: "AV-2026-0042",
+    status: "completed",
+    packageId: "maintenance",
+    vehicleSize: "small",
+    make: "Mini",
+    model: "Cooper",
+    addonIds: [],
+    requestedDateLabel: "Wed 22 Apr",
+    requestedTimeLabel: "09:00",
+    serviceEndLabel: "10:00",
+    blockedUntilLabel: "10:45",
+    isOutsideZone: false,
+    parkingAvailable: "Yes",
+    estimatedTotalMinor: 5500,
+    finalTotalMinor: 5500,
+    depositPaidMinor: 3000,
+    balancePaidMinor: 2500,
+    balanceDueMinor: 0,
+    requestedStartAt: "2026-04-22T08:00:00.000Z",
+    blockedUntil: "2026-04-22T09:45:00.000Z",
+  },
 };
 
 function getMockSeed(id: string) {
-  return mockSeeds[id] ?? {
-    ...mockSeeds["mock-request-1"],
-    id,
-    reference: "AV-2026-DEMO0",
-  };
+  return mockSeeds[id] ?? null;
 }
 
 function buildAddonDetails(addonIds: AddonId[]) {
@@ -233,22 +367,24 @@ function buildAddonDetails(addonIds: AddonId[]) {
   });
 }
 
-function getActions(status: BookingStatus) {
+function getActions(seed: MockBookingSeed) {
+  const status = seed.status;
   const isPending = status === "pending_admin_review";
-  const isApprovedOrActive =
+  const canCancel =
     status === "approved" ||
     status === "on_the_way" ||
     status === "arrived" ||
-    status === "in_progress" ||
-    status === "completed";
+    status === "in_progress";
+  const canAdjustPrice = canCancel || status === "completed";
+  const canMarkBalancePaid = canAdjustPrice && seed.balanceDueMinor > 0;
 
   return {
     canApprove: isPending,
     canDecline: isPending,
     canReschedule: isPending || status === "approved" || status === "reschedule_requested",
-    canCancel: isApprovedOrActive,
-    canAdjustPrice: isApprovedOrActive,
-    canMarkBalancePaid: isApprovedOrActive,
+    canCancel,
+    canAdjustPrice,
+    canMarkBalancePaid,
   };
 }
 
@@ -320,10 +456,15 @@ function buildApprovalChecks(seed: MockBookingSeed): ApprovalCheck[] {
   ];
 }
 
-export async function getAdminBookingDetail(id: string): Promise<AdminBookingDetailData> {
+export async function getAdminBookingDetail(id: string): Promise<AdminBookingDetailData | null> {
   // TODO: Replace this safe mock detail with a database-backed booking lookup.
   // The mock data is generic and must not be treated as a live customer record.
   const seed = getMockSeed(id);
+
+  if (!seed) {
+    return null;
+  }
+
   const service = getServicePackage(seed.packageId);
   const paymentStatus = getPaymentDisplayStatus({
     bookingId: seed.id,
@@ -396,7 +537,7 @@ export async function getAdminBookingDetail(id: string): Promise<AdminBookingDet
       adminNotes: "Placeholder detail record. Replace with database notes before launch.",
     },
     checks: buildApprovalChecks(seed),
-    actions: getActions(seed.status),
+    actions: getActions(seed),
     activity: [
       {
         id: "activity-1",

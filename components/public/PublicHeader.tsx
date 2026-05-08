@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { BrandLogo } from "./BrandLogo";
 import { MobileMenu, type PublicNavLink } from "./MobileMenu";
 
 const publicNavLinks: PublicNavLink[] = [
@@ -32,9 +33,7 @@ export function PublicHeader() {
     <>
       <header className={`public-header${isScrolled ? " is-scrolled" : ""}`}>
         <div className="public-header__inner">
-          <Link className="public-header__brand" href="/" aria-label="AUTO VALET home">
-            AUTO VALET
-          </Link>
+          <BrandLogo className="public-header__brand" />
 
           <nav className="public-header__nav" aria-label="Primary navigation">
             {publicNavLinks.map((link) => (
@@ -64,4 +63,3 @@ export function PublicHeader() {
     </>
   );
 }
-

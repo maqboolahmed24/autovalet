@@ -1,23 +1,13 @@
-import { AdminEmptyState } from "../../../../components/admin/AdminEmptyState";
-import { AdminPageHeader } from "../../../../components/admin/AdminPageHeader";
+import { AdminServicesPricingPage } from "../../../../components/admin/AdminServicesPricingPage";
+import { getAdminServicesPricing } from "../../../../lib/admin/services-pricing";
 
 export const metadata = {
   title: "Services & Pricing | AUTO VALET Admin",
-  description: "AUTO VALET services and pricing setup placeholder.",
+  description: "AUTO VALET services, vehicle-size pricing, add-ons and duration settings.",
 };
 
-export default function ServicesPricingPage() {
-  return (
-    <div className="admin-page">
-      <AdminPageHeader
-        eyebrow="Services"
-        title="Services & pricing"
-        description="Packages, vehicle-size pricing, durations and add-ons will be managed here."
-      />
-      <AdminEmptyState
-        title="Pricing controls coming next"
-        description="The central catalogue exists. Admin editing will be added after persistence is connected."
-      />
-    </div>
-  );
+export default async function ServicesPricingPage() {
+  const data = await getAdminServicesPricing();
+
+  return <AdminServicesPricingPage data={data} />;
 }

@@ -5,6 +5,8 @@ import type { AvailabilityOverride, WorkingHoursRule } from "./types";
 import {
   addMinutesToTime,
   getWorkingHoursForDate,
+  isValidDateString,
+  isValidTimeString,
   parseTimeToMinutes,
 } from "./working-hours";
 
@@ -74,6 +76,10 @@ function getTimezoneOffsetMinutes(date: Date, timeZone = BUSINESS_TIMEZONE) {
 }
 
 export function createUtcDateFromBusinessTime(date: string, time: string) {
+  if (!isValidDateString(date) || !isValidTimeString(time)) {
+    throw new Error(`Invalid business date/time: ${date} ${time}`);
+  }
+
   const [year, month, day] = date.split("-").map(Number);
   const [hours, minutes] = time.split(":").map(Number);
   const utcGuess = new Date(Date.UTC(year, month - 1, day, hours, minutes, 0, 0));

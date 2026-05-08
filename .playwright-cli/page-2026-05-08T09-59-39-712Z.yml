@@ -1,0 +1,258 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - link "Skip to main content" [ref=e3] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - link "AUTO VALET home" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - text: AUTO VALET
+        - navigation "Primary navigation" [ref=e7]:
+          - link "Services" [ref=e8] [cursor=pointer]:
+            - /url: /services
+          - link "Gallery" [ref=e9] [cursor=pointer]:
+            - /url: /gallery
+          - link "How it works" [ref=e10] [cursor=pointer]:
+            - /url: /#how-it-works
+          - link "Pricing" [ref=e11] [cursor=pointer]:
+            - /url: /#pricing
+          - link "Request a Booking" [ref=e12] [cursor=pointer]:
+            - /url: /booking
+    - main [ref=e14]:
+      - region "Premium mobile detailing, wherever your car is parked." [ref=e15]:
+        - img "White Audi exterior detail after mobile valeting" [ref=e17]
+        - generic [ref=e19]:
+          - paragraph [ref=e20]: AUTO VALET
+          - heading "Premium mobile detailing, wherever your car is parked." [level=1] [ref=e21]:
+            - text: Premium mobile detailing,
+            - generic [ref=e22]: wherever your car is parked.
+          - paragraph [ref=e23]: Maintenance cleans, deep cleans and finishing extras delivered with care.
+          - link "Request a Booking" [ref=e25] [cursor=pointer]:
+            - /url: /booking
+          - paragraph [ref=e26]: Deposit required. Bookings confirmed after approval.
+      - region "AUTO VALET service highlights" [ref=e27]:
+        - generic [ref=e28]: Mobile service
+        - generic [ref=e29]: Deposit required
+        - generic [ref=e30]: Manual approval
+        - generic [ref=e31]: Premium finish
+      - region "Choose the level of care." [ref=e32]:
+        - generic [ref=e33]:
+          - generic [ref=e34]:
+            - paragraph [ref=e35]: Services
+            - heading "Choose the level of care." [level=2] [ref=e36]
+            - paragraph [ref=e37]: Maintenance cleans, deep cleans and finishing extras for vehicles that deserve proper attention.
+          - generic [ref=e38]:
+            - article [ref=e39]:
+              - paragraph [ref=e40]: Maintenance
+              - heading "Regular care, refined finish." [level=3] [ref=e41]
+              - generic "Maintenance prices and durations" [ref=e42]:
+                - generic [ref=e43]:
+                  - generic [ref=e44]: Small
+                  - strong [ref=e45]: £55
+                  - generic [ref=e46]: 60 mins
+                - generic [ref=e47]:
+                  - generic [ref=e48]: Medium
+                  - strong [ref=e49]: £65
+                  - generic [ref=e50]: 75 mins
+                - generic [ref=e51]:
+                  - generic [ref=e52]: Large / 4x4
+                  - strong [ref=e53]: £75
+                  - generic [ref=e54]: 90 mins
+              - paragraph [ref=e55]: From 1 hour
+            - article [ref=e56]:
+              - paragraph [ref=e57]: Deep Clean
+              - heading "A more complete reset." [level=3] [ref=e58]
+              - paragraph [ref=e59]: £160 - £170
+              - paragraph [ref=e60]: Final price may vary depending on condition on arrival.
+          - generic [ref=e61]:
+            - link "Request a Booking" [ref=e62] [cursor=pointer]:
+              - /url: /booking
+            - link "View Services" [ref=e63] [cursor=pointer]:
+              - /url: /services
+      - region "Detail you can see. Care you can feel." [ref=e64]:
+        - generic [ref=e65]:
+          - generic [ref=e66]:
+            - paragraph [ref=e67]: Recent Work
+            - heading "Detail you can see. Care you can feel." [level=2] [ref=e68]
+            - paragraph [ref=e69]: A quiet, careful process designed to reset the vehicle and leave a refined finish.
+          - list "AUTO VALET work highlights" [ref=e70]:
+            - listitem [ref=e71]:
+              - generic [ref=e72]:
+                - img "AUTO VALET Exterior finish" [ref=e73]
+                - generic [ref=e74]: Exterior finish
+              - generic [ref=e75]:
+                - generic [ref=e76]: "01"
+                - paragraph [ref=e77]: Clean paintwork and glass, finished with a sharp exterior stance.
+            - listitem [ref=e78]:
+              - generic [ref=e79]:
+                - img "AUTO VALET Interior reset" [ref=e80]
+                - generic [ref=e81]: Interior reset
+              - generic [ref=e82]:
+                - generic [ref=e83]: "02"
+                - paragraph [ref=e84]: Cabin touchpoints, seats and trim reset after a careful clean.
+            - listitem [ref=e85]:
+              - generic [ref=e86]:
+                - img "AUTO VALET Premium cabin" [ref=e87]
+                - generic [ref=e88]: Premium cabin
+              - generic [ref=e89]:
+                - generic [ref=e90]: "03"
+                - paragraph [ref=e91]: High-end materials handled with the right level of care.
+            - listitem [ref=e92]:
+              - generic [ref=e93]:
+                - img "AUTO VALET Final result" [ref=e94]
+                - generic [ref=e95]: Final result
+              - generic [ref=e96]:
+                - generic [ref=e97]: "04"
+                - paragraph [ref=e98]: Polished details that hold up under close inspection.
+      - region "A simple request process." [ref=e99]:
+        - generic [ref=e100]:
+          - generic [ref=e101]:
+            - paragraph [ref=e102]: How it works
+            - heading "A simple request process." [level=2] [ref=e103]
+            - paragraph [ref=e104]: Choose your service, request your preferred time, pay your deposit, and wait for approval.
+          - list [ref=e105]:
+            - listitem [ref=e106]:
+              - text: "01"
+              - heading "Choose your service" [level=3] [ref=e107]
+              - paragraph [ref=e108]: Select your package, vehicle size and any extras.
+            - listitem [ref=e109]:
+              - text: "02"
+              - heading "Request your slot" [level=3] [ref=e110]
+              - paragraph [ref=e111]: Pick a preferred date and time from available options.
+            - listitem [ref=e112]:
+              - text: "03"
+              - heading "Pay your deposit" [level=3] [ref=e113]
+              - paragraph [ref=e114]: Your request is submitted securely after deposit payment.
+            - listitem [ref=e115]:
+              - text: "04"
+              - heading "We confirm" [level=3] [ref=e116]
+              - paragraph [ref=e117]: Every booking is manually reviewed before approval.
+      - region "Clear pricing. Final quote confirmed on arrival." [ref=e118]:
+        - generic [ref=e119]:
+          - generic [ref=e120]:
+            - paragraph [ref=e121]: Pricing
+            - heading "Clear pricing. Final quote confirmed on arrival." [level=2] [ref=e122]
+            - paragraph [ref=e123]: Choose your service with a clear estimate. Final price may vary depending on vehicle condition on arrival.
+          - generic [ref=e124]:
+            - article [ref=e125]:
+              - paragraph [ref=e126]: Maintenance
+              - generic "Maintenance prices by vehicle size" [ref=e127]:
+                - generic [ref=e128]:
+                  - generic [ref=e129]: Small
+                  - strong [ref=e130]: £55
+                - generic [ref=e131]:
+                  - generic [ref=e132]: Medium
+                  - strong [ref=e133]: £65
+                - generic [ref=e134]:
+                  - generic [ref=e135]: Large / 4x4
+                  - strong [ref=e136]: £75
+            - article [ref=e137]:
+              - paragraph [ref=e138]: Deep Clean
+              - strong [ref=e139]: £160 - £170
+              - paragraph [ref=e140]: For vehicles needing a more thorough reset.
+          - paragraph [ref=e142]: A deposit is required to submit a booking request. Appointments are confirmed after approval.
+          - generic [ref=e143]:
+            - link "Request a Booking" [ref=e144] [cursor=pointer]:
+              - /url: /booking
+            - link "View Full Pricing" [ref=e145] [cursor=pointer]:
+              - /url: /services
+      - region "Finishing extras, selected during booking." [ref=e146]:
+        - generic [ref=e147]:
+          - generic [ref=e148]:
+            - paragraph [ref=e149]: Add-ons
+            - heading "Finishing extras, selected during booking." [level=2] [ref=e150]
+            - paragraph [ref=e151]: Add focused treatments to your booking request for a more complete finish.
+          - generic [ref=e152]:
+            - article [ref=e153]:
+              - generic [ref=e154]: Engine bay clean
+              - strong [ref=e155]: £30
+            - article [ref=e156]:
+              - generic [ref=e157]: Windscreen repellent
+              - strong [ref=e158]: £30
+            - article [ref=e159]:
+              - generic [ref=e160]: Exhaust tips polished
+              - strong [ref=e161]: £20
+            - article [ref=e162]:
+              - generic [ref=e163]: Leather deep clean
+              - strong [ref=e164]: £50
+            - article [ref=e165]:
+              - generic [ref=e166]: Convertible roof treatment
+              - strong [ref=e167]: £40
+            - article [ref=e168]:
+              - generic [ref=e169]: Removal of excess pet hair
+              - strong [ref=e170]: £30
+            - article [ref=e171]:
+              - generic [ref=e172]: Liquid decon and clay bar
+              - strong [ref=e173]: £50
+          - generic [ref=e174]:
+            - link "View all services" [ref=e175] [cursor=pointer]:
+              - /url: /services
+            - link "Request a Booking" [ref=e176] [cursor=pointer]:
+              - /url: /booking
+      - region "Booking requests are reviewed before confirmation." [ref=e177]:
+        - generic [ref=e179]:
+          - generic [ref=e180]:
+            - paragraph [ref=e181]: Before you book
+            - heading "Booking requests are reviewed before confirmation." [level=2] [ref=e182]
+            - paragraph [ref=e183]: A deposit protects your requested slot while we review your location, vehicle details and selected service.
+          - generic [ref=e184]:
+            - article [ref=e185]:
+              - heading "Selected service areas" [level=3] [ref=e186]
+              - paragraph [ref=e187]: We operate within approved postcode and regional zones.
+            - article [ref=e188]:
+              - heading "Outside-zone requests" [level=3] [ref=e189]
+              - paragraph [ref=e190]: We may consider requests outside the usual area for 3+ vehicles at the same address.
+            - article [ref=e191]:
+              - heading "Access and parking" [level=3] [ref=e192]
+              - paragraph [ref=e193]: Please make sure the vehicle is accessible and suitable parking is available nearby.
+            - article [ref=e194]:
+              - heading "Manual approval" [level=3] [ref=e195]
+              - paragraph [ref=e196]: Your appointment is only confirmed once AUTO VALET approves the request.
+          - generic [ref=e197]:
+            - link "Request a Booking" [ref=e198] [cursor=pointer]:
+              - /url: /booking
+            - link "Read FAQs" [ref=e199] [cursor=pointer]:
+              - /url: /faq
+      - region "Ready when your car is." [ref=e200]:
+        - generic [ref=e202]:
+          - paragraph [ref=e203]: Request a booking
+          - heading "Ready when your car is." [level=2] [ref=e204]
+          - paragraph [ref=e205]: Choose your service, request your preferred slot, and we'll review the booking before confirming.
+          - link "Request a Booking" [ref=e207] [cursor=pointer]:
+            - /url: /booking
+          - paragraph [ref=e208]: Deposit required. Bookings confirmed after approval.
+    - contentinfo [ref=e209]:
+      - generic [ref=e210]:
+        - generic [ref=e211]:
+          - link "AUTO VALET" [ref=e212] [cursor=pointer]:
+            - /url: /
+          - paragraph [ref=e213]: Premium mobile detailing at your location.
+        - navigation "Footer navigation" [ref=e214]:
+          - link "Services" [ref=e215] [cursor=pointer]:
+            - /url: /services
+          - link "Booking" [ref=e216] [cursor=pointer]:
+            - /url: /booking
+          - link "Gallery" [ref=e217] [cursor=pointer]:
+            - /url: /gallery
+          - link "FAQ" [ref=e218] [cursor=pointer]:
+            - /url: /faq
+          - link "Policies" [ref=e219] [cursor=pointer]:
+            - /url: /policies
+          - link "Contact" [ref=e220] [cursor=pointer]:
+            - /url: /contact
+        - generic [ref=e221]:
+          - paragraph [ref=e222]: AUTO VALET operates within selected service areas.
+          - paragraph [ref=e223]: Deposit required. Bookings are confirmed after manual approval.
+        - navigation "Policy links" [ref=e224]:
+          - link "Privacy Policy" [ref=e225] [cursor=pointer]:
+            - /url: /policies/privacy
+          - link "Terms & Conditions" [ref=e226] [cursor=pointer]:
+            - /url: /policies/terms
+          - link "Deposit & Cancellation Policy" [ref=e227] [cursor=pointer]:
+            - /url: /policies/deposit-cancellation
+          - link "Cookie Policy" [ref=e228] [cursor=pointer]:
+            - /url: /policies/cookies
+          - link "Data Requests" [ref=e229] [cursor=pointer]:
+            - /url: /policies/data-requests
+  - button "Open Next.js Dev Tools" [ref=e235] [cursor=pointer]:
+    - img [ref=e236]

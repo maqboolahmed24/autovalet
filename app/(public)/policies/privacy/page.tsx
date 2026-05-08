@@ -13,6 +13,7 @@ const privacySections: PolicySection[] = [
       "Vehicle details, selected services, extras and booking notes.",
       "Booking references, payment references, payment status and amounts.",
       "Marketing or photo consent choices where applicable.",
+      "Private admin notes where needed for booking and service management.",
     ],
   },
   {
@@ -37,6 +38,13 @@ const privacySections: PolicySection[] = [
     ],
   },
   {
+    title: "Analytics privacy",
+    paragraphs: [
+      "AUTO VALET analytics is disabled by default unless a privacy-safe provider is configured.",
+      "Analytics events must not include full names, email addresses, phone numbers, full addresses, full postcodes, payment provider IDs, internal booking IDs, vehicle registrations or notes.",
+    ],
+  },
+  {
     title: "Marketing and photo consent",
     paragraphs: [
       "AUTO VALET may ask for separate consent before using customer vehicle photos for marketing or gallery content.",
@@ -46,7 +54,8 @@ const privacySections: PolicySection[] = [
   {
     title: "Data retention",
     paragraphs: [
-      "Booking, payment reference and customer communication records may be retained for operational, accounting, support and audit purposes.",
+      "Booking and payment reference records may be retained for up to 6 years for operational, accounting, support and audit purposes.",
+      "Notification logs, audit logs and gallery consent records should be retained only for the period needed for operational, legal or consent evidence.",
       "Data that is no longer needed should be deleted or anonymised according to the retention process configured for AUTO VALET.",
     ],
   },
@@ -57,6 +66,13 @@ const privacySections: PolicySection[] = [
       "Customers can ask for incorrect details to be corrected.",
       "Customers can ask for deletion where there is no valid operational, legal or accounting reason to retain the data.",
       "Customers can withdraw optional marketing or photo consent.",
+    ],
+  },
+  {
+    title: "Data requests",
+    paragraphs: [
+      "Customers can use the Data Requests page to ask for access, correction, deletion or marketing/photo consent withdrawal.",
+      "Automatic handling is not enabled until AUTO VALET connects secure request storage or notification delivery.",
     ],
   },
   {

@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
+import { createAbsoluteUrl, getSiteUrl, siteConfig } from "./site-config";
 
-const siteName = "AUTO VALET";
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://autovalet.example";
-const defaultDescription =
-  "Premium mobile car detailing at your location. Request maintenance cleans, deep cleans and finishing extras with deposit-secured booking approval.";
+const noindexRoutes: PublicRouteKey[] = ["bookingStatus"];
 
 export type PublicRouteKey =
   | "home"
@@ -16,6 +14,7 @@ export type PublicRouteKey =
   | "terms"
   | "depositCancellation"
   | "cookies"
+  | "dataRequests"
   | "contact"
   | "bookingSuccess"
   | "paymentFailed"
@@ -33,8 +32,8 @@ export const publicRouteMetadata: Record<
 > = {
   home: {
     path: "/",
-    title: "AUTO VALET | Premium Mobile Car Detailing",
-    description: defaultDescription,
+    title: siteConfig.defaultTitle,
+    description: siteConfig.defaultDescription,
     purpose: "Premium introduction and booking request CTA.",
   },
   services: {
@@ -91,6 +90,12 @@ export const publicRouteMetadata: Record<
     description: "How AUTO VALET uses essential cookies and how analytics cookies will be handled if added later.",
     purpose: "Cookie and tracking policy.",
   },
+  dataRequests: {
+    path: "/policies/data-requests",
+    title: "Data Requests | AUTO VALET",
+    description: "Request access, correction, deletion or marketing/photo consent withdrawal for AUTO VALET data.",
+    purpose: "GDPR and customer data request handling.",
+  },
   contact: {
     path: "/contact",
     title: "Contact | AUTO VALET",
@@ -99,9 +104,9 @@ export const publicRouteMetadata: Record<
   },
   bookingSuccess: {
     path: "/booking/success",
-    title: "Booking Request Received | AUTO VALET",
-    description: "Your paid booking request has been received and is waiting for AUTO VALET review.",
-    purpose: "Deposit-paid booking request success state.",
+    title: "Payment Return | AUTO VALET",
+    description: "Return from deposit checkout. AUTO VALET verifies payment before booking review.",
+    purpose: "Payment return state before verified booking review.",
   },
   paymentFailed: {
     path: "/booking/failed",
@@ -125,21 +130,51 @@ export const publicRouteMetadata: Record<
 
 export function createPublicMetadata(route: PublicRouteKey): Metadata {
   const routeMeta = publicRouteMetadata[route];
-  const canonical = new URL(routeMeta.path.replace("[reference]", ""), siteUrl).toString();
-
-  return {
-    title: routeMeta.title,
-    description: routeMeta.description,
-    metadataBase: new URL(siteUrl),
-    alternates: {
-      canonical,
+  const canonical = routeMeta.path.includes("[") ? undefined : createAbsoluteUrl(routeMeta.path);
+  const openGraphImageUrl = createAbsoluteUrl("/opengraph-image");
+  const openGraphImages = openGraphImageUrl
+    ? [
+        {
+          url: openGraphImageUrl,
+          width: 1200,
+          height: 630,
+          alt: siteConfig.siteName,
+        },
+      ]
+    : undefined;
+  const noindex = noindexRoutes.includes(route);
+  const metadata: Metadata = {
+    metadataBase: getSiteUrl(),
+    title: {
+      absolute: routeMeta.title,
     },
+    description: routeMeta.description,
+    alternates: canonical ? { canonical } : undefined,
+    robots: noindex
+      ? {
+          index: false,
+          follow: false,
+          nocache: true,
+        }
+      : {
+          index: true,
+          follow: true,
+        },
     openGraph: {
       title: routeMeta.title,
       description: routeMeta.description,
-      siteName,
-      url: canonical,
+      siteName: siteConfig.siteName,
       type: "website",
+      url: canonical,
+      images: openGraphImages,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: routeMeta.title,
+      description: routeMeta.description,
+      images: openGraphImageUrl ? [openGraphImageUrl] : undefined,
     },
   };
+
+  return metadata;
 }

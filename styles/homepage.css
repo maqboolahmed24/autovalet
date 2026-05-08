@@ -182,6 +182,21 @@
   box-shadow: var(--shadow-premium);
 }
 
+.work-story-card__placeholder--image {
+  background: #080808;
+}
+
+.work-story-card__placeholder--image::before {
+  z-index: 1;
+  background:
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.72)),
+    linear-gradient(120deg, rgba(0, 0, 0, 0.12), transparent 48%);
+}
+
+.work-story-card__placeholder--image::after {
+  display: none;
+}
+
 .work-story-card__image {
   position: absolute;
   inset: 0;

@@ -48,14 +48,41 @@
   gap: var(--space-4);
 }
 
-.public-header__brand,
-.mobile-menu__brand,
-.public-footer__brand a {
+.brand-logo {
   color: var(--text-main);
+  text-decoration: none;
+}
+
+.brand-logo--inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+}
+
+.brand-logo__mark {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
+.brand-logo__text {
   font-size: 0.84rem;
   font-weight: 950;
   letter-spacing: 0.16em;
-  text-decoration: none;
+  line-height: 1;
+}
+
+.brand-logo--wordmark {
+  display: block;
+  width: min(230px, 72vw);
+}
+
+.brand-logo__wordmark {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
 }
 
 .public-header__nav {
@@ -218,6 +245,27 @@
   font-size: var(--text-lg);
 }
 
+.section.page-intro--compact {
+  padding-top: var(--space-24);
+  padding-bottom: var(--space-7);
+}
+
+.page-intro--compact .page-intro__inner {
+  max-width: 780px;
+  gap: var(--space-3);
+}
+
+.page-intro--compact .page-intro__inner h1 {
+  max-width: 760px;
+  font-size: clamp(2.4rem, 5.6vw, 3.75rem);
+  letter-spacing: var(--tracking-tight);
+}
+
+.page-intro--compact .page-intro__inner p:not(.eyebrow) {
+  max-width: 620px;
+  font-size: var(--text-md);
+}
+
 .sticky-booking-cta .primary-button {
   display: grid;
   gap: 4px;
@@ -250,6 +298,10 @@
   display: grid;
   gap: var(--space-3);
   max-width: 360px;
+}
+
+.public-footer__brand .brand-logo--wordmark {
+  width: min(172px, 56vw);
 }
 
 .public-footer__links,
@@ -319,4 +371,3 @@
     grid-column: 1 / -1;
   }
 }
-

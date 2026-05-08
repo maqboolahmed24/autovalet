@@ -8,7 +8,7 @@ type FaqGroup = {
   items: FaqItem[];
 };
 
-const faqGroups: FaqGroup[] = [
+export const faqGroups: FaqGroup[] = [
   {
     title: "Booking requests",
     items: [
@@ -80,6 +80,8 @@ const faqGroups: FaqGroup[] = [
     ],
   },
 ];
+
+export const faqSchemaItems: FaqItem[] = faqGroups.flatMap((group) => group.items);
 
 export function FaqPageContent() {
   return (

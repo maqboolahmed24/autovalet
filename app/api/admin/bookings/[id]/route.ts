@@ -7,7 +7,7 @@ import { adminGuardErrorResponse, requireAdmin } from "../../../../../lib/auth/r
 export const runtime = "nodejs";
 
 type BookingDetailRouteContext = {
-  params: { id: string } | Promise<{ id: string }>;
+  params: Promise<{ id: string }>;
 };
 
 export async function GET(request: Request, context: BookingDetailRouteContext) {
@@ -19,6 +19,20 @@ export async function GET(request: Request, context: BookingDetailRouteContext) 
 
   const params = await context.params;
   const data = await getAdminBookingDetail(params.id);
+
+  if (!data) {
+    return Response.json(
+      {
+        success: false,
+        error: {
+          code: "BOOKING_NOT_FOUND",
+          message: "Booking was not found.",
+          details: {},
+        },
+      },
+      { status: 404 },
+    );
+  }
 
   return Response.json({
     success: true,

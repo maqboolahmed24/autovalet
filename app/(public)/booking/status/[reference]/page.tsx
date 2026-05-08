@@ -4,11 +4,13 @@ import { createPublicMetadata } from "../../../../../lib/seo/public-metadata";
 export const metadata = createPublicMetadata("bookingStatus");
 
 type BookingStatusPageProps = {
-  params: {
+  params: Promise<{
     reference: string;
-  };
+  }>;
 };
 
-export default function BookingStatusPage({ params }: BookingStatusPageProps) {
-  return <BookingStatusView reference={params.reference} />;
+export default async function BookingStatusPage({ params }: BookingStatusPageProps) {
+  const resolvedParams = await params;
+
+  return <BookingStatusView reference={resolvedParams.reference} />;
 }

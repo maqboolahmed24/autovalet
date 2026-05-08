@@ -120,8 +120,6 @@ export async function adjustFinalPrice(
     };
   }
 
-  const preview = previewFinalPriceAdjustment(input, options.booking);
-
   if (!options.persistenceConfigured) {
     return {
       success: false,
@@ -130,11 +128,9 @@ export async function adjustFinalPrice(
     };
   }
 
-  // TODO: Update final_total_minor, balance_due_minor, price_adjustment_reason and audit log in one transaction.
-  // TODO: Dispatch `final_price_adjusted` after persistence succeeds.
   return {
-    success: true,
-    finalTotalMinor: preview.finalTotalMinor,
-    balanceDueMinor: preview.balanceDueMinor,
+    success: false,
+    code: "FINAL_PRICE_PERSISTENCE_NOT_CONFIGURED",
+    message: "Final price adjustment is not connected to database persistence yet.",
   };
 }

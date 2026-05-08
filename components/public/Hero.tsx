@@ -17,7 +17,25 @@ export function Hero({ className, imageAlt = "", imageSrc }: HeroProps) {
       data-hero
     >
       <div className="hero__media" aria-hidden={imageAlt ? undefined : true}>
-        {imageSrc ? <img alt={imageAlt} className="hero__image" src={imageSrc} /> : <div className="hero__image-placeholder" />}
+        {imageSrc ? (
+          <img alt={imageAlt} className="hero__image" src={imageSrc} />
+        ) : (
+          <div className="hero__scene">
+            <div className="hero__road" aria-hidden="true" />
+            <div className="hero__vehicle-stage" aria-hidden="true">
+              <div className="hero-car">
+                <div className="hero-car__shadow" />
+                <div className="hero-car__wheel hero-car__wheel--front">
+                  <img className="hero-car__wheel-image" src="/hero-car/car-wheel.png" alt="" />
+                </div>
+                <div className="hero-car__wheel hero-car__wheel--rear">
+                  <img className="hero-car__wheel-image" src="/hero-car/car-wheel.png" alt="" />
+                </div>
+                <img className="hero-car__body" src="/hero-car/car-body.png" alt="" />
+              </div>
+            </div>
+          </div>
+        )}
         <div className="hero__overlay" aria-hidden="true" />
       </div>
 
@@ -44,4 +62,3 @@ export function Hero({ className, imageAlt = "", imageSrc }: HeroProps) {
     </section>
   );
 }
-

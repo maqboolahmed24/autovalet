@@ -15,9 +15,9 @@ import type {
   ZoneCheckStatus,
 } from "../../../lib/booking/types";
 import { addonDefinitions, servicePackages } from "../../../lib/pricing";
-import { getPaymentProvider, getSiteUrl } from "../../../lib/payments/provider";
 import { isValidIdempotencyKey, normalizeIdempotencyKey } from "../../../lib/payments/idempotency";
-import { PaymentProviderConfigurationError } from "../../../lib/payments/types";
+import { validateServiceZone, ZoneValidationError } from "../../../lib/zones";
+import type { ZoneValidationResult } from "../../../lib/zones";
 
 export const runtime = "nodejs";
 
@@ -50,8 +50,6 @@ type ParsedDraftResult =
       draft: null;
       errors: string[];
     };
-
-const paymentHoldPersistenceConfigured = false;
 
 function jsonResponse<TData>(body: ApiSuccessResponse<TData> | ApiErrorResponse, status = 200) {
   return Response.json(body, { status });
@@ -112,6 +110,13 @@ function isZoneCheckStatus(value: unknown): value is ZoneCheckStatus {
     value === "outside_zone_volume_allowed" ||
     value === "outside_zone_blocked"
   );
+}
+
+function mapZoneValidationToDraftStatus(result: ZoneValidationResult): ZoneCheckStatus {
+  if (result.zoneStatus === "standard_zone") return "standard_zone";
+  if (result.zoneStatus === "outside_zone_volume_exception") return "outside_zone_volume_allowed";
+
+  return "outside_zone_blocked";
 }
 
 function parseBookingDraft(value: unknown): ParsedDraftResult {
@@ -196,7 +201,13 @@ export async function POST(request: Request) {
   let body: CreatePaymentHoldRequestBody;
 
   try {
-    body = (await request.json()) as CreatePaymentHoldRequestBody;
+    const parsedBody = await request.json();
+
+    if (!parsedBody || typeof parsedBody !== "object" || Array.isArray(parsedBody)) {
+      throw new Error("Invalid request body.");
+    }
+
+    body = parsedBody as CreatePaymentHoldRequestBody;
   } catch {
     return errorResponse("INVALID_JSON", "Request body must be valid JSON.", 400);
   }
@@ -226,6 +237,43 @@ export async function POST(request: Request) {
     });
   }
 
+  let zoneValidation: ZoneValidationResult;
+
+  try {
+    zoneValidation = validateServiceZone({
+      postcode: parsedDraft.draft.postcode,
+      vehicleCount: parsedDraft.draft.vehicleCount,
+    });
+  } catch (error) {
+    if (error instanceof ZoneValidationError) {
+      return errorResponse("BOOKING_VALIDATION_FAILED", "Check the booking details before payment.", 400, {
+        errors: [error.message],
+      });
+    }
+
+    return errorResponse("SERVICE_AREA_CHECK_FAILED", "Service area could not be checked. Please try again.", 500);
+  }
+  const verifiedZoneStatus = mapZoneValidationToDraftStatus(zoneValidation);
+
+  if (!zoneValidation.allowed) {
+    return errorResponse("SERVICE_AREA_NOT_ALLOWED", zoneValidation.message, 400, {
+      zoneStatus: zoneValidation.zoneStatus,
+      requiredVehicleCount: zoneValidation.requiredVehicleCount,
+    });
+  }
+
+  if (parsedDraft.draft.zoneCheckStatus !== verifiedZoneStatus) {
+    return errorResponse(
+      "SERVICE_AREA_RECHECK_REQUIRED",
+      "Check the service area again before payment.",
+      409,
+      {
+        expectedZoneStatus: verifiedZoneStatus,
+        receivedZoneStatus: parsedDraft.draft.zoneCheckStatus,
+      },
+    );
+  }
+
   const holdSnapshot = createPaymentHoldSnapshot({
     bookingReference: createBookingReference(),
     draft: parsedDraft.draft,
@@ -246,55 +294,12 @@ export async function POST(request: Request) {
     return errorResponse("SLOT_UNAVAILABLE", "This time is no longer available. Please choose another slot.", 409);
   }
 
-  if (!paymentHoldPersistenceConfigured) {
-    return errorResponse(
-      "PAYMENT_HOLD_PERSISTENCE_NOT_CONFIGURED",
-      "Deposit checkout is not configured yet.",
-      503,
-      {
-        reason: "Database persistence for payment_hold bookings is not configured.",
-      },
-    );
-  }
-
-  try {
-    const siteUrl = getSiteUrl(request);
-    const provider = getPaymentProvider();
-    const checkout = await provider.createCheckoutSession({
-      bookingReference: holdSnapshot.bookingReference,
-      amountMinor: holdSnapshot.price.depositDueMinor,
-      currency: "GBP",
-      customerEmail: parsedDraft.draft.customer.email,
-      successUrl: `${siteUrl}/booking/success?reference=${encodeURIComponent(holdSnapshot.bookingReference)}`,
-      cancelUrl: `${siteUrl}/booking/failed?reference=${encodeURIComponent(holdSnapshot.bookingReference)}`,
-      metadata: {
-        bookingReference: holdSnapshot.bookingReference,
-        bookingStatus: "payment_hold",
-        packageId: parsedDraft.draft.packageId,
-        requestedDate: parsedDraft.draft.selectedDate,
-        requestedTime: parsedDraft.draft.selectedSlotStart,
-      },
-      idempotencyKey,
-    });
-
-    // TODO: Persist booking, vehicles, add-ons and payment rows in one transaction before returning checkout.
-    return jsonResponse({
-      success: true,
-      data: {
-        bookingReference: holdSnapshot.bookingReference,
-        checkoutUrl: checkout.checkoutUrl,
-        holdExpiresAt: holdSnapshot.holdExpiresAt,
-      },
-    });
-  } catch (error) {
-    if (error instanceof PaymentProviderConfigurationError) {
-      return errorResponse(error.code, error.message, 503);
-    }
-
-    return errorResponse(
-      "CHECKOUT_CREATE_FAILED",
-      "Deposit checkout could not be started. Please try again.",
-      502,
-    );
-  }
+  return errorResponse(
+    "PAYMENT_HOLD_PERSISTENCE_NOT_CONFIGURED",
+    "Deposit checkout is not configured yet.",
+    503,
+    {
+      reason: "Database persistence for payment_hold bookings is not configured.",
+    },
+  );
 }

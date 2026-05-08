@@ -1,6 +1,6 @@
 import { getDefaultWorkingHoursRules } from "../availability/default-availability";
 import type { AvailabilityOverride, AvailabilityOverrideType, Weekday } from "../availability/types";
-import { parseTimeToMinutes } from "../availability/working-hours";
+import { isValidDateString, parseTimeToMinutes } from "../availability/working-hours";
 
 export type AdminAvailabilityData = {
   isMockData: boolean;
@@ -135,11 +135,10 @@ export async function addBlockedTime(
     };
   }
 
-  // TODO: Insert availability override, check calendar conflicts, and write audit log.
   return {
-    success: true,
-    overrideId: "pending-db-override",
-    type: input.type,
+    success: false,
+    code: "AVAILABILITY_PERSISTENCE_NOT_CONFIGURED",
+    message: "Availability persistence is not configured yet.",
   };
 }
 
@@ -167,13 +166,10 @@ export async function updateWorkingHours(
     };
   }
 
-  // TODO: Update weekly working-hours rule, check affected bookings, and write audit log.
   return {
-    success: true,
-    weekday: input.weekday,
-    active: input.active,
-    startTime: input.active ? input.startTime : undefined,
-    endTime: input.active ? input.endTime : undefined,
+    success: false,
+    code: "AVAILABILITY_PERSISTENCE_NOT_CONFIGURED",
+    message: "Availability persistence is not configured yet.",
   };
 }
 
@@ -292,7 +288,7 @@ function isValidTimeRange(startTime: string, endTime: string) {
 }
 
 function isDateString(value: string) {
-  return /^\d{4}-\d{2}-\d{2}$/.test(value);
+  return isValidDateString(value);
 }
 
 function normalizeWeekdaySort(weekday: Weekday) {

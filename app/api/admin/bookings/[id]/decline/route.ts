@@ -9,7 +9,7 @@ import { isDepositAction } from "../../../../../../lib/policies";
 export const runtime = "nodejs";
 
 type RouteContext = {
-  params: { id: string } | Promise<{ id: string }>;
+  params: Promise<{ id: string }>;
 };
 
 function errorResponse(code: string, message: string, status: number, details: Record<string, unknown> = {}) {
@@ -75,6 +75,11 @@ export async function POST(request: Request, context: RouteContext) {
 
   const params = await context.params;
   const booking = await getAdminBookingDetail(params.id);
+
+  if (!booking) {
+    return errorResponse("BOOKING_NOT_FOUND", "Booking was not found.", 404);
+  }
+
   const result = await declineBooking(
     {
       bookingId: params.id,

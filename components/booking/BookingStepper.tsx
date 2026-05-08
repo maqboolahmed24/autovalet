@@ -1,10 +1,10 @@
 "use client";
 
 import type { ComponentType } from "react";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { BookingProgress } from "./BookingProgress";
 import { BookingStepShell } from "./BookingStepShell";
-import { BookingSummary } from "./BookingSummary";
 import { AddonsStep } from "./steps/AddonsStep";
 import { CustomerDetailsStep } from "./steps/CustomerDetailsStep";
 import { LocationStep } from "./steps/LocationStep";
@@ -14,8 +14,10 @@ import { ReviewPaymentStep } from "./steps/ReviewPaymentStep";
 import { SlotStep } from "./steps/SlotStep";
 import { VehicleStep } from "./steps/VehicleStep";
 import type { BookingDraft } from "../../lib/booking/types";
+import { isValidDateString, isValidTimeString } from "../../lib/availability";
 import { createIdempotencyKey } from "../../lib/payments/idempotency";
 import { DEFAULT_MIN_OUTSIDE_ZONE_VEHICLE_COUNT } from "../../lib/zones";
+import { trackAnalyticsEvent } from "../../lib/analytics/provider";
 
 export type BookingDraftUpdate = (updater: (draft: BookingDraft) => BookingDraft) => void;
 
@@ -171,7 +173,7 @@ function isValidEmail(value: string) {
   return /\S+@\S+\.\S+/.test(value);
 }
 
-function validateReviewPrerequisites(draft: BookingDraft) {
+function validateReviewPrerequisites(draft: BookingDraft): string {
   for (const stepId of reviewPrerequisiteStepIds) {
     const validationMessage = validateStep(stepId, draft);
 
@@ -183,7 +185,7 @@ function validateReviewPrerequisites(draft: BookingDraft) {
   return "";
 }
 
-function validateStep(stepId: BookingStepId, draft: BookingDraft) {
+function validateStep(stepId: BookingStepId, draft: BookingDraft): string {
   const vehicle = getPrimaryVehicle(draft);
 
   switch (stepId) {
@@ -204,7 +206,8 @@ function validateStep(stepId: BookingStepId, draft: BookingDraft) {
     case "vehicles":
       if (draft.vehicleCount < 1) return "Choose at least one vehicle.";
       if (
-        draft.zoneCheckStatus === "outside_zone_blocked" &&
+        (draft.zoneCheckStatus === "outside_zone_blocked" ||
+          draft.zoneCheckStatus === "outside_zone_volume_allowed") &&
         draft.vehicleCount < DEFAULT_MIN_OUTSIDE_ZONE_VEHICLE_COUNT
       ) {
         return "Outside-zone requests need 3+ vehicles at the same address.";
@@ -212,7 +215,9 @@ function validateStep(stepId: BookingStepId, draft: BookingDraft) {
       return "";
     case "time":
       if (!draft.selectedDate) return "Choose a preferred date.";
+      if (!isValidDateString(draft.selectedDate)) return "Choose a valid preferred date.";
       if (!draft.selectedSlotStart) return "Choose a preferred time.";
+      if (!isValidTimeString(draft.selectedSlotStart)) return "Choose a valid preferred time.";
       return "";
     case "details":
       if (!draft.customer.fullName.trim()) return "Enter your full name.";
@@ -233,6 +238,12 @@ export function BookingStepper() {
   const [completionMessage, setCompletionMessage] = useState("");
   const [isPaymentSubmitting, setIsPaymentSubmitting] = useState(false);
   const [paymentError, setPaymentError] = useState("");
+  const [isBookingWindowOpen, setIsBookingWindowOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const bookingStartedTrackedRef = useRef(false);
+  const customerDetailsTrackedRef = useRef(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const startButtonRef = useRef<HTMLButtonElement>(null);
 
   const currentStep = bookingSteps[currentStepIndex];
   const ActiveStep = currentStep.component;
@@ -241,12 +252,128 @@ export function BookingStepper() {
   const isFirstStep = currentStepIndex === 0;
   const isLastStep = currentStepIndex === bookingSteps.length - 1;
   const showUncheckedZoneWarning = currentStep.id === "review" && draft.zoneCheckStatus === "unchecked";
-  const paymentEnabled = true;
+  const paymentEnabled = false;
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const handleOpenBookingWindow = () => {
+    setIsBookingWindowOpen(true);
+
+    if (!bookingStartedTrackedRef.current) {
+      bookingStartedTrackedRef.current = true;
+      trackAnalyticsEvent("booking_started", {
+        pagePath: "/booking",
+        bookingFlowStep: "start",
+      });
+    }
+  };
+
+  const handleCloseBookingWindow = useCallback(() => {
+    setIsBookingWindowOpen(false);
+
+    window.requestAnimationFrame(() => {
+      startButtonRef.current?.focus();
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!isBookingWindowOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const dialog = dialogRef.current;
+
+      if (event.key === "Escape") {
+        event.preventDefault();
+        handleCloseBookingWindow();
+        return;
+      }
+
+      if (event.key !== "Tab" || !dialog) return;
+
+      const focusableElements = Array.from(
+        dialog.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((element) => !element.hasAttribute("aria-hidden"));
+
+      if (!focusableElements.length) {
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    };
+
+    window.requestAnimationFrame(() => {
+      dialogRef.current?.focus();
+    });
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [handleCloseBookingWindow, isBookingWindowOpen]);
 
   const updateDraft: BookingDraftUpdate = (updater) => {
     setCompletionMessage("");
     setPaymentError("");
-    setDraft((previousDraft) => updater(previousDraft));
+    setDraft((previousDraft) => {
+      const nextDraft = updater(previousDraft);
+      const previousVehicle = getPrimaryVehicle(previousDraft);
+      const nextVehicle = getPrimaryVehicle(nextDraft);
+
+      if (previousDraft.packageId !== nextDraft.packageId && nextDraft.packageId) {
+        trackAnalyticsEvent("package_selected", {
+          serviceType: nextDraft.packageId,
+          bookingFlowStep: "package",
+        });
+      }
+
+      if (previousVehicle?.size !== nextVehicle?.size && nextVehicle?.size) {
+        trackAnalyticsEvent("vehicle_size_selected", {
+          vehicleSize: nextVehicle.size,
+          bookingFlowStep: "vehicle",
+        });
+      }
+
+      if (previousVehicle?.addons.length !== nextVehicle?.addons.length) {
+        trackAnalyticsEvent("addons_selected", {
+          addonCount: nextVehicle?.addons.length ?? 0,
+          bookingFlowStep: "addons",
+        });
+      }
+
+      if (previousDraft.selectedSlotStart !== nextDraft.selectedSlotStart && nextDraft.selectedSlotStart) {
+        trackAnalyticsEvent("slot_selected", {
+          bookingFlowStep: "time",
+        });
+      }
+
+      if (!customerDetailsTrackedRef.current && validateStep("details", nextDraft) === "") {
+        customerDetailsTrackedRef.current = true;
+        trackAnalyticsEvent("customer_details_completed", {
+          bookingFlowStep: "details",
+        });
+      }
+
+      return nextDraft;
+    });
   };
 
   const handleBack = () => {
@@ -277,6 +404,12 @@ export function BookingStepper() {
     setIsPaymentSubmitting(true);
     setPaymentError("");
     setCompletionMessage("");
+    trackAnalyticsEvent("deposit_checkout_started", {
+      serviceType: draft.packageId || undefined,
+      vehicleSize: getPrimaryVehicle(draft)?.size || undefined,
+      addonCount: getPrimaryVehicle(draft)?.addons.length ?? 0,
+      bookingFlowStep: "review",
+    });
 
     try {
       const response = await fetch("/api/create-payment-hold", {
@@ -306,81 +439,119 @@ export function BookingStepper() {
     }
   };
 
-  return (
-    <section className="section booking-page" aria-label="AUTO VALET booking request form">
-      <div className="section__inner booking-page__inner">
-        <div className="booking-flow__notice" role="note">
-          <span className="status-badge status-badge--warning">Booking request</span>
-          <p>This is a booking request. AUTO VALET manually reviews every appointment before approval.</p>
-        </div>
-
-        <div className="booking-flow">
-          <div className="booking-flow__main">
-            <BookingProgress
-              currentStepIndex={currentStepIndex}
-              currentLabel={currentStep.label}
-              totalSteps={bookingSteps.length}
-            />
-
-            <BookingStepShell
-              eyebrow={currentStep.label}
-              title={currentStep.title}
-              titleId={`booking-step-${currentStep.id}`}
-              description={currentStep.description}
-            >
-              <ActiveStep
-                draft={draft}
-                updateDraft={updateDraft}
-                onPaymentSubmit={handlePaymentSubmit}
-                isPaymentSubmitting={isPaymentSubmitting}
-                paymentEnabled={paymentEnabled}
-                paymentError={paymentError}
-              />
-            </BookingStepShell>
-
-            {showUncheckedZoneWarning ? (
-              <p className="booking-step-note booking-step-note--warning" role="status">
-                Service area has not been checked yet. AUTO VALET will still review your location before approval.
-              </p>
-            ) : null}
-
+  const bookingWindow =
+    isBookingWindowOpen && isMounted
+      ? createPortal(
+          <div className="booking-window" role="presentation">
+            <div className="booking-window__backdrop" aria-hidden="true" />
             <div
-              className={`booking-actions${isLastStep ? " booking-actions--review" : ""}`}
-              aria-label="Booking step controls"
+              className="booking-window__panel"
+              id="booking-window"
+              role="dialog"
+              aria-modal="true"
+              aria-label="AUTO VALET booking request form"
+              tabIndex={-1}
+              ref={dialogRef}
             >
-              <button className="secondary-button" type="button" onClick={handleBack} disabled={isFirstStep}>
-                Back
-              </button>
-              {!isLastStep ? (
-                <button
-                  className="primary-button"
-                  type="button"
-                  onClick={handleContinue}
-                  disabled={!canContinue}
-                  aria-describedby={!canContinue ? "booking-step-error" : undefined}
-                  title={validationMessage || undefined}
-                >
-                  Continue
+              <div className="booking-window__bar">
+                <span>Booking request</span>
+                <button className="ghost-button booking-window__close" type="button" onClick={handleCloseBookingWindow}>
+                  Close
                 </button>
-              ) : null}
+              </div>
+
+              <div className="booking-flow booking-flow--focused">
+                <div className="booking-flow__main">
+                  <BookingProgress
+                    currentStepIndex={currentStepIndex}
+                    currentLabel={currentStep.label}
+                    totalSteps={bookingSteps.length}
+                  />
+
+                  <BookingStepShell
+                    eyebrow={currentStep.label}
+                    title={currentStep.title}
+                    titleId={`booking-step-${currentStep.id}`}
+                    description={currentStep.description}
+                  >
+                    <ActiveStep
+                      draft={draft}
+                      updateDraft={updateDraft}
+                      onPaymentSubmit={handlePaymentSubmit}
+                      isPaymentSubmitting={isPaymentSubmitting}
+                      paymentEnabled={paymentEnabled}
+                      paymentError={paymentError}
+                    />
+                  </BookingStepShell>
+
+                  {showUncheckedZoneWarning ? (
+                    <p className="booking-step-note booking-step-note--warning" role="status">
+                      Service area has not been checked yet. AUTO VALET will still review your location before approval.
+                    </p>
+                  ) : null}
+
+                  <div
+                    className={`booking-actions${isLastStep ? " booking-actions--review" : ""}`}
+                    aria-label="Booking step controls"
+                  >
+                    <button className="secondary-button" type="button" onClick={handleBack} disabled={isFirstStep}>
+                      Back
+                    </button>
+                    {!isLastStep ? (
+                      <button
+                        className="primary-button"
+                        type="button"
+                        onClick={handleContinue}
+                        disabled={!canContinue}
+                        aria-describedby={!canContinue ? "booking-step-error" : undefined}
+                        title={validationMessage || undefined}
+                      >
+                        Continue
+                      </button>
+                    ) : null}
+                  </div>
+
+                  {!canContinue ? (
+                    <p className="form-field__error booking-step-error" id="booking-step-error">
+                      {validationMessage}
+                    </p>
+                  ) : null}
+
+                  {completionMessage ? (
+                    <p className="booking-step-success" role="status">
+                      {completionMessage}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
             </div>
+          </div>,
+          document.body,
+        )
+      : null;
 
-            {!canContinue ? (
-              <p className="form-field__error booking-step-error" id="booking-step-error">
-                {validationMessage}
-              </p>
-            ) : null}
-
-            {completionMessage ? (
-              <p className="booking-step-success" role="status">
-                {completionMessage}
-              </p>
-            ) : null}
+  return (
+    <>
+      <section className="section booking-page" aria-label="Booking request">
+        <div className="section__inner booking-page__inner">
+          <div className="premium-card booking-launch booking-launch--minimal">
+            <div className="booking-launch__actions">
+              <button
+                className="primary-button booking-launch__start"
+                type="button"
+                onClick={handleOpenBookingWindow}
+                aria-haspopup="dialog"
+                aria-controls="booking-window"
+                ref={startButtonRef}
+              >
+                Start Booking
+              </button>
+              <p>Deposit required before the request is sent for review.</p>
+            </div>
           </div>
-
-          <BookingSummary draft={draft} />
         </div>
-      </div>
-    </section>
+      </section>
+      {bookingWindow}
+    </>
   );
 }

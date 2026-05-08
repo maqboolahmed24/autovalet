@@ -19,9 +19,9 @@ type ApiErrorResponse = {
 };
 
 type RouteContext = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
 function jsonResponse<TData>(body: ApiSuccessResponse<TData> | ApiErrorResponse, status = 200) {
@@ -62,12 +62,32 @@ function readString(value: unknown) {
 }
 
 function readMoneyMinor(value: unknown) {
-  const numberValue = typeof value === "number" ? value : Number(value);
+  const numberValue = readIntegerInput(value);
 
-  return Number.isFinite(numberValue) ? Math.round(numberValue) : null;
+  return numberValue !== null && Number.isSafeInteger(numberValue) ? numberValue : null;
 }
 
-export async function PATCH(request: Request, { params }: RouteContext) {
+function readIntegerInput(value: unknown) {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = value.trim();
+
+  if (!/^-?\d+$/.test(normalized)) {
+    return null;
+  }
+
+  const numberValue = Number(normalized);
+
+  return Number.isSafeInteger(numberValue) ? numberValue : null;
+}
+
+export async function PATCH(request: Request, context: RouteContext) {
   const guard = await requireAdmin(request, { permission: "adjust_final_price" });
 
   if (!guard.success) {
@@ -91,6 +111,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     return errorResponse("INVALID_FINAL_TOTAL", "Final total must be an integer minor-unit amount.", 400);
   }
 
+  const params = await context.params;
   const result = await adjustFinalPrice({
     bookingId: params.id,
     finalTotalMinor,

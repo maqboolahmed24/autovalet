@@ -1,5 +1,6 @@
 import type { CalendarBlockingBooking } from "../availability";
-import { generateAvailableSlots } from "../availability";
+import { createUtcDateFromBusinessTime, generateAvailableSlots } from "../availability";
+import { isValidDateString, isValidTimeString } from "../availability/working-hours";
 import { canTransitionBookingStatus } from "../booking/lifecycle";
 import type { BookingDraft } from "../booking/types";
 import { calculateBookingDuration } from "../pricing";
@@ -39,11 +40,19 @@ export type ProposeRescheduleOptions = {
 };
 
 function isValidDate(value: string) {
-  return /^\d{4}-\d{2}-\d{2}$/.test(value);
+  return isValidDateString(value);
 }
 
 function isValidTime(value: string) {
-  return /^\d{2}:\d{2}$/.test(value);
+  return isValidTimeString(value);
+}
+
+function isProposedStartInPast(date: string, time: string, now = new Date()) {
+  if (!isValidDateString(date) || !isValidTimeString(time)) {
+    return false;
+  }
+
+  return createUtcDateFromBusinessTime(date, time).getTime() <= now.getTime();
 }
 
 function createDraftForDuration(booking: AdminBookingDetailData): BookingDraft {
@@ -99,17 +108,27 @@ function validateReschedule(
   existingBookings: CalendarBlockingBooking[],
 ) {
   const errors: string[] = [];
+  const proposedDateIsValid = isValidDate(input.proposedDate);
+  const proposedTimeIsValid = isValidTime(input.proposedStartTime);
+  const proposedStartIsPast =
+    proposedDateIsValid &&
+    proposedTimeIsValid &&
+    isProposedStartInPast(input.proposedDate, input.proposedStartTime);
 
   if (!["pending_admin_review", "approved", "reschedule_requested"].includes(booking.status)) {
     errors.push("This booking status cannot receive a reschedule suggestion.");
   }
 
-  if (!isValidDate(input.proposedDate)) {
+  if (!proposedDateIsValid) {
     errors.push("Choose a valid proposed date.");
   }
 
-  if (!isValidTime(input.proposedStartTime)) {
+  if (!proposedTimeIsValid) {
     errors.push("Choose a valid proposed time.");
+  }
+
+  if (proposedStartIsPast) {
+    errors.push("Choose a future proposed time.");
   }
 
   if (booking.status !== "reschedule_requested") {
@@ -124,8 +143,9 @@ function validateReschedule(
   }
 
   if (
-    isValidDate(input.proposedDate) &&
-    isValidTime(input.proposedStartTime) &&
+    proposedDateIsValid &&
+    proposedTimeIsValid &&
+    !proposedStartIsPast &&
     !proposedSlotIsAvailable(booking, input, existingBookings)
   ) {
     errors.push("The proposed time is not available.");
@@ -222,16 +242,12 @@ export async function proposeReschedule(
     };
   }
 
-  // TODO: Store proposed_start_at and proposed_expires_at once schema support is added.
-  // TODO: Audit the proposal and keep the previous slot policy explicit.
-  await dispatchRescheduleNotification(options.booking, input);
-
   return {
-    success: true,
-    bookingId: input.bookingId,
-    status: "reschedule_requested",
-    proposedDate: input.proposedDate,
-    proposedStartTime: input.proposedStartTime,
-    customerActionUrl: `/booking/status/${encodeURIComponent(options.booking.reference)}`,
+    success: false,
+    code: "RESCHEDULE_PERSISTENCE_NOT_CONFIGURED",
+    message: "Reschedule suggestions are not connected to database persistence yet.",
+    details: {
+      reason: "Proposed start time, expiry, audit log and customer action URL require persistence.",
+    },
   };
 }

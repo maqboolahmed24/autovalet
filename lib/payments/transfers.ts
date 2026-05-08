@@ -79,12 +79,9 @@ export async function transferDeposit(
     };
   }
 
-  // TODO: Record a transfer payment row, link the future booking when present, and write an audit log.
-  // TODO: Dispatch `deposit_transferred` after persistence succeeds.
   return {
-    success: true,
-    transferReference: `TR-${input.fromBookingId}`,
-    amountMinor: input.amountMinor,
-    status: input.toBookingId ? "recorded" : "pending_future_booking",
+    success: false,
+    code: "TRANSFER_PERSISTENCE_NOT_CONFIGURED",
+    message: "Deposit transfer persistence is not connected yet.",
   };
 }

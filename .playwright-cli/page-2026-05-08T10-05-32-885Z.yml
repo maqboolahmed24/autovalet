@@ -1,0 +1,60 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - link "Skip to main content" [ref=e3] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - link "AUTO VALET home" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - text: AUTO VALET
+        - navigation "Primary navigation" [ref=e7]:
+          - link "Services" [ref=e8] [cursor=pointer]:
+            - /url: /services
+          - link "Gallery" [ref=e9] [cursor=pointer]:
+            - /url: /gallery
+          - link "How it works" [ref=e10] [cursor=pointer]:
+            - /url: /#how-it-works
+          - link "Pricing" [ref=e11] [cursor=pointer]:
+            - /url: /#pricing
+          - link "Request a Booking" [ref=e12] [cursor=pointer]:
+            - /url: /booking
+    - main [ref=e14]:
+      - generic [ref=e16]:
+        - paragraph [ref=e17]: Loading
+        - heading "Preparing AUTO VALET..." [level=1] [ref=e18]
+        - region "Preparing AUTO VALET" [ref=e19]
+    - contentinfo [ref=e24]:
+      - generic [ref=e25]:
+        - generic [ref=e26]:
+          - link "AUTO VALET" [ref=e27] [cursor=pointer]:
+            - /url: /
+          - paragraph [ref=e28]: Premium mobile detailing at your location.
+        - navigation "Footer navigation" [ref=e29]:
+          - link "Services" [ref=e30] [cursor=pointer]:
+            - /url: /services
+          - link "Booking" [ref=e31] [cursor=pointer]:
+            - /url: /booking
+          - link "Gallery" [ref=e32] [cursor=pointer]:
+            - /url: /gallery
+          - link "FAQ" [ref=e33] [cursor=pointer]:
+            - /url: /faq
+          - link "Policies" [ref=e34] [cursor=pointer]:
+            - /url: /policies
+          - link "Contact" [ref=e35] [cursor=pointer]:
+            - /url: /contact
+        - generic [ref=e36]:
+          - paragraph [ref=e37]: AUTO VALET operates within selected service areas.
+          - paragraph [ref=e38]: Deposit required. Bookings are confirmed after manual approval.
+        - navigation "Policy links" [ref=e39]:
+          - link "Privacy Policy" [ref=e40] [cursor=pointer]:
+            - /url: /policies/privacy
+          - link "Terms & Conditions" [ref=e41] [cursor=pointer]:
+            - /url: /policies/terms
+          - link "Deposit & Cancellation Policy" [ref=e42] [cursor=pointer]:
+            - /url: /policies/deposit-cancellation
+          - link "Cookie Policy" [ref=e43] [cursor=pointer]:
+            - /url: /policies/cookies
+          - link "Data Requests" [ref=e44] [cursor=pointer]:
+            - /url: /policies/data-requests
+  - button "Open Next.js Dev Tools" [ref=e50] [cursor=pointer]:
+    - img [ref=e51]

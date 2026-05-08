@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandLogo } from "./BrandLogo";
 
 const footerLinks = [
   { href: "/services", label: "Services" },
@@ -14,6 +15,7 @@ const policyLinks = [
   { href: "/policies/terms", label: "Terms & Conditions" },
   { href: "/policies/deposit-cancellation", label: "Deposit & Cancellation Policy" },
   { href: "/policies/cookies", label: "Cookie Policy" },
+  { href: "/policies/data-requests", label: "Data Requests" },
 ];
 
 export function PublicFooter() {
@@ -21,7 +23,7 @@ export function PublicFooter() {
     <footer className="public-footer">
       <div className="public-footer__inner">
         <div className="public-footer__brand">
-          <Link href="/">AUTO VALET</Link>
+          <BrandLogo variant="wordmark" />
           <p>Premium mobile detailing at your location.</p>
         </div>
 
@@ -49,4 +51,3 @@ export function PublicFooter() {
     </footer>
   );
 }
-

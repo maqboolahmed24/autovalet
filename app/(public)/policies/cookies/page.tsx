@@ -15,8 +15,16 @@ const cookieSections: PolicySection[] = [
   {
     title: "Analytics later",
     paragraphs: [
+      "Analytics is disabled by default unless a privacy-safe provider is configured.",
       "If analytics, advertising pixels or other non-essential tracking are added later, this policy must be updated before those tools are enabled.",
       "Where required, customers should be given a clear choice before non-essential cookies are used.",
+    ],
+  },
+  {
+    title: "Non-essential cookies",
+    paragraphs: [
+      "Non-essential analytics or marketing cookies must not be activated until a consent mechanism is implemented.",
+      "Analytics events must not include personal booking details such as names, phone numbers, email addresses, full addresses, full postcodes or payment references.",
     ],
   },
   {

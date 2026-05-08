@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { BookingDraft, ZoneCheckStatus } from "../../../lib/booking/types";
+import { trackAnalyticsEvent } from "../../../lib/analytics/provider";
 import type { ZoneValidationResult } from "../../../lib/zones";
 import type { BookingStepProps } from "../BookingStepper";
 
@@ -155,6 +156,9 @@ function LocationStepForm({
       status: "loading",
       message: "Checking service area...",
     });
+    trackAnalyticsEvent("postcode_submitted", {
+      bookingFlowStep: "location",
+    });
 
     try {
       const response = await fetch("/api/validate-zone", {
@@ -179,6 +183,10 @@ function LocationStepForm({
 
       onChange({
         zoneCheckStatus: mapZoneStatusToDraftStatus(payload.data),
+      });
+      trackAnalyticsEvent(payload.data.allowed ? "zone_validated" : "zone_failed", {
+        zoneResultCategory: mapZoneStatusToDraftStatus(payload.data),
+        bookingFlowStep: "location",
       });
       setZoneCheck({
         status: getZoneUiStatus(payload.data),

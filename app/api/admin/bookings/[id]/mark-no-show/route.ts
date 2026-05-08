@@ -20,9 +20,9 @@ type ApiErrorResponse = {
 };
 
 type RouteContext = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
 function jsonResponse<TData>(body: ApiSuccessResponse<TData> | ApiErrorResponse, status = 200) {
@@ -75,7 +75,7 @@ function isNoShowReason(value: unknown): value is NoShowReason {
   );
 }
 
-export async function POST(request: Request, { params }: RouteContext) {
+export async function POST(request: Request, context: RouteContext) {
   const guard = await requireAdmin(request, { permission: "mark_no_show" });
 
   if (!guard.success) {
@@ -97,6 +97,7 @@ export async function POST(request: Request, { params }: RouteContext) {
     return errorResponse("INVALID_NO_SHOW_REASON", "No-show reason is invalid.", 400);
   }
 
+  const params = await context.params;
   const result = await markNoShow({
     bookingId: params.id,
     adminId: guard.session.adminId,

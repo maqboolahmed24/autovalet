@@ -1,18 +1,19 @@
 import { GalleryPageContent } from "../../../components/public/GalleryPageContent";
-import { PageIntro } from "../../../components/public/PageIntro";
+import { JsonLdScript } from "../../../components/seo/JsonLd";
+import { getPublicGalleryItems } from "../../../lib/gallery/public-gallery";
+import { publicBreadcrumbs } from "../../../lib/seo/breadcrumbs";
 import { createPublicMetadata } from "../../../lib/seo/public-metadata";
+import { createBreadcrumbJsonLd } from "../../../lib/seo/structured-data";
 
 export const metadata = createPublicMetadata("gallery");
 
-export default function GalleryPage() {
+export default async function GalleryPage() {
+  const items = await getPublicGalleryItems();
+
   return (
     <>
-      <PageIntro eyebrow="Gallery" title="Recent work, built for before and after results.">
-        Real customer images will be added as completed work is approved for the gallery. Until
-        then, these placeholders show where exterior, interior and deep clean results will live.
-      </PageIntro>
-
-      <GalleryPageContent />
+      <JsonLdScript data={createBreadcrumbJsonLd(publicBreadcrumbs.gallery)} />
+      <GalleryPageContent items={items} />
     </>
   );
 }

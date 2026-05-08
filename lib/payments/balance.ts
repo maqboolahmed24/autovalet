@@ -69,6 +69,11 @@ export const balancePaymentStatuses = [
 
 export function poundsToMinor(value: string) {
   const normalized = value.replace(/[£,]/g, "").trim();
+
+  if (!/^\d+(?:\.\d{1,2})?$/.test(normalized)) {
+    return null;
+  }
+
   const numberValue = Number(normalized);
 
   if (!Number.isFinite(numberValue)) {
@@ -195,19 +200,6 @@ export async function markBalancePaid(
     };
   }
 
-  const nextBalancePaidMinor = options.booking.balancePaidMinor + input.amountPaidMinor;
-  const nextBalanceDueMinor = calculateBalanceDueMinor({
-    finalTotalMinor: options.booking.finalTotalMinor,
-    estimatedTotalMinor: options.booking.estimatedTotalMinor,
-    depositPaidMinor: options.booking.depositPaidMinor,
-    balancePaidMinor: nextBalancePaidMinor,
-  });
-  const paymentStatus = getPaymentDisplayStatus({
-    ...options.booking,
-    balancePaidMinor: nextBalancePaidMinor,
-    balanceDueMinor: nextBalanceDueMinor,
-  });
-
   if (!options.persistenceConfigured) {
     return {
       success: false,
@@ -216,12 +208,9 @@ export async function markBalancePaid(
     };
   }
 
-  // TODO: Create a balance payment row, update booking balance fields, and write an audit log in one transaction.
-  // TODO: Dispatch `balance_payment_recorded` after persistence succeeds.
   return {
-    success: true,
-    balancePaidMinor: nextBalancePaidMinor,
-    balanceDueMinor: nextBalanceDueMinor,
-    paymentStatus,
+    success: false,
+    code: "BALANCE_PAYMENT_PERSISTENCE_NOT_CONFIGURED",
+    message: "Balance payment recording is not connected to database persistence yet.",
   };
 }

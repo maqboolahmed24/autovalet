@@ -21,6 +21,7 @@ export function AdminManualCustomerSection({ value, onChange }: AdminManualCusto
             onChange={(event) => onChange({ fullName: event.target.value })}
             placeholder="Sarah Wilson"
             autoComplete="name"
+            required
           />
         </label>
         <label className="admin-field">
@@ -31,6 +32,8 @@ export function AdminManualCustomerSection({ value, onChange }: AdminManualCusto
             placeholder="07123 456789"
             autoComplete="tel"
             inputMode="tel"
+            type="tel"
+            required
           />
         </label>
         <label className="admin-field admin-field-grid__full">
@@ -41,6 +44,8 @@ export function AdminManualCustomerSection({ value, onChange }: AdminManualCusto
             placeholder="customer@example.com"
             autoComplete="email"
             inputMode="email"
+            type="email"
+            required
           />
         </label>
       </div>

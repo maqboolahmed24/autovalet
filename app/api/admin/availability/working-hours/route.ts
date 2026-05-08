@@ -60,11 +60,17 @@ async function parseJson(request: Request): Promise<
     }
 > {
   try {
-    const data = (await request.json()) as WorkingHoursBody;
+    const data = await request.json();
+
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+      return {
+        success: false,
+      };
+    }
 
     return {
       success: true,
-      data,
+      data: data as WorkingHoursBody,
     };
   } catch {
     return {

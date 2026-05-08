@@ -28,6 +28,11 @@ const policyLinks: PolicyLink[] = [
     text: "Essential cookie use now and how analytics cookies will be handled later.",
   },
   {
+    href: "/policies/data-requests",
+    title: "Data Requests",
+    text: "Request access, correction, deletion or marketing/photo consent withdrawal.",
+  },
+  {
     href: "/contact",
     title: "Service Area Guidance",
     text: "Selected service zones, outside-zone requests and access or parking guidance.",

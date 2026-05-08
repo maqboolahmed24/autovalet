@@ -3,6 +3,7 @@ import {
   compactPostcode,
   getOutwardCode,
   getPostcodeDistrict,
+  isValidFullUkPostcode,
   normalizePostcode,
   normalizeRegionName,
   normalizeServiceZoneValue,
@@ -55,6 +56,10 @@ export function validateServiceZone(
 
   if (!normalizedPostcode) {
     throw new ZoneValidationError("POSTCODE_REQUIRED", "Please enter a postcode before checking the service area.");
+  }
+
+  if (!isValidFullUkPostcode(normalizedPostcode)) {
+    throw new ZoneValidationError("INVALID_INPUT", "Enter a valid UK postcode.");
   }
 
   const zones = options.zones ?? defaultServiceZones;
