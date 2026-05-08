@@ -23,6 +23,11 @@ export async function GET(request: Request) {
         error: {
           code: "UNAUTHORIZED",
           message: "Cron authorization failed.",
+          details: {
+            authorizationHeaderLength: authorization.length,
+            authorizationHeaderPresent: Boolean(authorization),
+            cronSecretConfigured: Boolean(cronSecret),
+          },
         },
       },
       401,
