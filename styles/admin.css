@@ -1582,6 +1582,22 @@
   font-size: var(--text-sm);
 }
 
+.admin-shell--login {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  place-items: center;
+  min-height: 100svh;
+  padding: var(--space-4);
+}
+
+.admin-shell--login main {
+  width: min(100%, 560px);
+}
+
+.admin-shell--login .admin-login-page {
+  min-height: auto;
+}
+
 .admin-calendar-page {
   gap: var(--space-7);
 }
@@ -3098,5 +3114,10 @@
   .booking-detail__side {
     position: sticky;
     top: var(--space-5);
+  }
+
+  .admin-shell--login {
+    grid-template-columns: minmax(0, 1fr);
+    padding: var(--space-6);
   }
 }
