@@ -1,5 +1,5 @@
 import { createUtcDateFromBusinessTime, generateAvailableSlots } from "../availability";
-import type { CalendarBlockingBooking } from "../availability";
+import type { AvailabilityOverride, CalendarBlockingBooking, WorkingHoursRule } from "../availability";
 import { isValidDateString, isValidTimeString } from "../availability/working-hours";
 import type { BookingDraft, BookingVehicle } from "./types";
 import { calculateBookingDuration, calculateBookingPrice } from "../pricing";
@@ -139,11 +139,17 @@ export function createPaymentHoldSnapshot({
 export function isRequestedSlotStillAvailable({
   draft,
   existingBookings = [],
+  workingHoursRules,
+  availabilityOverrides,
+  duration: inputDuration,
 }: {
   draft: BookingDraft;
   existingBookings?: CalendarBlockingBooking[];
+  workingHoursRules?: WorkingHoursRule[];
+  availabilityOverrides?: AvailabilityOverride[];
+  duration?: DurationBreakdown;
 }) {
-  const duration = calculateBookingDuration(draft);
+  const duration = inputDuration ?? calculateBookingDuration(draft);
 
   if (duration.serviceDurationMinutes <= 0 || !draft.selectedDate || !draft.selectedSlotStart) {
     return false;
@@ -157,6 +163,8 @@ export function isRequestedSlotStillAvailable({
     date: draft.selectedDate,
     serviceDurationMinutes: duration.serviceDurationMinutes,
     travelBufferMinutes: duration.travelBufferMinutes,
+    workingHoursRules,
+    overrides: availabilityOverrides,
     existingBookings,
   });
 

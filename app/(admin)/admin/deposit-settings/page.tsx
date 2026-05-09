@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { AdminDepositSettingsPage } from "../../../../components/admin/AdminDepositSettingsPage";
-import { getDepositSettings } from "../../../../lib/admin/deposit-settings";
+import { getPersistedDepositSettings } from "../../../../lib/admin/deposit-settings-persistence";
 import { arePaymentsEnabled } from "../../../../lib/config/features";
 
 export const metadata = {
@@ -15,7 +15,7 @@ export default async function DepositSettingsPage() {
     notFound();
   }
 
-  const settings = await getDepositSettings();
+  const settings = await getPersistedDepositSettings();
 
   return <AdminDepositSettingsPage settings={settings} />;
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import type { AdminAvailabilityData } from "../../lib/admin/availability";
 
@@ -29,6 +30,7 @@ type WorkingHoursResponse =
     };
 
 export function EditWorkingHoursSheet({ day, onClose }: EditWorkingHoursSheetProps) {
+  const router = useRouter();
   const [active, setActive] = useState(day.active);
   const [startTime, setStartTime] = useState(day.startTime ?? "09:00");
   const [endTime, setEndTime] = useState(day.endTime ?? "17:00");
@@ -64,6 +66,7 @@ export function EditWorkingHoursSheet({ day, onClose }: EditWorkingHoursSheetPro
 
       setTone("success");
       setMessage("Working hours saved.");
+      router.refresh();
     } catch (error) {
       setTone("warning");
       setMessage(error instanceof Error ? error.message : "Working hours could not be saved.");
@@ -117,7 +120,7 @@ export function EditWorkingHoursSheet({ day, onClose }: EditWorkingHoursSheetPro
         )}
 
         <p className="admin-inline-note">
-          If shorter hours affect existing approved jobs, persistence must warn before saving.
+          Shorter hours affect future requested times. Existing approved jobs stay unchanged.
         </p>
 
         <div className="admin-sheet-actions">

@@ -1,5 +1,7 @@
 import { adjustFinalPrice } from "../../../../../../lib/admin/final-price";
+import { getAdminBookingDetail } from "../../../../../../lib/admin/booking-detail";
 import { requireAdmin, adminGuardErrorResponse } from "../../../../../../lib/auth/route-guards";
+import { isDatabaseConfigured } from "../../../../../../lib/db/postgres";
 
 export const runtime = "nodejs";
 
@@ -48,6 +50,8 @@ function statusForAdjustFinalPriceError(code: string) {
     case "BOOKING_LOOKUP_NOT_CONFIGURED":
     case "FINAL_PRICE_PERSISTENCE_NOT_CONFIGURED":
       return 501;
+    case "BOOKING_NOT_FOUND":
+      return 404;
     case "ADMIN_PERMISSION_REQUIRED":
       return 403;
     case "FINAL_PRICE_VALIDATION_FAILED":
@@ -112,6 +116,12 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   const params = await context.params;
+  const booking = await getAdminBookingDetail(params.id);
+
+  if (!booking) {
+    return errorResponse("BOOKING_NOT_FOUND", "Booking was not found.", 404);
+  }
+
   const result = await adjustFinalPrice({
     bookingId: params.id,
     finalTotalMinor,
@@ -120,7 +130,17 @@ export async function PATCH(request: Request, context: RouteContext) {
   }, {
     adminAuthenticated: true,
     canAdjustFinalPrice: true,
-    persistenceConfigured: false,
+    persistenceConfigured: isDatabaseConfigured(),
+    booking: {
+      bookingId: booking.id,
+      status: booking.status,
+      estimatedTotalMinor: booking.financials.estimatedTotalMinor,
+      finalTotalMinor: booking.financials.finalTotalMinor,
+      depositPaidMinor: booking.financials.depositPaidMinor,
+      balanceDueMinor: booking.financials.balanceDueMinor,
+      balancePaidMinor: booking.financials.balancePaidMinor,
+      currency: "GBP",
+    },
   });
 
   if (!result.success) {

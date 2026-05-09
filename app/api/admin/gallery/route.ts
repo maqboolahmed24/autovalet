@@ -4,6 +4,7 @@ import {
   type AdminGalleryItemInput,
 } from "../../../../lib/admin/gallery";
 import { adminGuardErrorResponse, requireAdmin } from "../../../../lib/auth/route-guards";
+import { isDatabaseConfigured } from "../../../../lib/db/postgres";
 
 export const runtime = "nodejs";
 
@@ -47,7 +48,7 @@ export async function POST(request: Request) {
   const result = await createGalleryItem(input, {
     adminAuthenticated: true,
     canManageGallery: true,
-    persistenceConfigured: false,
+    persistenceConfigured: isDatabaseConfigured(),
   });
 
   if (!result.success) {

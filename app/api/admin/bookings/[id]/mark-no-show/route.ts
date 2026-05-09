@@ -1,5 +1,7 @@
 import { markNoShow } from "../../../../../../lib/admin/no-show";
+import { getAdminBookingDetail } from "../../../../../../lib/admin/booking-detail";
 import { requireAdmin, adminGuardErrorResponse } from "../../../../../../lib/auth/route-guards";
+import { isDatabaseConfigured } from "../../../../../../lib/db/postgres";
 import type { NoShowReason } from "../../../../../../lib/policies";
 
 export const runtime = "nodejs";
@@ -49,6 +51,8 @@ function statusForNoShowError(code: string) {
     case "BOOKING_LOOKUP_NOT_CONFIGURED":
     case "NO_SHOW_PERSISTENCE_NOT_CONFIGURED":
       return 501;
+    case "BOOKING_NOT_FOUND":
+      return 404;
     case "ADMIN_PERMISSION_REQUIRED":
       return 403;
     case "NO_SHOW_STATUS_NOT_ALLOWED":
@@ -98,6 +102,12 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   const params = await context.params;
+  const booking = await getAdminBookingDetail(params.id);
+
+  if (!booking) {
+    return errorResponse("BOOKING_NOT_FOUND", "Booking was not found.", 404);
+  }
+
   const result = await markNoShow({
     bookingId: params.id,
     adminId: guard.session.adminId,
@@ -106,7 +116,12 @@ export async function POST(request: Request, context: RouteContext) {
   }, {
     adminAuthenticated: true,
     canMarkNoShow: true,
-    persistenceConfigured: false,
+    persistenceConfigured: isDatabaseConfigured(),
+    booking: {
+      id: booking.id,
+      status: booking.status,
+      depositPaidMinor: booking.financials.depositPaidMinor,
+    },
   });
 
   if (!result.success) {

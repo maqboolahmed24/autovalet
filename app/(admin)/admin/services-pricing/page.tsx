@@ -6,6 +6,8 @@ export const metadata = {
   description: "AUTO VALET services, vehicle-size pricing, add-ons and duration settings.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function ServicesPricingPage() {
   const data = await getAdminServicesPricing();
 

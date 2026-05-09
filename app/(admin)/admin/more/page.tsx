@@ -34,16 +34,6 @@ export default function AdminMorePage() {
             </div>
           </section>
         ))}
-
-        <section className="admin-more-group" aria-labelledby="more-reviews">
-          <h2 id="more-reviews">Reviews</h2>
-          <div className="admin-more-list">
-            <div className="admin-more-link admin-more-link--disabled" aria-disabled="true">
-              <span>Reviews</span>
-              <small>Review management will be added after the core booking tools.</small>
-            </div>
-          </div>
-        </section>
       </div>
     </div>
   );

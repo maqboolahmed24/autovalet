@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import type {
   AdminGalleryImageMode,
@@ -32,6 +33,7 @@ type GalleryMutationResponse =
     };
 
 export function GalleryItemEditorSheet({ item, onClose }: GalleryItemEditorSheetProps) {
+  const router = useRouter();
   const [title, setTitle] = useState(item?.title ?? "");
   const [description, setDescription] = useState(item?.description ?? "");
   const [serviceType, setServiceType] = useState(item?.serviceType ?? "");
@@ -85,6 +87,7 @@ export function GalleryItemEditorSheet({ item, onClose }: GalleryItemEditorSheet
 
       setTone("success");
       setMessage("Gallery item saved.");
+      router.refresh();
     } catch (error) {
       setTone("warning");
       setMessage(error instanceof Error ? error.message : "Gallery item could not be saved.");
@@ -233,7 +236,7 @@ export function GalleryItemEditorSheet({ item, onClose }: GalleryItemEditorSheet
 
         <p className="admin-inline-note">
           Active public items require an image, consent and a completed personal-details check.
-          Uploads are disabled until a media storage provider is configured.
+          Image URLs save to the database. Direct file upload still needs a media storage provider.
         </p>
 
         <div className="admin-sheet-actions">

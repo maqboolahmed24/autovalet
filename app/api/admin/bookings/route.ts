@@ -1,8 +1,13 @@
 import {
-  createManualBooking,
   parseCreateManualBookingInput,
 } from "../../../../lib/admin/manual-booking";
+import { createManualBooking } from "../../../../lib/admin/manual-booking-persistence";
+import { getAvailabilityPersistence } from "../../../../lib/admin/availability";
+import { getAdminServicesPricing } from "../../../../lib/admin/services-pricing";
+import { getServiceZoneValidationOptions } from "../../../../lib/admin/service-zones";
 import { requireAdmin, adminGuardErrorResponse } from "../../../../lib/auth/route-guards";
+import { getBlockingBookingRecords } from "../../../../lib/db/booking-repository";
+import { isDatabaseConfigured } from "../../../../lib/db/postgres";
 
 export const runtime = "nodejs";
 
@@ -86,11 +91,20 @@ export async function POST(request: Request) {
     });
   }
 
+  const persistenceConfigured = isDatabaseConfigured();
+  const existingBookings = persistenceConfigured ? await getBlockingBookingRecords() : [];
+  const availability = await getAvailabilityPersistence();
+  const pricingData = await getAdminServicesPricing();
+  const zoneValidationOptions = await getServiceZoneValidationOptions();
   const result = await createManualBooking(parsed.input, {
     adminAuthenticated: true,
     canCreateManualBooking: true,
-    persistenceConfigured: false,
-    existingBookings: [],
+    persistenceConfigured,
+    existingBookings,
+    workingHoursRules: availability.rules,
+    availabilityOverrides: availability.overrides,
+    zoneValidationOptions,
+    pricingData,
   });
 
   if (!result.success) {

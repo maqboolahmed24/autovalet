@@ -33,7 +33,7 @@ export function AdminCustomersPage({ data, search }: AdminCustomersPageProps) {
           description={
             search
               ? "Try a different customer name, phone, email, postcode or vehicle."
-              : "Customer records will appear here once booking persistence is connected."
+              : "New customer records will appear after booking requests are submitted."
           }
         />
       )}

@@ -1,5 +1,7 @@
+import { randomUUID } from "node:crypto";
 import { canTransitionBookingStatus } from "../booking/lifecycle";
 import type { BookingStatus } from "../booking/types";
+import { transaction } from "../db/postgres";
 import {
   evaluateCancellationPolicy,
   isDepositAction,
@@ -148,9 +150,73 @@ export async function cancelBooking(
     };
   }
 
-  return {
-    success: false,
-    code: "CANCELLATION_PERSISTENCE_NOT_CONFIGURED",
-    message: "Cancellation persistence is not connected yet.",
-  };
+  try {
+    const updated = await transaction(async (client) => {
+      const result = await client.query<{ id: string }>(
+        `
+          UPDATE bookings
+          SET status = $2,
+            cancelled_at = now(),
+            cancellation_actor = $3,
+            cancellation_reason = $4,
+            cancellation_notes = $5,
+            updated_at = now()
+          WHERE id = $1
+          RETURNING id
+        `,
+        [
+          input.bookingId,
+          decision.recommendedBookingStatus,
+          input.actor,
+          input.reason,
+          input.notes?.trim() || null,
+        ],
+      );
+
+      if (!result.rows[0]) {
+        return false;
+      }
+
+      await client.query(
+        `
+          INSERT INTO audit_logs (id, admin_id, entity_type, entity_id, action, metadata)
+          VALUES ($1, $2, 'booking', $3, 'booking_cancelled', $4::jsonb)
+        `,
+        [
+          randomUUID(),
+          input.adminId,
+          input.bookingId,
+          JSON.stringify({
+            status: decision.recommendedBookingStatus,
+            actor: input.actor,
+            reason: input.reason,
+            depositAction,
+          }),
+        ],
+      );
+
+      return true;
+    });
+
+    if (!updated) {
+      return {
+        success: false,
+        code: "BOOKING_NOT_FOUND",
+        message: "Booking was not found.",
+      };
+    }
+
+    return {
+      success: true,
+      bookingId: input.bookingId,
+      status: decision.recommendedBookingStatus,
+      depositAction,
+    };
+  } catch {
+    return {
+      success: false,
+      code: "CANCELLATION_PERSISTENCE_FAILED",
+      message: "Cancellation could not be saved.",
+    };
+  }
 }

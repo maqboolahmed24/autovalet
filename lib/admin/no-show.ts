@@ -1,5 +1,7 @@
+import { randomUUID } from "node:crypto";
 import { canTransitionBookingStatus } from "../booking/lifecycle";
 import type { BookingStatus } from "../booking/types";
+import { transaction } from "../db/postgres";
 import type { DepositAction, NoShowReason } from "../policies";
 
 export type MarkNoShowInput = {
@@ -116,9 +118,64 @@ export async function markNoShow(
     };
   }
 
-  return {
-    success: false,
-    code: "NO_SHOW_PERSISTENCE_NOT_CONFIGURED",
-    message: "No-show persistence is not connected yet.",
-  };
+  try {
+    const updated = await transaction(async (client) => {
+      const result = await client.query<{ id: string }>(
+        `
+          UPDATE bookings
+          SET status = 'no_show',
+            no_show_at = now(),
+            no_show_reason = $2,
+            no_show_notes = $3,
+            updated_at = now()
+          WHERE id = $1
+          RETURNING id
+        `,
+        [input.bookingId, input.reason, input.notes?.trim() || null],
+      );
+
+      if (!result.rows[0]) {
+        return false;
+      }
+
+      await client.query(
+        `
+          INSERT INTO audit_logs (id, admin_id, entity_type, entity_id, action, metadata)
+          VALUES ($1, $2, 'booking', $3, 'booking_no_show', $4::jsonb)
+        `,
+        [
+          randomUUID(),
+          input.adminId,
+          input.bookingId,
+          JSON.stringify({
+            reason: input.reason,
+            depositAction: "no_deposit_action_required",
+          }),
+        ],
+      );
+
+      return true;
+    });
+
+    if (!updated) {
+      return {
+        success: false,
+        code: "BOOKING_NOT_FOUND",
+        message: "Booking was not found.",
+      };
+    }
+
+    return {
+      success: true,
+      bookingId: input.bookingId,
+      status: "no_show",
+      depositAction: "no_deposit_action_required",
+    };
+  } catch {
+    return {
+      success: false,
+      code: "NO_SHOW_PERSISTENCE_FAILED",
+      message: "No-show could not be saved.",
+    };
+  }
 }

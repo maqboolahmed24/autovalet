@@ -41,7 +41,6 @@ export const defaultDepositSettings: DepositSettings = {
 };
 
 export async function getDepositSettings(): Promise<DepositSettings> {
-  // TODO: Replace fallback settings with persisted admin deposit settings.
   return defaultDepositSettings;
 }
 

@@ -99,17 +99,21 @@ export function validateBookingDraftForRequest(draft: BookingDraft) {
 export function createBookingRequestSnapshot({
   bookingReference,
   draft,
+  price: inputPrice,
+  duration: inputDuration,
 }: {
   bookingReference: string;
   draft: BookingDraft;
+  price?: PriceBreakdown;
+  duration?: DurationBreakdown;
 }): BookingRequestSnapshot {
   assertBookingTransition("zone_validated", "pending_admin_review", {
     actor: "customer",
     reason: "booking request submitted without payment",
   });
 
-  const price = calculateBookingPrice(draft, { paymentsEnabled: false });
-  const duration = calculateBookingDuration(draft);
+  const price = inputPrice ?? calculateBookingPrice(draft, { paymentsEnabled: false });
+  const duration = inputDuration ?? calculateBookingDuration(draft);
   const requestedStart = createUtcDateFromBusinessTime(draft.selectedDate, draft.selectedSlotStart);
   const serviceEndsAt = new Date(requestedStart.getTime() + duration.serviceDurationMinutes * 60_000);
   const blockedUntil = new Date(requestedStart.getTime() + duration.blockedDurationMinutes * 60_000);

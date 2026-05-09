@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import type { AdminAddonItem } from "../../lib/admin/services-pricing";
 
@@ -26,6 +27,7 @@ type AddonResponse =
     };
 
 export function AddonEditorSheet({ addon, onClose }: AddonEditorSheetProps) {
+  const router = useRouter();
   const [pricePounds, setPricePounds] = useState(String(addon.priceMinor / 100));
   const [extraDurationMinutes, setExtraDurationMinutes] = useState(String(addon.extraDurationMinutes));
   const [active, setActive] = useState(addon.active);
@@ -70,6 +72,7 @@ export function AddonEditorSheet({ addon, onClose }: AddonEditorSheetProps) {
 
       setTone("success");
       setMessage("Add-on saved.");
+      router.refresh();
     } catch (error) {
       setTone("warning");
       setMessage(error instanceof Error ? error.message : "Add-on could not be saved.");

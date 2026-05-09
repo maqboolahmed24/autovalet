@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import type { AdminServicePackage } from "../../lib/admin/services-pricing";
 
@@ -33,6 +34,7 @@ type EditableVariant = {
 };
 
 export function ServiceVariantEditor({ servicePackage, onClose }: ServiceVariantEditorProps) {
+  const router = useRouter();
   const [variants, setVariants] = useState<EditableVariant[]>(
     servicePackage.variants.map((variant) => ({
       vehicleSize: variant.vehicleSize,
@@ -87,6 +89,7 @@ export function ServiceVariantEditor({ servicePackage, onClose }: ServiceVariant
 
       setTone("success");
       setMessage("Package pricing saved.");
+      router.refresh();
     } catch (error) {
       setTone("warning");
       setMessage(error instanceof Error ? error.message : "Package pricing could not be saved.");

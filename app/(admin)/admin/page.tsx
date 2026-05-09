@@ -6,6 +6,8 @@ export const metadata = {
   description: "AUTO VALET admin dashboard for requests, jobs and quick actions.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminDashboardPage() {
   const data = await getAdminDashboardData();
 

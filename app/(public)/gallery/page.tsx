@@ -6,6 +6,7 @@ import { createPublicMetadata } from "../../../lib/seo/public-metadata";
 import { createBreadcrumbJsonLd } from "../../../lib/seo/structured-data";
 
 export const metadata = createPublicMetadata("gallery");
+export const dynamic = "force-dynamic";
 
 export default async function GalleryPage() {
   const items = await getPublicGalleryItems();

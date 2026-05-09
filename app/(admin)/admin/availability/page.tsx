@@ -6,6 +6,8 @@ export const metadata = {
   description: "AUTO VALET admin controls for working hours, closed days and blocked time.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function AvailabilityPage() {
   const data = await getAdminAvailabilitySettings();
 

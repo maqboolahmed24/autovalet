@@ -1,11 +1,14 @@
 import {
-  getDepositSettings,
   isDepositType,
-  updateDepositSettings,
   type DepositSettings,
 } from "../../../../lib/admin/deposit-settings";
+import {
+  getPersistedDepositSettings,
+  updatePersistedDepositSettings,
+} from "../../../../lib/admin/deposit-settings-persistence";
 import { adminGuardErrorResponse, requireAdmin } from "../../../../lib/auth/route-guards";
 import { arePaymentsEnabled } from "../../../../lib/config/features";
+import { isDatabaseConfigured } from "../../../../lib/db/postgres";
 
 export const runtime = "nodejs";
 
@@ -22,15 +25,17 @@ export async function GET(request: Request) {
     return adminGuardErrorResponse(guard);
   }
 
-  const settings = await getDepositSettings();
+  const settings = await getPersistedDepositSettings();
 
   return Response.json({
     success: true,
     data: {
       settings,
-      isMockData: true,
+      isMockData: !isDatabaseConfigured(),
     },
-    message: "Deposit settings are current fallback defaults until database persistence is connected.",
+    message: !isDatabaseConfigured()
+      ? "Deposit settings are using fallback defaults because database persistence is unavailable."
+      : undefined,
   });
 }
 
@@ -57,10 +62,10 @@ export async function PATCH(request: Request) {
     return apiError("INVALID_DEPOSIT_SETTINGS_INPUT", "Deposit settings details are incomplete.", 400);
   }
 
-  const result = await updateDepositSettings(input, {
+  const result = await updatePersistedDepositSettings(input, {
     adminAuthenticated: true,
     canEditDepositSettings: true,
-    persistenceConfigured: false,
+    persistenceConfigured: isDatabaseConfigured(),
   });
 
   if (!result.success) {

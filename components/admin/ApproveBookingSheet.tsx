@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import type { AdminBookingDetailData } from "../../lib/admin/booking-detail";
 
@@ -28,6 +29,7 @@ type ApproveResponse =
     };
 
 export function ApproveBookingSheet({ booking, onClose }: ApproveBookingSheetProps) {
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [tone, setTone] = useState<"neutral" | "success" | "warning">("neutral");
@@ -54,6 +56,7 @@ export function ApproveBookingSheet({ booking, onClose }: ApproveBookingSheetPro
 
       setTone("success");
       setMessage("Booking approved.");
+      router.refresh();
     } catch (error) {
       setTone("warning");
       setMessage(error instanceof Error ? error.message : "Booking could not be approved.");
@@ -67,7 +70,7 @@ export function ApproveBookingSheet({ booking, onClose }: ApproveBookingSheetPro
       <div className="admin-action-sheet__header">
         <p className="eyebrow">Approve</p>
         <h2 id="approve-booking-title">Approve this booking?</h2>
-        <p>This will send a confirmation to the customer once persistence and notifications are connected.</p>
+        <p>This records the approval and keeps the requested slot blocked.</p>
       </div>
 
       <dl className="admin-sheet-summary">

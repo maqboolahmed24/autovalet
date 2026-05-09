@@ -3,6 +3,7 @@ import {
   type AdminGalleryItemInput,
 } from "../../../../../lib/admin/gallery";
 import { adminGuardErrorResponse, requireAdmin } from "../../../../../lib/auth/route-guards";
+import { isDatabaseConfigured } from "../../../../../lib/db/postgres";
 
 export const runtime = "nodejs";
 
@@ -33,7 +34,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   const result = await updateGalleryItem(params.id, input, {
     adminAuthenticated: true,
     canManageGallery: true,
-    persistenceConfigured: false,
+    persistenceConfigured: isDatabaseConfigured(),
   });
 
   if (!result.success) {
@@ -150,6 +151,7 @@ function getGalleryErrorStatus(code: string) {
   if (code === "PERSISTENCE_NOT_CONFIGURED") return 501;
   if (code === "ADMIN_AUTH_REQUIRED") return 401;
   if (code === "ADMIN_PERMISSION_REQUIRED") return 403;
+  if (code === "GALLERY_ITEM_NOT_FOUND") return 404;
 
   return 400;
 }

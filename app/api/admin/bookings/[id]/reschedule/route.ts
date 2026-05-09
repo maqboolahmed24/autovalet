@@ -1,6 +1,10 @@
 import { getAdminBookingDetail } from "../../../../../../lib/admin/booking-detail";
+import { getAvailabilityPersistence } from "../../../../../../lib/admin/availability";
+import { getAdminServicesPricing } from "../../../../../../lib/admin/services-pricing";
 import { proposeReschedule } from "../../../../../../lib/admin/reschedule-booking";
 import { adminGuardErrorResponse, requireAdmin } from "../../../../../../lib/auth/route-guards";
+import { getBlockingBookingRecords } from "../../../../../../lib/db/booking-repository";
+import { isDatabaseConfigured } from "../../../../../../lib/db/postgres";
 
 export const runtime = "nodejs";
 
@@ -28,6 +32,8 @@ function statusForRescheduleError(code: string) {
     case "BOOKING_LOOKUP_NOT_CONFIGURED":
     case "RESCHEDULE_PERSISTENCE_NOT_CONFIGURED":
       return 501;
+    case "BOOKING_NOT_FOUND":
+      return 404;
     case "ADMIN_PERMISSION_REQUIRED":
       return 403;
     case "RESCHEDULE_SLOT_UNAVAILABLE":
@@ -75,6 +81,12 @@ export async function POST(request: Request, context: RouteContext) {
     return errorResponse("BOOKING_NOT_FOUND", "Booking was not found.", 404);
   }
 
+  const persistenceConfigured = isDatabaseConfigured();
+  const existingBookings = persistenceConfigured
+    ? await getBlockingBookingRecords({ excludeBookingId: params.id })
+    : [];
+  const availability = await getAvailabilityPersistence();
+  const pricingData = await getAdminServicesPricing();
   const result = await proposeReschedule(
     {
       bookingId: params.id,
@@ -86,9 +98,12 @@ export async function POST(request: Request, context: RouteContext) {
     {
       adminAuthenticated: true,
       canRescheduleBooking: true,
-      persistenceConfigured: false,
+      persistenceConfigured,
       booking,
-      existingBookings: [],
+      existingBookings,
+      workingHoursRules: availability.rules,
+      availabilityOverrides: availability.overrides,
+      pricingData,
     },
   );
 

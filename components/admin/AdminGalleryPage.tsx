@@ -35,8 +35,8 @@ export function AdminGalleryPage({ data }: AdminGalleryPageProps) {
         <section className="settings-notice" aria-label="Gallery persistence status">
           <strong>Current gallery defaults</strong>
           <p>
-            These items are placeholder admin data until database persistence and media storage are
-            connected. Save and upload actions stay guarded.
+            Gallery database storage is unavailable in this environment. File upload still needs a
+            media storage provider.
           </p>
         </section>
       ) : null}

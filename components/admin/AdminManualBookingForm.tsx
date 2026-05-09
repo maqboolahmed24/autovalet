@@ -1,7 +1,7 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AdminBookingSummary } from "./AdminBookingSummary";
 import { AdminManualCustomerSection } from "./AdminManualCustomerSection";
 import { AdminManualLocationSection } from "./AdminManualLocationSection";
@@ -11,9 +11,9 @@ import { AdminManualSlotSection } from "./AdminManualSlotSection";
 import { AdminManualVehicleSection } from "./AdminManualVehicleSection";
 import type { CreateManualBookingInput, ManualBookingStatus } from "../../lib/admin/manual-booking";
 import { buildManualBookingDraft } from "../../lib/admin/manual-booking";
-import { calculateBookingDuration, formatMoneyGBP } from "../../lib/pricing";
+import type { AdminServicesPricingData } from "../../lib/admin/services-pricing";
+import { calculateBookingDurationFromAdminPricing } from "../../lib/admin/services-pricing-calculator";
 import { addMinutesToTime } from "../../lib/availability/working-hours";
-import { normalizePostcode, validateServiceZone } from "../../lib/zones";
 
 type AdminManualBookingResponse =
   | {
@@ -40,6 +40,23 @@ type AvailableSlotsResponse =
         slots: {
           label: string;
         }[];
+      };
+      message?: string;
+    }
+  | {
+      success: false;
+      error: {
+        code: string;
+        message: string;
+        details: Record<string, unknown>;
+      };
+    };
+
+type ZoneValidationResponse =
+  | {
+      success: true;
+      data: {
+        message: string;
       };
       message?: string;
     }
@@ -89,27 +106,12 @@ const initialManualBooking: CreateManualBookingInput = {
   },
 };
 
-function getZoneNote(booking: CreateManualBookingInput) {
-  const postcode = normalizePostcode(booking.location.postcode);
+type AdminManualBookingFormProps = {
+  pricingData: AdminServicesPricingData;
+};
 
-  if (!postcode) {
-    return "Enter a postcode to preview the service-zone result.";
-  }
-
-  try {
-    const result = validateServiceZone({
-      postcode,
-      vehicleCount: booking.service.vehicleCount,
-    });
-
-    return result.message;
-  } catch (error) {
-    return error instanceof Error ? error.message : "Service zone could not be checked.";
-  }
-}
-
-function getDurationLabels(booking: CreateManualBookingInput) {
-  const duration = calculateBookingDuration(buildManualBookingDraft(booking));
+function getDurationLabels(booking: CreateManualBookingInput, pricingData: AdminServicesPricingData) {
+  const duration = calculateBookingDurationFromAdminPricing(buildManualBookingDraft(booking), pricingData);
 
   if (!booking.schedule.startTime || duration.serviceDurationMinutes <= 0) {
     return {
@@ -134,15 +136,59 @@ function getDurationLabels(booking: CreateManualBookingInput) {
   }
 }
 
-export function AdminManualBookingForm() {
+export function AdminManualBookingForm({ pricingData }: AdminManualBookingFormProps) {
   const [booking, setBooking] = useState<CreateManualBookingInput>(initialManualBooking);
+  const [zoneNote, setZoneNote] = useState("Enter a postcode to preview the service-zone result.");
   const [slotCheckMessage, setSlotCheckMessage] = useState("");
   const [isCheckingSlot, setIsCheckingSlot] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState("");
   const [submitTone, setSubmitTone] = useState<"neutral" | "success" | "warning">("neutral");
-  const zoneNote = useMemo(() => getZoneNote(booking), [booking.location.postcode, booking.service.vehicleCount]);
-  const durationLabels = useMemo(() => getDurationLabels(booking), [booking]);
+  const durationLabels = useMemo(() => getDurationLabels(booking, pricingData), [booking, pricingData]);
+
+  useEffect(() => {
+    const postcode = booking.location.postcode.trim();
+
+    if (!postcode) {
+      setZoneNote("Enter a postcode to preview the service-zone result.");
+      return;
+    }
+
+    const controller = new AbortController();
+
+    async function validateZone() {
+      try {
+        const response = await fetch("/api/validate-zone", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            postcode,
+            vehicleCount: booking.service.vehicleCount,
+          }),
+          signal: controller.signal,
+        });
+        const payload = (await response.json()) as ZoneValidationResponse;
+
+        if (!response.ok || !payload.success) {
+          throw new Error(payload.success ? "Service zone could not be checked." : payload.error.message);
+        }
+
+        setZoneNote(payload.data.message);
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+
+        setZoneNote(error instanceof Error ? error.message : "Service zone could not be checked.");
+      }
+    }
+
+    void validateZone();
+
+    return () => controller.abort();
+  }, [booking.location.postcode, booking.service.vehicleCount]);
 
   function updateBooking(patch: Partial<CreateManualBookingInput>) {
     setSubmitMessage("");
@@ -190,7 +236,7 @@ export function AdminManualBookingForm() {
 
       setSlotCheckMessage(
         selectedSlotIsAvailable
-          ? "No placeholder conflict found. Saving will still re-check server-side before any database write."
+          ? "This time is currently available. Saving will re-check before the database write."
           : "This time is not available in the current working-hours preview.",
       );
     } catch (error) {
@@ -235,7 +281,7 @@ export function AdminManualBookingForm() {
       <div className="admin-page-intro">
         <p>
           Use this for phone, WhatsApp, Instagram or referral bookings. Approved and pending manual
-          bookings will block public availability when persistence is connected.
+          bookings save to the database and block public availability.
         </p>
       </div>
 
@@ -259,6 +305,7 @@ export function AdminManualBookingForm() {
           />
           <AdminManualServiceSection
             value={booking.service}
+            pricingData={pricingData}
             onChange={(patch) => updateBooking({ service: { ...booking.service, ...patch } })}
           />
           <AdminManualLocationSection
@@ -285,9 +332,6 @@ export function AdminManualBookingForm() {
           />
 
           <div className="booking-action-bar admin-manual-booking__actions">
-            <button className="admin-button admin-button--secondary" type="button" disabled title="Draft saving comes later.">
-              Draft later
-            </button>
             <button className="admin-button admin-button--primary" type="submit" disabled={isSubmitting}>
               {isSubmitting
                 ? "Checking..."
@@ -304,7 +348,7 @@ export function AdminManualBookingForm() {
           ) : null}
         </div>
 
-        <AdminBookingSummary booking={booking} />
+        <AdminBookingSummary booking={booking} pricingData={pricingData} />
       </form>
     </section>
   );

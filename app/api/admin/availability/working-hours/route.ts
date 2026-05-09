@@ -4,6 +4,7 @@ import {
   type UpdateWorkingHoursInput,
 } from "../../../../../lib/admin/availability";
 import { adminGuardErrorResponse, requireAdmin } from "../../../../../lib/auth/route-guards";
+import { isDatabaseConfigured } from "../../../../../lib/db/postgres";
 
 export const runtime = "nodejs";
 
@@ -36,7 +37,7 @@ export async function PATCH(request: Request) {
   const result = await updateWorkingHours(input, {
     adminAuthenticated: true,
     canEditAvailability: true,
-    persistenceConfigured: false,
+    persistenceConfigured: isDatabaseConfigured(),
   });
 
   if (!result.success) {

@@ -14,6 +14,7 @@ type CancelBookingSheetProps = {
   defaultReason?: CancellationReason;
   defaultDepositAction?: DepositAction;
   onCancelled?: (update: { status: string; depositAction: DepositAction }) => void;
+  onClose?: () => void;
 };
 
 type CancelBookingResponse =
@@ -60,6 +61,7 @@ export function CancelBookingSheet({
   defaultReason = "admin_operational_issue",
   defaultDepositAction = "transfer",
   onCancelled,
+  onClose,
 }: CancelBookingSheetProps) {
   const [actor, setActor] = useState<CancellationActor>(defaultActor);
   const [reason, setReason] = useState<CancellationReason>(defaultReason);
@@ -158,9 +160,16 @@ export function CancelBookingSheet({
           </label>
         </div>
 
-        <button className="admin-button admin-button--danger" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Recording..." : "Cancel booking"}
-        </button>
+        <div className="admin-sheet-actions">
+          {onClose ? (
+            <button className="admin-button admin-button--secondary" type="button" onClick={onClose}>
+              Close
+            </button>
+          ) : null}
+          <button className="admin-button admin-button--danger" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Recording..." : "Cancel booking"}
+          </button>
+        </div>
       </form>
 
       {message ? (

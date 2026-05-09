@@ -1,13 +1,18 @@
 import type { CreateManualBookingInput } from "../../lib/admin/manual-booking";
+import type { AdminServicesPricingData } from "../../lib/admin/services-pricing";
 import type { AddonId, PackageId } from "../../lib/booking/types";
-import { addonList, formatMoneyGBP, servicePackageList } from "../../lib/pricing";
+import { formatMoneyGBP } from "../../lib/pricing";
 
 type AdminManualServiceSectionProps = {
   value: CreateManualBookingInput["service"];
+  pricingData: AdminServicesPricingData;
   onChange: (patch: Partial<CreateManualBookingInput["service"]>) => void;
 };
 
-export function AdminManualServiceSection({ value, onChange }: AdminManualServiceSectionProps) {
+export function AdminManualServiceSection({ value, pricingData, onChange }: AdminManualServiceSectionProps) {
+  const activePackages = pricingData.packages.filter((servicePackage) => servicePackage.active);
+  const activeAddons = pricingData.addons.filter((addon) => addon.active);
+
   function toggleAddon(addonId: AddonId) {
     const addons = value.addons.includes(addonId)
       ? value.addons.filter((selectedId) => selectedId !== addonId)
@@ -24,7 +29,7 @@ export function AdminManualServiceSection({ value, onChange }: AdminManualServic
       </div>
 
       <div className="admin-option-grid">
-        {servicePackageList.map((servicePackage) => (
+        {activePackages.map((servicePackage) => (
           <button
             className={`admin-select-card${value.packageId === servicePackage.id ? " is-selected" : ""}`}
             key={servicePackage.id}
@@ -52,7 +57,7 @@ export function AdminManualServiceSection({ value, onChange }: AdminManualServic
       </label>
 
       <div className="admin-checkbox-grid" aria-label="Add-ons">
-        {addonList.map((addon) => {
+        {activeAddons.map((addon) => {
           const isSelected = value.addons.includes(addon.id);
 
           return (

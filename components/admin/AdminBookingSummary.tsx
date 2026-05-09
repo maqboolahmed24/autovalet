@@ -1,25 +1,34 @@
 import type { CreateManualBookingInput } from "../../lib/admin/manual-booking";
 import { buildManualBookingDraft } from "../../lib/admin/manual-booking";
+import type { AdminServicesPricingData } from "../../lib/admin/services-pricing";
+import {
+  calculateBookingDurationFromAdminPricing,
+  calculateBookingPriceFromAdminPricing,
+} from "../../lib/admin/services-pricing-calculator";
 import { arePaymentsEnabled } from "../../lib/config/features";
-import { calculateBookingDuration, calculateBookingPrice, formatMoneyGBP, servicePackages, vehicleSizeLabels } from "../../lib/pricing";
+import { formatMoneyGBP, vehicleSizeLabels } from "../../lib/pricing";
 
 type AdminBookingSummaryProps = {
   booking: CreateManualBookingInput;
+  pricingData: AdminServicesPricingData;
 };
 
-function getPackageLabel(booking: CreateManualBookingInput) {
-  return booking.service.packageId ? servicePackages[booking.service.packageId].label : "Not selected";
+function getPackageLabel(booking: CreateManualBookingInput, pricingData: AdminServicesPricingData) {
+  if (!booking.service.packageId) return "Not selected";
+
+  return pricingData.packages.find((servicePackage) => servicePackage.id === booking.service.packageId)?.label
+    ?? booking.service.packageId;
 }
 
 function getVehicleSizeLabel(booking: CreateManualBookingInput) {
   return booking.vehicle.size ? vehicleSizeLabels[booking.vehicle.size] : "Not selected";
 }
 
-export function AdminBookingSummary({ booking }: AdminBookingSummaryProps) {
+export function AdminBookingSummary({ booking, pricingData }: AdminBookingSummaryProps) {
   const draft = buildManualBookingDraft(booking);
-  const price = calculateBookingPrice(draft);
-  const duration = calculateBookingDuration(draft);
   const paymentsEnabled = arePaymentsEnabled();
+  const price = calculateBookingPriceFromAdminPricing(draft, pricingData, { paymentsEnabled });
+  const duration = calculateBookingDurationFromAdminPricing(draft, pricingData);
   const balanceDue = paymentsEnabled
     ? Math.max(price.estimatedTotalMinor - booking.payment.depositPaidMinor, 0)
     : price.estimatedTotalMinor;
@@ -39,7 +48,7 @@ export function AdminBookingSummary({ booking }: AdminBookingSummaryProps) {
 
         <div className="info-row">
           <span>Service</span>
-          <strong>{getPackageLabel(booking)}</strong>
+          <strong>{getPackageLabel(booking, pricingData)}</strong>
         </div>
         <div className="info-row">
           <span>Vehicle</span>

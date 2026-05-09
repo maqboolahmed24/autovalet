@@ -8,16 +8,16 @@ import type {
   VehicleSize,
 } from "../booking/types";
 import { createBookingReference } from "../booking/references";
-import { assertBookingTransition } from "../booking/lifecycle";
 import { arePaymentsEnabled } from "../config/features";
 import type { CalendarBlockingBooking } from "../availability";
 import { createUtcDateFromBusinessTime, generateAvailableSlots } from "../availability";
 import { isValidDateString, isValidTimeString } from "../availability/working-hours";
 import { normalizePostcode } from "../zones/normalize-postcode";
 import { validateServiceZone } from "../zones/validate-zone";
-import type { ZoneValidationResult } from "../zones";
+import type { ZoneValidationOptions, ZoneValidationResult } from "../zones";
 import { addonDefinitions, calculateBookingDuration, calculateBookingPrice, servicePackages } from "../pricing";
 import type { DurationBreakdown, PriceBreakdown } from "../pricing";
+import type { AvailabilityOverride, WorkingHoursRule } from "../availability";
 
 export type ManualBookingSource = Exclude<BookingSource, "public_booking">;
 
@@ -99,6 +99,8 @@ export type CreateManualBookingOptions = {
   canCreateManualBooking?: boolean;
   persistenceConfigured?: boolean;
   existingBookings?: CalendarBlockingBooking[];
+  workingHoursRules?: WorkingHoursRule[];
+  availabilityOverrides?: AvailabilityOverride[];
 };
 
 type ParsedManualBookingInput =
@@ -358,13 +360,18 @@ export function buildManualBookingDraft(input: CreateManualBookingInput): Bookin
 export function calculateManualBookingPreview(
   input: CreateManualBookingInput,
   existingBookings: CalendarBlockingBooking[] = [],
+  availability: {
+    workingHoursRules?: WorkingHoursRule[];
+    overrides?: AvailabilityOverride[];
+    zoneValidationOptions?: ZoneValidationOptions;
+  } = {},
 ): ManualBookingPreview {
   const draft = buildManualBookingDraft(input);
   const normalizedPostcode = normalizePostcode(input.location.postcode);
   const zoneResult = validateServiceZone({
     postcode: normalizedPostcode,
     vehicleCount: input.service.vehicleCount,
-  });
+  }, availability.zoneValidationOptions);
   const price = calculateBookingPrice(draft);
   const duration = calculateBookingDuration(draft);
   const requestedStart = createUtcDateFromBusinessTime(input.schedule.date, input.schedule.startTime);
@@ -374,6 +381,8 @@ export function calculateManualBookingPreview(
     date: input.schedule.date,
     serviceDurationMinutes: duration.serviceDurationMinutes,
     travelBufferMinutes: duration.travelBufferMinutes,
+    workingHoursRules: availability.workingHoursRules,
+    overrides: availability.overrides,
     existingBookings,
   });
 
@@ -387,103 +396,5 @@ export function calculateManualBookingPreview(
     serviceEndsAt: serviceEndsAt.toISOString(),
     blockedUntil: blockedUntil.toISOString(),
     slotAvailable: availableSlots.some((slot) => slot.label === input.schedule.startTime),
-  };
-}
-
-export async function createManualBooking(
-  input: CreateManualBookingInput,
-  options: CreateManualBookingOptions = {},
-): Promise<CreateManualBookingResult> {
-  if (!options.adminAuthenticated) {
-    return {
-      success: false,
-      code: "ADMIN_AUTH_NOT_CONFIGURED",
-      message: "Admin authentication is not configured yet.",
-    };
-  }
-
-  if (!options.canCreateManualBooking) {
-    return {
-      success: false,
-      code: "ADMIN_PERMISSION_REQUIRED",
-      message: "The admin account cannot create manual bookings.",
-    };
-  }
-
-  const validationErrors = validateManualBookingInput(input);
-
-  if (validationErrors.length > 0) {
-    return {
-      success: false,
-      code: "MANUAL_BOOKING_VALIDATION_FAILED",
-      message: "Check the manual booking details.",
-      details: { errors: validationErrors },
-    };
-  }
-
-  let preview: ManualBookingPreview;
-
-  try {
-    preview = calculateManualBookingPreview(input, options.existingBookings ?? []);
-  } catch (error) {
-    return {
-      success: false,
-      code: "MANUAL_BOOKING_PREVIEW_FAILED",
-      message: error instanceof Error ? error.message : "Manual booking preview could not be calculated.",
-    };
-  }
-
-  if (!preview.zoneResult.allowed) {
-    return {
-      success: false,
-      code: "OUTSIDE_SERVICE_AREA",
-      message: preview.zoneResult.message,
-      details: { zoneResult: preview.zoneResult },
-    };
-  }
-
-  if (!preview.slotAvailable) {
-    return {
-      success: false,
-      code: "SLOT_UNAVAILABLE",
-      message: "This time conflicts with working hours, blocked time or another booking.",
-      details: {
-        requestedStartAt: preview.requestedStartAt,
-        blockedUntil: preview.blockedUntil,
-      },
-    };
-  }
-
-  if (input.status === "approved") {
-    assertBookingTransition("pending_admin_review", "approved", {
-      actor: "admin",
-      reason: "manual booking created as approved",
-    });
-  }
-
-  if (!options.persistenceConfigured) {
-    return {
-      success: false,
-      code: "MANUAL_BOOKING_PERSISTENCE_NOT_CONFIGURED",
-      message: "Manual booking creation is not connected to database persistence yet.",
-      details: {
-        preview,
-        plannedWrites: arePaymentsEnabled()
-          ? ["customers", "bookings", "vehicles", "booking_addons", "payments", "audit_logs"]
-          : ["customers", "bookings", "vehicles", "booking_addons", "audit_logs"],
-      },
-    };
-  }
-
-  return {
-    success: false,
-    code: "MANUAL_BOOKING_PERSISTENCE_NOT_CONFIGURED",
-    message: "Manual booking creation is not connected to database persistence yet.",
-    details: {
-      preview,
-      plannedWrites: arePaymentsEnabled()
-        ? ["customers", "bookings", "vehicles", "booking_addons", "payments", "audit_logs"]
-        : ["customers", "bookings", "vehicles", "booking_addons", "audit_logs"],
-    },
   };
 }

@@ -6,6 +6,8 @@ export const metadata = {
   description: "AUTO VALET admin customer records, vehicles and booking history.",
 };
 
+export const dynamic = "force-dynamic";
+
 type SearchParams = Record<string, string | string[] | undefined>;
 
 type AdminCustomersPageProps = {

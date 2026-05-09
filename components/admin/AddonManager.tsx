@@ -46,7 +46,7 @@ export function AddonManager({ addons, onEdit }: AddonManagerProps) {
       ) : (
         <AdminEmptyState
           title="No add-ons active"
-          description="Add-on pricing and durations will appear here when services are connected to persistence."
+          description="Active add-ons will appear here after they are added or re-enabled."
         />
       )}
     </section>

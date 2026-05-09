@@ -155,6 +155,122 @@ async function createSchema() {
       ON service_zones (zone_type, normalized_value)
       WHERE active = true;
 
+    CREATE TABLE IF NOT EXISTS services (
+      id text PRIMARY KEY,
+      name text NOT NULL,
+      description text,
+      active boolean NOT NULL DEFAULT true,
+      display_order integer NOT NULL DEFAULT 0,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now()
+    );
+
+    CREATE INDEX IF NOT EXISTS services_active_display_order_idx
+      ON services (active, display_order);
+
+    CREATE TABLE IF NOT EXISTS service_variants (
+      id text PRIMARY KEY,
+      service_id text NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+      vehicle_size text NOT NULL CHECK (vehicle_size IN ('small', 'medium', 'large_4x4')),
+      price_minor integer NOT NULL CHECK (price_minor >= 0),
+      duration_minutes integer NOT NULL CHECK (duration_minutes > 0),
+      active boolean NOT NULL DEFAULT true,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now(),
+      UNIQUE (service_id, vehicle_size)
+    );
+
+    CREATE INDEX IF NOT EXISTS service_variants_service_id_idx
+      ON service_variants (service_id);
+
+    CREATE TABLE IF NOT EXISTS addons (
+      id text PRIMARY KEY,
+      name text NOT NULL,
+      price_minor integer NOT NULL CHECK (price_minor >= 0),
+      extra_duration_minutes integer NOT NULL DEFAULT 0 CHECK (extra_duration_minutes >= 0),
+      active boolean NOT NULL DEFAULT true,
+      display_order integer NOT NULL DEFAULT 0,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now()
+    );
+
+    CREATE INDEX IF NOT EXISTS addons_active_display_order_idx
+      ON addons (active, display_order);
+
+    CREATE TABLE IF NOT EXISTS availability_rules (
+      id text PRIMARY KEY,
+      weekday integer NOT NULL CHECK (weekday BETWEEN 0 AND 6),
+      start_time text NOT NULL,
+      end_time text NOT NULL,
+      active boolean NOT NULL DEFAULT true,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now(),
+      UNIQUE (weekday)
+    );
+
+    CREATE INDEX IF NOT EXISTS availability_rules_weekday_active_idx
+      ON availability_rules (weekday, active);
+
+    CREATE TABLE IF NOT EXISTS availability_overrides (
+      id text PRIMARY KEY,
+      date date NOT NULL,
+      start_time text,
+      end_time text,
+      type text NOT NULL CHECK (type IN ('closed_day', 'custom_hours', 'blocked_time')),
+      reason text,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now()
+    );
+
+    CREATE INDEX IF NOT EXISTS availability_overrides_date_idx
+      ON availability_overrides (date);
+
+    CREATE TABLE IF NOT EXISTS gallery_items (
+      id text PRIMARY KEY,
+      booking_id text REFERENCES bookings(id) ON DELETE SET NULL,
+      title text NOT NULL,
+      description text,
+      service_type text NOT NULL,
+      vehicle_type text,
+      before_image_url text,
+      after_image_url text,
+      single_image_url text,
+      alt_text text,
+      has_marketing_consent boolean NOT NULL DEFAULT false,
+      registration_plate_checked boolean NOT NULL DEFAULT false,
+      is_featured boolean NOT NULL DEFAULT false,
+      active boolean NOT NULL DEFAULT false,
+      display_order integer NOT NULL DEFAULT 0,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now()
+    );
+
+    ALTER TABLE gallery_items
+      ADD COLUMN IF NOT EXISTS service_type text NOT NULL DEFAULT '',
+      ADD COLUMN IF NOT EXISTS registration_plate_checked boolean NOT NULL DEFAULT false,
+      ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
+
+    CREATE INDEX IF NOT EXISTS gallery_items_booking_id_idx
+      ON gallery_items (booking_id);
+    CREATE INDEX IF NOT EXISTS gallery_items_featured_active_idx
+      ON gallery_items (is_featured, active);
+    CREATE INDEX IF NOT EXISTS gallery_items_display_order_idx
+      ON gallery_items (display_order, created_at DESC);
+
+    CREATE TABLE IF NOT EXISTS deposit_settings (
+      id text PRIMARY KEY,
+      deposit_type text NOT NULL,
+      fixed_amount_minor integer NOT NULL DEFAULT 0,
+      percentage numeric NOT NULL DEFAULT 0,
+      per_vehicle_amount_minor integer NOT NULL DEFAULT 0,
+      minimum_deposit_minor integer NOT NULL DEFAULT 0,
+      maximum_deposit_minor integer,
+      transfer_allowed boolean NOT NULL DEFAULT true,
+      policy_text text NOT NULL DEFAULT '',
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now()
+    );
+
     CREATE TABLE IF NOT EXISTS customer_notes (
       id text PRIMARY KEY,
       customer_id text NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
@@ -175,6 +291,17 @@ async function createSchema() {
       ON customer_notes (admin_id);
     CREATE INDEX IF NOT EXISTS customer_notes_created_at_idx
       ON customer_notes (created_at DESC);
+
+    ALTER TABLE bookings
+      ADD COLUMN IF NOT EXISTS cancelled_at timestamptz,
+      ADD COLUMN IF NOT EXISTS cancellation_actor text,
+      ADD COLUMN IF NOT EXISTS cancellation_reason text,
+      ADD COLUMN IF NOT EXISTS cancellation_notes text,
+      ADD COLUMN IF NOT EXISTS no_show_at timestamptz,
+      ADD COLUMN IF NOT EXISTS no_show_reason text,
+      ADD COLUMN IF NOT EXISTS no_show_notes text,
+      ADD COLUMN IF NOT EXISTS reschedule_proposed_start_at timestamptz,
+      ADD COLUMN IF NOT EXISTS reschedule_message text;
 
     CREATE TABLE IF NOT EXISTS privacy_data_requests (
       id text PRIMARY KEY,

@@ -137,7 +137,7 @@ export function AdminBookingDetail({
             />
           ) : null}
 
-          <AdminNotesCard notes={booking.notes} />
+          <AdminNotesCard bookingId={booking.id} notes={booking.notes} />
           <BookingActivityLog activity={booking.activity} />
         </aside>
       </div>

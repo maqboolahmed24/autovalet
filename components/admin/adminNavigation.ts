@@ -101,17 +101,17 @@ export const adminMoreGroups: AdminNavGroup[] = [
       {
         href: "/admin/settings#profile",
         label: "Admin profile",
-        description: "Profile details will live in settings.",
+        description: "Owner login and session status.",
       },
       {
         href: "/admin/settings#security",
-        label: "Security",
-        description: "Password, sessions and 2FA setup.",
+        label: "Database",
+        description: "Postgres and persistence status.",
       },
       {
         href: "/admin/settings#notifications",
-        label: "Notification settings",
-        description: "Email and SMS preferences once providers are connected.",
+        label: "Booking mode",
+        description: "Payments flag and customer booking flow.",
       },
     ],
   },

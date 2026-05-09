@@ -1,7 +1,9 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { blockedTimeReasonSuggestions, type AddBlockedTimeInput } from "../../lib/admin/availability";
+import type { AddBlockedTimeInput } from "../../lib/admin/availability";
+import { blockedTimeReasonSuggestions } from "../../lib/admin/availability-options";
 
 type AddBlockedTimeSheetProps = {
   defaultType: AddBlockedTimeInput["type"];
@@ -27,6 +29,7 @@ type AddBlockedTimeResponse =
     };
 
 export function AddBlockedTimeSheet({ defaultType, onClose }: AddBlockedTimeSheetProps) {
+  const router = useRouter();
   const [date, setDate] = useState("");
   const [type, setType] = useState<AddBlockedTimeInput["type"]>(defaultType);
   const [startTime, setStartTime] = useState("");
@@ -66,6 +69,7 @@ export function AddBlockedTimeSheet({ defaultType, onClose }: AddBlockedTimeShee
 
       setTone("success");
       setMessage("Blocked time saved.");
+      router.refresh();
     } catch (error) {
       setTone("warning");
       setMessage(error instanceof Error ? error.message : "Blocked time could not be saved.");
@@ -137,7 +141,7 @@ export function AddBlockedTimeSheet({ defaultType, onClose }: AddBlockedTimeShee
         </label>
 
         <p className="admin-inline-note">
-          If this overlaps existing approved jobs, persistence must check conflicts before saving.
+          Blocked time removes matching public requested slots. Existing approved jobs stay visible separately.
         </p>
 
         <div className="admin-sheet-actions">

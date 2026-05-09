@@ -7,6 +7,7 @@ type NoShowSheetProps = {
   bookingId: string;
   depositPaidMinor: number;
   onMarkedNoShow?: (update: { status: "no_show"; depositAction: string }) => void;
+  onClose?: () => void;
 };
 
 type NoShowResponse =
@@ -35,7 +36,7 @@ const noShowReasons: { value: NoShowReason; label: string }[] = [
   { value: "other", label: "Other" },
 ];
 
-export function NoShowSheet({ bookingId, depositPaidMinor, onMarkedNoShow }: NoShowSheetProps) {
+export function NoShowSheet({ bookingId, depositPaidMinor, onMarkedNoShow, onClose }: NoShowSheetProps) {
   const [reason, setReason] = useState<NoShowReason>("customer_unavailable");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -109,9 +110,16 @@ export function NoShowSheet({ bookingId, depositPaidMinor, onMarkedNoShow }: NoS
             placeholder="Customer unavailable, vehicle inaccessible, no parking, unsafe location..."
           />
         </label>
-        <button className="admin-button admin-button--danger" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Recording..." : "Mark no-show"}
-        </button>
+        <div className="admin-sheet-actions">
+          {onClose ? (
+            <button className="admin-button admin-button--secondary" type="button" onClick={onClose}>
+              Close
+            </button>
+          ) : null}
+          <button className="admin-button admin-button--danger" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Recording..." : "Mark no-show"}
+          </button>
+        </div>
       </form>
 
       {message ? (

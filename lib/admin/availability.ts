@@ -1,6 +1,12 @@
+import { randomUUID } from "node:crypto";
 import { getDefaultWorkingHoursRules } from "../availability/default-availability";
-import type { AvailabilityOverrideType, Weekday } from "../availability/types";
-import { isValidDateString, parseTimeToMinutes } from "../availability/working-hours";
+import type { AvailabilityOverride, AvailabilityOverrideType, Weekday, WorkingHoursRule } from "../availability/types";
+import {
+  getBusinessDateString,
+  isValidDateString,
+  parseTimeToMinutes,
+} from "../availability/working-hours";
+import { isDatabaseConfigured, query, transaction } from "../db/postgres";
 
 export type AdminAvailabilityData = {
   isMockData: boolean;
@@ -73,6 +79,23 @@ type AdminAvailabilityFailure = {
   message: string;
 };
 
+type AvailabilityRuleRow = {
+  id: string;
+  weekday: number;
+  start_time: string;
+  end_time: string;
+  active: boolean;
+};
+
+type AvailabilityOverrideRow = {
+  id: string;
+  date: Date | string;
+  start_time: string | null;
+  end_time: string | null;
+  type: string;
+  reason: string | null;
+};
+
 const weekdayLabels: Record<Weekday, string> = {
   0: "Sunday",
   1: "Monday",
@@ -92,8 +115,148 @@ export const blockedTimeReasonSuggestions = [
   "Other",
 ] as const;
 
+async function seedDefaultAvailabilityIfEmpty() {
+  await transaction(async (client) => {
+    const countResult = await client.query<{ count: string }>("SELECT count(*) FROM availability_rules");
+    const shouldSeed = Number(countResult.rows[0]?.count ?? 0) === 0;
+
+    if (!shouldSeed) return;
+
+    for (const rule of getDefaultWorkingHoursRules()) {
+      await client.query(
+        `
+          INSERT INTO availability_rules (id, weekday, start_time, end_time, active)
+          VALUES ($1, $2, $3, $4, $5)
+          ON CONFLICT (weekday)
+          DO UPDATE SET
+            start_time = EXCLUDED.start_time,
+            end_time = EXCLUDED.end_time,
+            active = EXCLUDED.active,
+            updated_at = now()
+        `,
+        [randomUUID(), rule.weekday, rule.startTime, rule.endTime, rule.active],
+      );
+    }
+  });
+}
+
+function toWeekday(value: number): Weekday {
+  return isWeekday(value) ? value : 0;
+}
+
+function toDateString(value: Date | string) {
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10);
+  }
+
+  return value.slice(0, 10);
+}
+
+function toAvailabilityOverrideType(value: string): AvailabilityOverrideType {
+  if (value === "closed_day" || value === "custom_hours" || value === "blocked_time") {
+    return value;
+  }
+
+  return "blocked_time";
+}
+
+function mapRuleRow(row: AvailabilityRuleRow): WorkingHoursRule {
+  return {
+    id: row.id,
+    weekday: toWeekday(row.weekday),
+    startTime: row.start_time,
+    endTime: row.end_time,
+    active: row.active,
+  };
+}
+
+function mapOverrideRow(row: AvailabilityOverrideRow): AvailabilityOverride {
+  const override: AvailabilityOverride = {
+    id: row.id,
+    date: toDateString(row.date),
+    type: toAvailabilityOverrideType(row.type),
+    reason: row.reason ?? undefined,
+  };
+
+  if (row.start_time) override.startTime = row.start_time;
+  if (row.end_time) override.endTime = row.end_time;
+
+  return override;
+}
+
+export async function getAvailabilityPersistence(): Promise<{
+  rules: WorkingHoursRule[];
+  overrides: AvailabilityOverride[];
+  isDatabaseBacked: boolean;
+}> {
+  if (!isDatabaseConfigured()) {
+    return {
+      rules: getDefaultWorkingHoursRules(),
+      overrides: [],
+      isDatabaseBacked: false,
+    };
+  }
+
+  await seedDefaultAvailabilityIfEmpty();
+
+  const [rulesResult, overridesResult] = await Promise.all([
+    query<AvailabilityRuleRow>(
+      `
+        SELECT id, weekday, start_time, end_time, active
+        FROM availability_rules
+        ORDER BY weekday ASC
+      `,
+    ),
+    query<AvailabilityOverrideRow>(
+      `
+        SELECT id, date, start_time, end_time, type, reason
+        FROM availability_overrides
+        WHERE date >= (now() AT TIME ZONE 'Europe/London')::date
+        ORDER BY date ASC, start_time ASC NULLS FIRST, created_at ASC
+      `,
+    ),
+  ]);
+
+  return {
+    rules: rulesResult.rows.map(mapRuleRow),
+    overrides: overridesResult.rows.map(mapOverrideRow),
+    isDatabaseBacked: true,
+  };
+}
+
+function getOverrideTypeLabel(type: AvailabilityOverrideType) {
+  if (type === "closed_day") return "Closed day";
+  if (type === "custom_hours") return "Custom hours";
+
+  return "Blocked time";
+}
+
+function formatDateLabel(date: string) {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+    weekday: "short",
+    timeZone: "Europe/London",
+  }).format(new Date(`${date}T12:00:00Z`));
+}
+
+function toUpcomingOverrideItem(override: AvailabilityOverride): AdminAvailabilityData["upcomingOverrides"][number] {
+  const timeLabel = override.type === "closed_day"
+    ? "Full day"
+    : `${override.startTime ?? "--:--"}-${override.endTime ?? "--:--"}`;
+
+  return {
+    id: override.id,
+    dateLabel: formatDateLabel(override.date),
+    typeLabel: getOverrideTypeLabel(override.type),
+    timeLabel,
+    reason: override.reason,
+  };
+}
+
 export async function getAdminAvailabilitySettings(): Promise<AdminAvailabilityData> {
-  const workingHours = getDefaultWorkingHoursRules()
+  const availability = await getAvailabilityPersistence();
+  const workingHours = availability.rules
     .sort((a, b) => normalizeWeekdaySort(a.weekday) - normalizeWeekdaySort(b.weekday))
     .map((rule) => ({
       weekday: rule.weekday,
@@ -104,9 +267,12 @@ export async function getAdminAvailabilitySettings(): Promise<AdminAvailabilityD
     }));
 
   return {
-    isMockData: false,
+    isMockData: !availability.isDatabaseBacked,
     workingHours,
-    upcomingOverrides: [],
+    upcomingOverrides: availability.overrides
+      .filter((override) => override.date >= getBusinessDateString())
+      .slice(0, 20)
+      .map(toUpcomingOverrideItem),
   };
 }
 
@@ -134,10 +300,29 @@ export async function addBlockedTime(
     };
   }
 
+  await seedDefaultAvailabilityIfEmpty();
+
+  const overrideId = randomUUID();
+
+  await query(
+    `
+      INSERT INTO availability_overrides (id, date, start_time, end_time, type, reason)
+      VALUES ($1, $2::date, $3, $4, $5, $6)
+    `,
+    [
+      overrideId,
+      input.date,
+      input.type === "blocked_time" ? input.startTime : null,
+      input.type === "blocked_time" ? input.endTime : null,
+      input.type,
+      input.reason.trim(),
+    ],
+  );
+
   return {
-    success: false,
-    code: "AVAILABILITY_PERSISTENCE_NOT_CONFIGURED",
-    message: "Availability persistence is not configured yet.",
+    success: true,
+    overrideId,
+    type: input.type,
   };
 }
 
@@ -165,10 +350,34 @@ export async function updateWorkingHours(
     };
   }
 
+  await seedDefaultAvailabilityIfEmpty();
+
+  await query(
+    `
+      INSERT INTO availability_rules (id, weekday, start_time, end_time, active, updated_at)
+      VALUES ($1, $2, $3, $4, $5, now())
+      ON CONFLICT (weekday)
+      DO UPDATE SET
+        start_time = EXCLUDED.start_time,
+        end_time = EXCLUDED.end_time,
+        active = EXCLUDED.active,
+        updated_at = now()
+    `,
+    [
+      randomUUID(),
+      input.weekday,
+      input.active ? input.startTime : "00:00",
+      input.active ? input.endTime : "00:00",
+      input.active,
+    ],
+  );
+
   return {
-    success: false,
-    code: "AVAILABILITY_PERSISTENCE_NOT_CONFIGURED",
-    message: "Availability persistence is not configured yet.",
+    success: true,
+    weekday: input.weekday,
+    active: input.active,
+    startTime: input.active ? input.startTime : undefined,
+    endTime: input.active ? input.endTime : undefined,
   };
 }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import type { AdminBookingDetailData } from "../../lib/admin/booking-detail";
 import {
@@ -42,6 +43,7 @@ const depositActions: DepositAction[] = [
 ];
 
 export function DeclineBookingSheet({ booking, onClose }: DeclineBookingSheetProps) {
+  const router = useRouter();
   const paymentsEnabled = arePaymentsEnabled();
   const [reason, setReason] = useState<DeclineReason>("outside_service_area");
   const [depositAction, setDepositAction] = useState<DepositAction>(
@@ -78,6 +80,7 @@ export function DeclineBookingSheet({ booking, onClose }: DeclineBookingSheetPro
 
       setTone("success");
       setMessage("Request declined.");
+      router.refresh();
     } catch (error) {
       setTone("warning");
       setMessage(error instanceof Error ? error.message : "Request could not be declined.");

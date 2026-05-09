@@ -7,6 +7,8 @@ export const metadata = {
   description: "AUTO VALET admin customer profile with vehicles, notes and booking history.",
 };
 
+export const dynamic = "force-dynamic";
+
 type CustomerProfileRouteProps = {
   params: { id: string } | Promise<{ id: string }>;
 };

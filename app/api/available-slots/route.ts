@@ -5,9 +5,14 @@ import {
   isPastBusinessDate,
   isValidDateString,
 } from "../../../lib/availability";
+import { getAvailabilityPersistence } from "../../../lib/admin/availability";
+import {
+  calculateBookingDurationWithAdminPricing,
+  getAdminServicesPricing,
+} from "../../../lib/admin/services-pricing";
 import { getBlockingBookingRecords } from "../../../lib/db/booking-repository";
 import { isDatabaseConfigured } from "../../../lib/db/postgres";
-import { addonDefinitions, calculateBookingDuration, servicePackages } from "../../../lib/pricing";
+import { addonDefinitions, servicePackages } from "../../../lib/pricing";
 
 type ApiSuccessResponse<TData> = {
   success: true;
@@ -178,7 +183,8 @@ export async function POST(request: Request) {
   }
 
   const draft = getBookingDraftForDuration(body);
-  const duration = calculateBookingDuration(draft);
+  const pricingData = await getAdminServicesPricing();
+  const duration = calculateBookingDurationWithAdminPricing(draft, pricingData);
 
   if (duration.serviceDurationMinutes <= 0) {
     return jsonResponse(
@@ -195,11 +201,14 @@ export async function POST(request: Request) {
   }
 
   const existingBookings = isDatabaseConfigured() ? await getBlockingBookingRecords() : [];
+  const availability = await getAvailabilityPersistence();
   const now = Date.now();
   const slots = generateAvailableSlots({
     date: draft.selectedDate,
     serviceDurationMinutes: duration.serviceDurationMinutes,
     travelBufferMinutes: duration.travelBufferMinutes,
+    workingHoursRules: availability.rules,
+    overrides: availability.overrides,
     existingBookings,
   }).filter((slot) => Date.parse(slot.start) > now);
 

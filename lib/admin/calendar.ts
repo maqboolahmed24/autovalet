@@ -6,6 +6,7 @@ import { listBookingRecords, type BookingListRecord } from "../db/booking-reposi
 import { getServicePackage } from "../pricing/catalog";
 import { getWorkingHoursForDate, parseTimeToMinutes, formatMinutesToTime } from "../availability/working-hours";
 import type { DayAvailability } from "../availability/types";
+import { getAvailabilityPersistence } from "./availability";
 
 export type AdminTimelineItemType = "booking" | "buffer" | "blocked_time" | "available" | "closed";
 
@@ -118,14 +119,24 @@ export async function buildAdminCalendarWeek(selectedDate: string): Promise<Admi
 
 export async function getAdminCalendarDay(input: { date: string }): Promise<AdminCalendarDay> {
   const date = parseAdminCalendarDate(input.date);
-  const availability = getWorkingHoursForDate({ date });
+  const availabilityPersistence = await getAvailabilityPersistence();
+  const availability = getWorkingHoursForDate({
+    date,
+    rules: availabilityPersistence.rules,
+    overrides: availabilityPersistence.overrides,
+  });
   const records = isDatabaseConfigured()
     ? (await listBookingRecords()).filter((record) => getBusinessDate(record.requestedStartAt) === date)
     : [];
   const bookings = records
     .filter((record) => paymentsEnabled || record.status !== "payment_hold")
     .map(toCalendarBooking);
-  const blockedTimes: BlockedTime[] = [];
+  const blockedTimes: BlockedTime[] = availability.blockedWindows.map((window, index) => ({
+    id: `${date}-blocked-${index}`,
+    startTime: window.startTime,
+    endTime: window.endTime,
+    reason: window.reason ?? "Blocked time",
+  }));
   const summary = getCalendarSummary(records);
 
   return {

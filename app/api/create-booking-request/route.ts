@@ -14,6 +14,12 @@ import {
 import { isDatabaseConfigured } from "../../../lib/db/postgres";
 import { isValidIdempotencyKey, normalizeIdempotencyKey } from "../../../lib/payments/idempotency";
 import { validateServiceZone, ZoneValidationError } from "../../../lib/zones";
+import { getAvailabilityPersistence } from "../../../lib/admin/availability";
+import {
+  calculateBookingDurationWithAdminPricing,
+  calculateBookingPriceWithAdminPricing,
+  getAdminServicesPricing,
+} from "../../../lib/admin/services-pricing";
 import { getServiceZoneValidationOptions } from "../../../lib/admin/service-zones";
 import type { ZoneStatus } from "../../../lib/booking/types";
 import type { ZoneValidationResult } from "../../../lib/zones";
@@ -166,15 +172,23 @@ export async function POST(request: Request) {
     });
   }
 
+  const pricingData = await getAdminServicesPricing();
+  const duration = calculateBookingDurationWithAdminPricing(parsedDraft.draft, pricingData);
   const requestSnapshot = createBookingRequestSnapshot({
     bookingReference: createBookingReference(),
     draft: parsedDraft.draft,
+    price: calculateBookingPriceWithAdminPricing(parsedDraft.draft, pricingData, { paymentsEnabled: false }),
+    duration,
   });
 
   const existingBookings = await getBlockingBookingRecords();
+  const availability = await getAvailabilityPersistence();
   const slotIsStillAvailable = isRequestedSlotStillAvailable({
     draft: parsedDraft.draft,
     existingBookings,
+    workingHoursRules: availability.rules,
+    availabilityOverrides: availability.overrides,
+    duration,
   });
 
   if (!slotIsStillAvailable) {

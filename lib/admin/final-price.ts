@@ -1,4 +1,6 @@
+import { randomUUID } from "node:crypto";
 import type { BookingStatus } from "../booking/types";
+import { transaction } from "../db/postgres";
 import { calculateBalanceDueMinor, type BookingBalanceSnapshot } from "../payments/balance";
 
 export type AdjustFinalPriceInput = {
@@ -128,9 +130,64 @@ export async function adjustFinalPrice(
     };
   }
 
-  return {
-    success: false,
-    code: "FINAL_PRICE_PERSISTENCE_NOT_CONFIGURED",
-    message: "Final price adjustment is not connected to database persistence yet.",
-  };
+  const preview = previewFinalPriceAdjustment(input, options.booking);
+
+  try {
+    const updated = await transaction(async (client) => {
+      const result = await client.query<{ id: string }>(
+        `
+          UPDATE bookings
+          SET final_total_minor = $2,
+            balance_due_minor = $3,
+            updated_at = now()
+          WHERE id = $1
+          RETURNING id
+        `,
+        [input.bookingId, preview.finalTotalMinor, preview.balanceDueMinor],
+      );
+
+      if (!result.rows[0]) {
+        return false;
+      }
+
+      await client.query(
+        `
+          INSERT INTO audit_logs (id, admin_id, entity_type, entity_id, action, metadata)
+          VALUES ($1, $2, 'booking', $3, 'final_price_adjusted', $4::jsonb)
+        `,
+        [
+          randomUUID(),
+          input.adminId,
+          input.bookingId,
+          JSON.stringify({
+            finalTotalMinor: preview.finalTotalMinor,
+            balanceDueMinor: preview.balanceDueMinor,
+            reason: input.reason.trim(),
+          }),
+        ],
+      );
+
+      return true;
+    });
+
+    if (!updated) {
+      return {
+        success: false,
+        code: "BOOKING_NOT_FOUND",
+        message: "Booking was not found.",
+      };
+    }
+
+    return {
+      success: true,
+      finalTotalMinor: preview.finalTotalMinor,
+      balanceDueMinor: preview.balanceDueMinor,
+    };
+  } catch {
+    return {
+      success: false,
+      code: "FINAL_PRICE_PERSISTENCE_FAILED",
+      message: "Final price adjustment could not be saved.",
+    };
+  }
 }

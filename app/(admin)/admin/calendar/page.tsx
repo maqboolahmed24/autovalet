@@ -11,6 +11,8 @@ export const metadata = {
   description: "AUTO VALET admin day timeline for jobs, requests, holds and blocked time.",
 };
 
+export const dynamic = "force-dynamic";
+
 type AdminCalendarRouteProps = {
   searchParams?: Promise<{
     date?: string | string[];

@@ -5,6 +5,7 @@ import {
   type UpdateServiceVariantInput,
 } from "../../../../../lib/admin/services-pricing";
 import { adminGuardErrorResponse, requireAdmin } from "../../../../../lib/auth/route-guards";
+import { isDatabaseConfigured } from "../../../../../lib/db/postgres";
 
 export const runtime = "nodejs";
 
@@ -45,7 +46,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   const result = await updateServiceVariant(input, {
     adminAuthenticated: true,
     canEditServicesPricing: true,
-    persistenceConfigured: false,
+    persistenceConfigured: isDatabaseConfigured(),
   });
 
   if (!result.success) {

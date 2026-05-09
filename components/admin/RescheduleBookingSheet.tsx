@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import type { AdminBookingDetailData } from "../../lib/admin/booking-detail";
 
@@ -54,6 +55,7 @@ type RescheduleResponse =
     };
 
 export function RescheduleBookingSheet({ booking, onClose }: RescheduleBookingSheetProps) {
+  const router = useRouter();
   const [proposedDate, setProposedDate] = useState("");
   const [proposedStartTime, setProposedStartTime] = useState("");
   const [messageToCustomer, setMessageToCustomer] = useState("");
@@ -150,6 +152,7 @@ export function RescheduleBookingSheet({ booking, onClose }: RescheduleBookingSh
 
       setTone("success");
       setSubmitMessage("Reschedule suggestion sent.");
+      router.refresh();
     } catch (error) {
       setTone("warning");
       setSubmitMessage(error instanceof Error ? error.message : "Suggestion could not be sent.");

@@ -1,3 +1,6 @@
+import { randomUUID } from "node:crypto";
+import { isDatabaseConfigured, query, transaction } from "../db/postgres";
+
 export type AdminGalleryImageMode = "before_after" | "single" | "placeholder";
 
 export type AdminGalleryItemInput = {
@@ -48,10 +51,75 @@ export type GalleryMutationOptions = {
   persistenceConfigured?: boolean;
 };
 
+type GalleryItemRow = {
+  id: string;
+  title: string;
+  description: string | null;
+  service_type: string;
+  vehicle_type: string | null;
+  before_image_url: string | null;
+  after_image_url: string | null;
+  single_image_url: string | null;
+  alt_text: string | null;
+  has_marketing_consent: boolean;
+  registration_plate_checked: boolean;
+  is_featured: boolean;
+  active: boolean;
+  display_order: number;
+};
+
+function mapGalleryItemRow(row: GalleryItemRow): AdminGalleryItem {
+  return toAdminGalleryItem({
+    id: row.id,
+    title: row.title,
+    description: row.description ?? undefined,
+    serviceType: row.service_type,
+    vehicleType: row.vehicle_type ?? undefined,
+    beforeImageUrl: row.before_image_url ?? undefined,
+    afterImageUrl: row.after_image_url ?? undefined,
+    singleImageUrl: row.single_image_url ?? undefined,
+    altText: row.alt_text ?? "",
+    hasMarketingConsent: row.has_marketing_consent,
+    registrationPlateChecked: row.registration_plate_checked,
+    isFeatured: row.is_featured,
+    active: row.active,
+    displayOrder: row.display_order,
+  });
+}
+
 export async function getAdminGalleryItems(): Promise<AdminGalleryData> {
+  if (!isDatabaseConfigured()) {
+    return {
+      isMockData: true,
+      items: [],
+    };
+  }
+
+  const result = await query<GalleryItemRow>(
+    `
+      SELECT
+        id,
+        title,
+        description,
+        service_type,
+        vehicle_type,
+        before_image_url,
+        after_image_url,
+        single_image_url,
+        alt_text,
+        has_marketing_consent,
+        registration_plate_checked,
+        is_featured,
+        active,
+        display_order
+      FROM gallery_items
+      ORDER BY display_order ASC, created_at DESC
+    `,
+  );
+
   return {
     isMockData: false,
-    items: [],
+    items: result.rows.map(mapGalleryItemRow),
   };
 }
 
@@ -75,10 +143,62 @@ export async function createGalleryItem(
     };
   }
 
+  const galleryItemId = randomUUID();
+
+  await transaction(async (client) => {
+    await client.query(
+      `
+        INSERT INTO gallery_items (
+          id,
+          title,
+          description,
+          service_type,
+          vehicle_type,
+          before_image_url,
+          after_image_url,
+          single_image_url,
+          alt_text,
+          has_marketing_consent,
+          registration_plate_checked,
+          is_featured,
+          active,
+          display_order
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+      `,
+      [
+        galleryItemId,
+        input.title.trim(),
+        input.description?.trim() || null,
+        input.serviceType.trim(),
+        input.vehicleType?.trim() || null,
+        input.beforeImageUrl?.trim() || null,
+        input.afterImageUrl?.trim() || null,
+        input.singleImageUrl?.trim() || null,
+        input.altText.trim() || null,
+        input.hasMarketingConsent,
+        input.registrationPlateChecked,
+        input.isFeatured,
+        input.active,
+        input.displayOrder ?? 0,
+      ],
+    );
+    await client.query(
+      `
+        INSERT INTO audit_logs (id, admin_id, entity_type, entity_id, action, metadata)
+        VALUES ($1, NULL, 'gallery_item', $2, 'gallery_item_created', $3::jsonb)
+      `,
+      [
+        randomUUID(),
+        galleryItemId,
+        JSON.stringify({ title: input.title.trim(), active: input.active }),
+      ],
+    );
+  });
+
   return {
-    success: false,
-    code: "PERSISTENCE_NOT_CONFIGURED",
-    message: "Admin gallery items are not connected to database persistence yet.",
+    success: true,
+    galleryItemId,
   };
 }
 
@@ -111,10 +231,75 @@ export async function updateGalleryItem(
     };
   }
 
+  const result = await transaction(async (client) => {
+    const updateResult = await client.query<{ id: string }>(
+      `
+        UPDATE gallery_items
+        SET title = $2,
+          description = $3,
+          service_type = $4,
+          vehicle_type = $5,
+          before_image_url = $6,
+          after_image_url = $7,
+          single_image_url = $8,
+          alt_text = $9,
+          has_marketing_consent = $10,
+          registration_plate_checked = $11,
+          is_featured = $12,
+          active = $13,
+          display_order = $14,
+          updated_at = now()
+        WHERE id = $1
+        RETURNING id
+      `,
+      [
+        id,
+        input.title.trim(),
+        input.description?.trim() || null,
+        input.serviceType.trim(),
+        input.vehicleType?.trim() || null,
+        input.beforeImageUrl?.trim() || null,
+        input.afterImageUrl?.trim() || null,
+        input.singleImageUrl?.trim() || null,
+        input.altText.trim() || null,
+        input.hasMarketingConsent,
+        input.registrationPlateChecked,
+        input.isFeatured,
+        input.active,
+        input.displayOrder ?? 0,
+      ],
+    );
+
+    if (!updateResult.rows[0]) {
+      return null;
+    }
+
+    await client.query(
+      `
+        INSERT INTO audit_logs (id, admin_id, entity_type, entity_id, action, metadata)
+        VALUES ($1, NULL, 'gallery_item', $2, 'gallery_item_updated', $3::jsonb)
+      `,
+      [
+        randomUUID(),
+        id,
+        JSON.stringify({ title: input.title.trim(), active: input.active }),
+      ],
+    );
+
+    return updateResult.rows[0];
+  });
+
+  if (!result) {
+    return {
+      success: false,
+      code: "GALLERY_ITEM_NOT_FOUND",
+      message: "Gallery item was not found.",
+    };
+  }
+
   return {
-    success: false,
-    code: "PERSISTENCE_NOT_CONFIGURED",
-    message: "Admin gallery item updates are not connected to database persistence yet.",
+    success: true,
+    galleryItemId: result.id,
   };
 }
 

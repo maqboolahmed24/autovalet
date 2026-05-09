@@ -1,5 +1,7 @@
 import { cancelBooking } from "../../../../../../lib/admin/cancel-booking";
+import { getAdminBookingDetail } from "../../../../../../lib/admin/booking-detail";
 import { requireAdmin, adminGuardErrorResponse } from "../../../../../../lib/auth/route-guards";
+import { isDatabaseConfigured } from "../../../../../../lib/db/postgres";
 import type { CancellationActor, CancellationReason, DepositAction } from "../../../../../../lib/policies";
 import { isDepositAction } from "../../../../../../lib/policies";
 
@@ -50,6 +52,8 @@ function statusForCancellationError(code: string) {
     case "BOOKING_LOOKUP_NOT_CONFIGURED":
     case "CANCELLATION_PERSISTENCE_NOT_CONFIGURED":
       return 501;
+    case "BOOKING_NOT_FOUND":
+      return 404;
     case "ADMIN_PERMISSION_REQUIRED":
       return 403;
     case "CANCELLATION_POLICY_BLOCKED":
@@ -116,6 +120,12 @@ export async function POST(request: Request, context: RouteContext) {
     : undefined;
 
   const params = await context.params;
+  const booking = await getAdminBookingDetail(params.id);
+
+  if (!booking) {
+    return errorResponse("BOOKING_NOT_FOUND", "Booking was not found.", 404);
+  }
+
   const result = await cancelBooking({
     bookingId: params.id,
     adminId: guard.session.adminId,
@@ -126,7 +136,13 @@ export async function POST(request: Request, context: RouteContext) {
   }, {
     adminAuthenticated: true,
     canCancelBooking: true,
-    persistenceConfigured: false,
+    persistenceConfigured: isDatabaseConfigured(),
+    booking: {
+      id: booking.id,
+      status: booking.status,
+      appointmentStartAt: booking.schedule.requestedStartAt,
+      depositPaidMinor: booking.financials.depositPaidMinor,
+    },
   });
 
   if (!result.success) {
