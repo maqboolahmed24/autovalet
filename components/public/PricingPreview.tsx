@@ -52,7 +52,7 @@ export function PricingPreview() {
         </div>
 
         <div className="pricing-preview__notice">
-          <p>No online payment is taken when you submit a booking request. Appointments are confirmed after approval.</p>
+          <p>Submit a booking request for review. Appointments are confirmed after approval.</p>
         </div>
 
         <div className="pricing-preview__actions">

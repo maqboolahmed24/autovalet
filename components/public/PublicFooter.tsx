@@ -37,7 +37,7 @@ export function PublicFooter() {
 
         <div className="public-footer__note">
           <p>AUTO VALET operates within selected service areas.</p>
-          <p>No online payment is taken. Bookings are confirmed after manual approval.</p>
+          <p>Bookings are reviewed before confirmation.</p>
         </div>
 
         <nav className="public-footer__policies" aria-label="Policy links">

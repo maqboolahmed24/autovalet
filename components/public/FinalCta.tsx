@@ -19,7 +19,7 @@ export function FinalCta() {
           </div>
 
           <p className="final-cta__note" id="final-cta-note">
-            No online payment. Bookings confirmed after approval.
+            Requests are reviewed before approval.
           </p>
         </div>
       </div>

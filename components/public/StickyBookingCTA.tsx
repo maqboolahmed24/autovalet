@@ -48,9 +48,8 @@ export function StickyBookingCTA({ threshold = 520 }: StickyBookingCTAProps) {
     <div className={`mobile-sticky-cta sticky-booking-cta${isVisible ? " is-visible" : ""}`}>
       <Link className="primary-button" href="/booking">
         <span>Request a Booking</span>
-        <small>Paid request, manually approved</small>
+        <small>Reviewed before approval</small>
       </Link>
     </div>
   );
 }
-

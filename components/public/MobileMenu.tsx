@@ -62,7 +62,7 @@ export function MobileMenu({ isOpen, links, onClose }: MobileMenuProps) {
           <Link className="primary-button" href="/booking" onClick={onClose}>
             Request a Booking
           </Link>
-          <p>No online payment. Bookings confirmed after approval.</p>
+          <p>Requests are reviewed before approval.</p>
         </div>
       </div>
     </div>

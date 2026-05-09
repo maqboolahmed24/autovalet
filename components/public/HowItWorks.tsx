@@ -20,7 +20,7 @@ const steps: ProcessStep[] = [
   {
     number: "03",
     title: "Submit your request",
-    text: "Your details are sent to AUTO VALET for review without online payment.",
+    text: "Your details are sent to AUTO VALET for review.",
   },
   {
     number: "04",
