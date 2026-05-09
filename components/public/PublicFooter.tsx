@@ -13,7 +13,6 @@ const footerLinks = [
 const policyLinks = [
   { href: "/policies/privacy", label: "Privacy Policy" },
   { href: "/policies/terms", label: "Terms & Conditions" },
-  { href: "/policies/deposit-cancellation", label: "Cancellation Policy" },
   { href: "/policies/cookies", label: "Cookie Policy" },
   { href: "/policies/data-requests", label: "Data Requests" },
 ];
