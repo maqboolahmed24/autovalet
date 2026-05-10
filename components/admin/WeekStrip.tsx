@@ -8,7 +8,7 @@ type WeekStripProps = {
 
 export function WeekStrip({ days, selectedDate }: WeekStripProps) {
   return (
-    <nav className="week-strip" aria-label="Calendar week">
+    <nav className="week-strip" aria-label="Calendar date range">
       {days.map((day) => (
         <Link
           aria-current={day.date === selectedDate ? "date" : undefined}

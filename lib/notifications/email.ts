@@ -1,21 +1,18 @@
+import nodemailer from "nodemailer";
+import type SMTPTransport from "nodemailer/lib/smtp-transport";
 import type { NotificationProviderResult, SendEmailInput } from "./types";
 
-type ResendSendResult = {
-  data?: {
-    id?: string;
-  } | null;
-  error?: {
-    message?: string;
-  } | null;
+type SmtpConfig = {
+  host: string;
+  port: number;
+  secure: boolean;
+  requireTls: boolean;
+  user: string;
+  password: string;
+  fromEmail: string;
+  fromName: string;
+  replyTo?: string;
 };
-
-type ResendClientLike = {
-  emails: {
-    send(input: Record<string, unknown>): Promise<ResendSendResult>;
-  };
-};
-
-type ResendConstructor = new (apiKey: string) => ResendClientLike;
 
 function readEnvironmentVariable(name: string) {
   const globalWithProcess = globalThis as typeof globalThis & {
@@ -24,89 +21,129 @@ function readEnvironmentVariable(name: string) {
     };
   };
 
-  return globalWithProcess.process?.env?.[name] ?? "";
+  return globalWithProcess.process?.env?.[name]?.trim() ?? "";
 }
 
-function getResendApiKey() {
-  return readEnvironmentVariable("RESEND_API_KEY").trim();
+function readBooleanEnvironmentVariable(name: string, fallback: boolean) {
+  const value = readEnvironmentVariable(name).toLowerCase();
+
+  if (!value) return fallback;
+  if (["1", "true", "yes", "on"].includes(value)) return true;
+  if (["0", "false", "no", "off"].includes(value)) return false;
+
+  return fallback;
 }
 
-function getFromEmail() {
-  return readEnvironmentVariable("RESEND_FROM_EMAIL").trim();
-}
+function readIntegerEnvironmentVariable(name: string) {
+  const value = readEnvironmentVariable(name);
 
-async function loadResendConstructor() {
-  try {
-    const dynamicImport = new Function("specifier", "return import(specifier)") as (
-      specifier: string,
-    ) => Promise<{ Resend?: unknown; default?: unknown }>;
-    const resendModule = await dynamicImport("resend");
-    const Constructor = resendModule.Resend ?? resendModule.default;
-
-    if (typeof Constructor !== "function") {
-      return null;
-    }
-
-    return Constructor as ResendConstructor;
-  } catch {
+  if (!/^\d+$/.test(value)) {
     return null;
   }
+
+  const parsed = Number(value);
+
+  return Number.isSafeInteger(parsed) ? parsed : null;
+}
+
+function getSmtpConfig(): SmtpConfig | null {
+  const host = readEnvironmentVariable("SMTP_HOST");
+  const port = readIntegerEnvironmentVariable("SMTP_PORT");
+  const user = readEnvironmentVariable("SMTP_USER");
+  const password = readEnvironmentVariable("SMTP_PASSWORD");
+  const fromEmail = readEnvironmentVariable("SMTP_FROM_EMAIL") || user;
+  const fromName = readEnvironmentVariable("SMTP_FROM_NAME") || "AUTO VALET";
+  const replyTo = readEnvironmentVariable("SMTP_REPLY_TO") || undefined;
+
+  if (!host || !port || !user || !password || !fromEmail) {
+    return null;
+  }
+
+  return {
+    host,
+    port,
+    secure: readBooleanEnvironmentVariable("SMTP_SECURE", port === 465),
+    requireTls: readBooleanEnvironmentVariable("SMTP_REQUIRE_TLS", port !== 465),
+    user,
+    password,
+    fromEmail,
+    fromName,
+    replyTo,
+  };
 }
 
 export function isEmailProviderConfigured() {
-  return Boolean(getResendApiKey() && getFromEmail());
+  return Boolean(getSmtpConfig());
+}
+
+function createTransport(config: SmtpConfig) {
+  const transportOptions: SMTPTransport.Options = {
+    host: config.host,
+    port: config.port,
+    secure: config.secure,
+    requireTLS: config.requireTls,
+    auth: {
+      user: config.user,
+      pass: config.password,
+    },
+    tls: {
+      minVersion: "TLSv1.2",
+    },
+  };
+
+  return nodemailer.createTransport(transportOptions);
+}
+
+function getSafeProviderErrorMessage(error: unknown) {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
+  return "Email provider could not send the message.";
 }
 
 export async function sendEmail(input: SendEmailInput): Promise<NotificationProviderResult> {
-  const apiKey = getResendApiKey();
-  const fromEmail = getFromEmail();
+  const config = getSmtpConfig();
 
-  if (!apiKey || !fromEmail) {
+  if (!config) {
     return {
       success: false,
       code: "EMAIL_PROVIDER_NOT_CONFIGURED",
-      message: "Email provider is not configured yet.",
+      message: "SMTP email provider is not configured yet.",
     };
   }
 
-  const Resend = await loadResendConstructor();
-
-  if (!Resend) {
+  if (!input.to.trim()) {
     return {
       success: false,
-      code: "EMAIL_PROVIDER_NOT_CONFIGURED",
-      message: "Email provider package is not installed yet.",
+      code: "EMAIL_RECIPIENT_MISSING",
+      message: "Email recipient is missing.",
     };
   }
 
   try {
-    const resend = new Resend(apiKey);
-    const result = await resend.emails.send({
-      from: fromEmail,
+    const transporter = createTransport(config);
+    const result = await transporter.sendMail({
+      from: {
+        name: config.fromName,
+        address: config.fromEmail,
+      },
       to: input.to,
       subject: input.subject,
       text: input.text,
       html: input.html,
-      reply_to: input.replyTo,
+      replyTo: input.replyTo || config.replyTo,
     });
-
-    if (result.error) {
-      return {
-        success: false,
-        code: "EMAIL_PROVIDER_SEND_FAILED",
-        message: result.error.message || "Email provider could not send the message.",
-      };
-    }
 
     return {
       success: true,
-      providerMessageId: result.data?.id,
+      providerMessageId: result.messageId,
     };
-  } catch {
+  } catch (error) {
     return {
       success: false,
       code: "EMAIL_PROVIDER_SEND_FAILED",
-      message: "Email provider could not send the message.",
+      message: getSafeProviderErrorMessage(error),
     };
   }
 }

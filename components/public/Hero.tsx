@@ -25,13 +25,13 @@ export function Hero({ className, imageAlt = "", imageSrc }: HeroProps) {
             <div className="hero__vehicle-stage" aria-hidden="true">
               <div className="hero-car">
                 <div className="hero-car__shadow" />
+                <img className="hero-car__image" src="/hero-car/car-full.png" alt="" />
                 <div className="hero-car__wheel hero-car__wheel--front">
                   <img className="hero-car__wheel-image" src="/hero-car/car-wheel.png" alt="" />
                 </div>
                 <div className="hero-car__wheel hero-car__wheel--rear">
-                  <img className="hero-car__wheel-image" src="/hero-car/car-wheel.png" alt="" />
+                  <img className="hero-car__wheel-image" src="/hero-car/car-wheel-rear.png" alt="" />
                 </div>
-                <img className="hero-car__body" src="/hero-car/car-body.png" alt="" />
               </div>
             </div>
           </div>

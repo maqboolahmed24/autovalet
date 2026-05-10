@@ -1,7 +1,7 @@
 export const notificationLogsTable = {
   name: "notification_logs",
   columns: {
-    id: { type: "uuid", primaryKey: true, default: "gen_random_uuid()" },
+    id: { type: "text", primaryKey: true },
     eventType: { name: "event_type", type: "text", nullable: false },
     channel: { type: "text", nullable: false },
     recipientType: { name: "recipient_type", type: "text", nullable: false },

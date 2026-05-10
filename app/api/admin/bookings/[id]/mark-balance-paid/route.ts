@@ -1,6 +1,16 @@
-import { isBalancePaymentMethod, markBalancePaid } from "../../../../../../lib/payments/balance";
+import { isBalancePaymentMethod } from "../../../../../../lib/payments/balance";
+import { markBalancePaid } from "../../../../../../lib/payments/balance-persistence";
+import { getAdminBookingDetail } from "../../../../../../lib/admin/booking-detail";
 import { requireAdmin, adminGuardErrorResponse } from "../../../../../../lib/auth/route-guards";
 import { arePaymentsEnabled } from "../../../../../../lib/config/features";
+import { isDatabaseConfigured } from "../../../../../../lib/db/postgres";
+import {
+  buildNotificationSummaryFromAdminBooking,
+  createAdminBookingUrl,
+  createPublicBookingStatusUrl,
+} from "../../../../../../lib/notifications/booking-summary";
+import { dispatchBookingUpdateNotifications } from "../../../../../../lib/notifications/workflows";
+import { formatMoneyGBP } from "../../../../../../lib/pricing";
 
 export const runtime = "nodejs";
 
@@ -49,6 +59,8 @@ function statusForBalancePaymentError(code: string) {
     case "BOOKING_LOOKUP_NOT_CONFIGURED":
     case "BALANCE_PAYMENT_PERSISTENCE_NOT_CONFIGURED":
       return 501;
+    case "BOOKING_NOT_FOUND":
+      return 404;
     case "ADMIN_PERMISSION_REQUIRED":
       return 403;
     case "BALANCE_PAYMENT_VALIDATION_FAILED":
@@ -121,6 +133,12 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   const params = await context.params;
+  const booking = await getAdminBookingDetail(params.id);
+
+  if (!booking) {
+    return errorResponse("BOOKING_NOT_FOUND", "Booking was not found.", 404);
+  }
+
   const result = await markBalancePaid({
     bookingId: params.id,
     amountPaidMinor,
@@ -131,12 +149,33 @@ export async function POST(request: Request, context: RouteContext) {
   }, {
     adminAuthenticated: true,
     canMarkBalancePaid: true,
-    persistenceConfigured: false,
+    persistenceConfigured: isDatabaseConfigured(),
+    booking: {
+      bookingId: booking.id,
+      status: booking.status,
+      estimatedTotalMinor: booking.financials.estimatedTotalMinor,
+      finalTotalMinor: booking.financials.finalTotalMinor,
+      depositPaidMinor: booking.financials.depositPaidMinor,
+      balanceDueMinor: booking.financials.balanceDueMinor,
+      balancePaidMinor: booking.financials.balancePaidMinor,
+      currency: "GBP",
+    },
   });
 
   if (!result.success) {
     return errorResponse(result.code, result.message, statusForBalancePaymentError(result.code));
   }
+
+  await dispatchBookingUpdateNotifications(
+    "balance_payment_recorded",
+    buildNotificationSummaryFromAdminBooking(booking, {
+      remainingBalance: formatMoneyGBP(result.balanceDueMinor),
+    }),
+    {
+      customerActionUrl: createPublicBookingStatusUrl(booking.reference),
+      adminActionUrl: createAdminBookingUrl(booking.id),
+    },
+  );
 
   return jsonResponse({
     success: true,

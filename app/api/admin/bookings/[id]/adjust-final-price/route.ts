@@ -2,6 +2,13 @@ import { adjustFinalPrice } from "../../../../../../lib/admin/final-price";
 import { getAdminBookingDetail } from "../../../../../../lib/admin/booking-detail";
 import { requireAdmin, adminGuardErrorResponse } from "../../../../../../lib/auth/route-guards";
 import { isDatabaseConfigured } from "../../../../../../lib/db/postgres";
+import {
+  buildNotificationSummaryFromAdminBooking,
+  createAdminBookingUrl,
+  createPublicBookingStatusUrl,
+} from "../../../../../../lib/notifications/booking-summary";
+import { dispatchBookingUpdateNotifications } from "../../../../../../lib/notifications/workflows";
+import { formatMoneyGBP } from "../../../../../../lib/pricing";
 
 export const runtime = "nodejs";
 
@@ -146,6 +153,19 @@ export async function PATCH(request: Request, context: RouteContext) {
   if (!result.success) {
     return errorResponse(result.code, result.message, statusForAdjustFinalPriceError(result.code));
   }
+
+  await dispatchBookingUpdateNotifications(
+    "final_price_adjusted",
+    buildNotificationSummaryFromAdminBooking(booking, {
+      estimatedTotal: formatMoneyGBP(result.finalTotalMinor),
+      remainingBalance: formatMoneyGBP(result.balanceDueMinor),
+    }),
+    {
+      reason: readString(body.reason),
+      customerActionUrl: createPublicBookingStatusUrl(booking.reference),
+      adminActionUrl: createAdminBookingUrl(booking.id),
+    },
+  );
 
   return jsonResponse({
     success: true,

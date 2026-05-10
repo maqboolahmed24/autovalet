@@ -2,6 +2,12 @@ import { cancelBooking } from "../../../../../../lib/admin/cancel-booking";
 import { getAdminBookingDetail } from "../../../../../../lib/admin/booking-detail";
 import { requireAdmin, adminGuardErrorResponse } from "../../../../../../lib/auth/route-guards";
 import { isDatabaseConfigured } from "../../../../../../lib/db/postgres";
+import {
+  buildNotificationSummaryFromAdminBooking,
+  createAdminBookingUrl,
+  createPublicBookingStatusUrl,
+} from "../../../../../../lib/notifications/booking-summary";
+import { dispatchBookingUpdateNotifications } from "../../../../../../lib/notifications/workflows";
 import type { CancellationActor, CancellationReason, DepositAction } from "../../../../../../lib/policies";
 import { isDepositAction } from "../../../../../../lib/policies";
 
@@ -89,6 +95,18 @@ function isCancellationReason(value: unknown): value is CancellationReason {
   );
 }
 
+const cancellationReasonLabels: Record<CancellationReason, string> = {
+  customer_requested: "Customer requested cancellation",
+  weather: "Weather",
+  outside_service_area: "Outside service area",
+  vehicle_unsuitable: "Vehicle unsuitable",
+  access_or_parking_issue: "Access or parking issue",
+  admin_operational_issue: "Operational issue",
+  duplicate_booking: "Duplicate booking",
+  payment_issue: "Payment issue",
+  other: "Other",
+};
+
 export async function POST(request: Request, context: RouteContext) {
   const guard = await requireAdmin(request, { permission: "cancel_booking" });
 
@@ -148,6 +166,18 @@ export async function POST(request: Request, context: RouteContext) {
   if (!result.success) {
     return errorResponse(result.code, result.message, statusForCancellationError(result.code));
   }
+
+  await dispatchBookingUpdateNotifications(
+    "booking_cancelled",
+    buildNotificationSummaryFromAdminBooking(booking, {
+      statusLabel: "Cancelled",
+    }),
+    {
+      reason: cancellationReasonLabels[body.reason],
+      customerActionUrl: createPublicBookingStatusUrl(booking.reference),
+      adminActionUrl: createAdminBookingUrl(booking.id),
+    },
+  );
 
   return jsonResponse({
     success: true,

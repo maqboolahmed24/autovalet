@@ -7,7 +7,12 @@ import {
   BookingPersistenceError,
   SlotUnavailableError,
 } from "../db/booking-repository";
-import { dispatchNotification } from "../notifications/dispatcher";
+import {
+  buildNotificationSummaryFromAdminBooking,
+  createAdminBookingUrl,
+  createPublicBookingStatusUrl,
+} from "../notifications/booking-summary";
+import { dispatchBookingUpdateNotifications } from "../notifications/workflows";
 import type { AdminBookingDetailData } from "./booking-detail";
 
 export type ApproveBookingInput = {
@@ -104,29 +109,16 @@ function validateBookingReadyForApproval(booking: AdminBookingDetailData, existi
 }
 
 async function dispatchApprovalNotification(booking: AdminBookingDetailData) {
-  await dispatchNotification({
-    eventType: "booking_approved",
-    channel: "email",
-    recipientType: "customer",
-    to: booking.customer.email,
-    booking: {
-      bookingReference: booking.reference,
-      customerName: booking.customer.fullName,
-      customerEmail: booking.customer.email,
-      customerPhone: booking.customer.phone,
-      requestedDate: booking.requestedDateLabel,
-      requestedTime: booking.requestedTimeLabel,
-      serviceLabel: booking.serviceLabel,
-      vehicleLabel: booking.vehicle.label,
-      addressSummary: booking.location.postcode,
-      estimatedTotal: booking.payment.estimatedTotalLabel,
-      depositPaid: booking.payment.depositPaidLabel,
-      remainingBalance: booking.payment.balanceDueLabel,
+  await dispatchBookingUpdateNotifications(
+    "booking_approved",
+    buildNotificationSummaryFromAdminBooking(booking, {
       statusLabel: "Confirmed",
-      zoneStatusLabel: booking.location.zoneLabel,
-      isOutsideZoneRequest: booking.location.isOutsideZone,
+    }),
+    {
+      customerActionUrl: createPublicBookingStatusUrl(booking.reference),
+      adminActionUrl: createAdminBookingUrl(booking.id),
     },
-  });
+  );
 }
 
 export async function approveBooking(

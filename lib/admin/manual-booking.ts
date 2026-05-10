@@ -84,6 +84,7 @@ export type ManualBookingPreview = {
 export type CreateManualBookingResult =
   | {
       success: true;
+      bookingId: string;
       bookingReference: string;
       status: BookingStatus;
     }

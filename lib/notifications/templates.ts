@@ -4,8 +4,10 @@ import type {
   NotificationEventType,
   NotificationTemplate,
 } from "./types";
+import { createAbsoluteUrl } from "../seo/site-config";
 
 const defaultBusinessName = "AUTO VALET";
+const logoPath = "/media/auto-valet/logo-wordmark.png";
 
 function valueOrFallback(value: string | undefined, fallback = "To be confirmed") {
   return value?.trim() || fallback;
@@ -34,11 +36,145 @@ function escapeHtml(value: string) {
     .replace(/'/g, "&#039;");
 }
 
-function htmlFromText(text: string) {
-  return text
+function isUrl(value: string) {
+  try {
+    const url = new URL(value);
+
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function isBusinessSignature(value: string) {
+  return value.trim().toUpperCase() === defaultBusinessName;
+}
+
+function splitLabelValue(paragraph: string) {
+  const [label, ...valueParts] = paragraph.split("\n");
+  const value = valueParts.join("\n").trim();
+
+  if (!label?.endsWith(":") || !value) {
+    return null;
+  }
+
+  return {
+    label: label.slice(0, -1),
+    value,
+  };
+}
+
+function renderTextParagraph(paragraph: string) {
+  return `
+    <p style="margin:0 0 18px;color:#d8d4cc;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:15px;line-height:1.65;">
+      ${escapeHtml(paragraph).replace(/\n/g, "<br />")}
+    </p>
+  `;
+}
+
+function renderDetailBlock(label: string, value: string) {
+  const escapedLabel = escapeHtml(label);
+  const escapedValue = escapeHtml(value).replace(/\n/g, "<br />");
+  const buttonHtml = isUrl(value)
+    ? `
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-top:12px;">
+        <tr>
+          <td style="border-radius:2px;background:#c8a96a;">
+            <a href="${escapedValue}" style="display:inline-block;padding:11px 16px;color:#080808;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:13px;font-weight:700;text-decoration:none;letter-spacing:0;">
+              Open link
+            </a>
+          </td>
+        </tr>
+      </table>
+    `
+    : "";
+
+  return `
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 12px;border:1px solid #252525;border-radius:4px;background:#151515;">
+      <tr>
+        <td style="padding:14px 16px;">
+          <div style="margin:0 0 5px;color:#c8a96a;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:11px;font-weight:700;line-height:1.3;text-transform:uppercase;letter-spacing:.08em;">
+            ${escapedLabel}
+          </div>
+          <div style="margin:0;color:#f4f1ea;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:15px;line-height:1.55;">
+            ${escapedValue}
+          </div>
+          ${buttonHtml}
+        </td>
+      </tr>
+    </table>
+  `;
+}
+
+function renderParagraph(paragraph: string) {
+  if (isBusinessSignature(paragraph)) {
+    return "";
+  }
+
+  const detail = splitLabelValue(paragraph);
+
+  if (detail) {
+    return renderDetailBlock(detail.label, detail.value);
+  }
+
+  return renderTextParagraph(paragraph);
+}
+
+function htmlFromText(text: string, subject: string, preview: string) {
+  const paragraphs = text
     .split("\n\n")
-    .map((paragraph) => `<p>${escapeHtml(paragraph).replace(/\n/g, "<br />")}</p>`)
-    .join("");
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+  const logoUrl = createAbsoluteUrl(logoPath);
+  const logoHtml = logoUrl
+    ? `<img src="${escapeHtml(logoUrl)}" width="120" alt="AUTO VALET" style="display:block;width:120px;max-width:120px;height:auto;border:0;outline:none;text-decoration:none;" />`
+    : `<div style="color:#f4f1ea;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:18px;font-weight:700;letter-spacing:.04em;">AUTO VALET</div>`;
+  const bodyHtml = paragraphs.map(renderParagraph).join("");
+
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="supported-color-schemes" content="dark light" />
+    <title>${escapeHtml(subject)}</title>
+  </head>
+  <body style="margin:0;padding:0;background:#050505;">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
+      ${escapeHtml(preview)}
+    </div>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#050505;margin:0;padding:0;">
+      <tr>
+        <td align="center" style="padding:32px 14px;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:620px;border-collapse:separate;border-spacing:0;">
+            <tr>
+              <td style="padding:0 0 18px;">
+                ${logoHtml}
+              </td>
+            </tr>
+            <tr>
+              <td style="border:1px solid #262626;border-radius:6px;background:#101010;padding:30px 26px;">
+                <div style="margin:0 0 8px;color:#c8a96a;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:12px;font-weight:700;line-height:1.4;text-transform:uppercase;letter-spacing:.1em;">
+                  AUTO VALET
+                </div>
+                <h1 style="margin:0 0 20px;color:#f4f1ea;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:24px;font-weight:700;line-height:1.25;letter-spacing:0;">
+                  ${escapeHtml(subject)}
+                </h1>
+                ${bodyHtml}
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:18px 2px 0;color:#8c877d;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:12px;line-height:1.55;">
+                AUTO VALET sends this email about your booking or admin account activity.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
 }
 
 function buildTemplate(subject: string, preview: string, lines: string[]): NotificationTemplate {
@@ -48,7 +184,7 @@ function buildTemplate(subject: string, preview: string, lines: string[]): Notif
     subject,
     preview,
     text,
-    html: htmlFromText(text),
+    html: htmlFromText(text, subject, preview),
   };
 }
 
@@ -70,14 +206,16 @@ function buildCustomerTemplate(input: BuildTemplateInput): NotificationTemplate 
     case "booking_request_received":
       return buildTemplate(
         "Your AUTO VALET booking request has been received",
-        "Deposit received. Your appointment is waiting for AUTO VALET review.",
+        "Your appointment is waiting for AUTO VALET review.",
         [
           customerGreeting(booking),
           "Thanks for your booking request.",
           `Requested time:\n${formatRequestedTime(booking)}`,
           `Service:\n${formatServiceLine(booking)}`,
-          `Deposit paid:\n${valueOrFallback(booking.depositPaid, "Deposit received")}`,
+          `Estimated total:\n${valueOrFallback(booking.estimatedTotal, "To be confirmed")}`,
+          `Deposit:\n${valueOrFallback(booking.depositPaid, "To be confirmed")}`,
           "Your appointment is not confirmed yet. AUTO VALET will review your location, vehicle details and requested time before approval.",
+          actionUrl ? `View booking status:\n${actionUrl}` : "",
           bookingReferenceLine(booking),
           businessName,
         ],
@@ -95,6 +233,7 @@ function buildCustomerTemplate(input: BuildTemplateInput): NotificationTemplate 
           `Deposit paid:\n${valueOrFallback(booking.depositPaid, "Recorded")}`,
           `Estimated remaining balance:\n${valueOrFallback(booking.remainingBalance, "To be confirmed")}`,
           "Please make sure the vehicle is accessible and suitable parking is available nearby.",
+          actionUrl ? `View booking status:\n${actionUrl}` : "",
           bookingReferenceLine(booking),
           businessName,
         ],
@@ -109,6 +248,7 @@ function buildCustomerTemplate(input: BuildTemplateInput): NotificationTemplate 
           reason ? `Reason:\n${reason}` : "",
           "Deposit action:\nRefund or transfer information will be handled according to the deposit policy.",
           "You can contact AUTO VALET if you would like to arrange a different date or location.",
+          actionUrl ? `View booking status:\n${actionUrl}` : "",
           bookingReferenceLine(booking),
           businessName,
         ],
@@ -135,6 +275,7 @@ function buildCustomerTemplate(input: BuildTemplateInput): NotificationTemplate 
           "Your AUTO VALET booking has been cancelled.",
           reason ? `Reason:\n${reason}` : "",
           "Any deposit action will follow the published cancellation policy.",
+          actionUrl ? `View booking status:\n${actionUrl}` : "",
           bookingReferenceLine(booking),
           businessName,
         ],
@@ -209,6 +350,7 @@ function buildCustomerTemplate(input: BuildTemplateInput): NotificationTemplate 
           `Final pricing has been updated for booking ${booking.bookingReference}.`,
           `Remaining balance:\n${valueOrFallback(booking.remainingBalance, "To be confirmed")}`,
           reason ? `Reason:\n${reason}` : "",
+          actionUrl ? `View booking status:\n${actionUrl}` : "",
           businessName,
         ],
       );
@@ -220,6 +362,7 @@ function buildCustomerTemplate(input: BuildTemplateInput): NotificationTemplate 
           customerGreeting(booking),
           "Your AUTO VALET balance payment has been recorded.",
           `Remaining balance:\n${valueOrFallback(booking.remainingBalance, "Updated")}`,
+          actionUrl ? `View booking status:\n${actionUrl}` : "",
           bookingReferenceLine(booking),
           businessName,
         ],
@@ -233,6 +376,7 @@ function buildCustomerTemplate(input: BuildTemplateInput): NotificationTemplate 
           "AUTO VALET has recorded a no-show or access issue for this booking.",
           reason ? `Reason:\n${reason}` : "",
           "Any deposit action will follow the published policy.",
+          actionUrl ? `View booking status:\n${actionUrl}` : "",
           bookingReferenceLine(booking),
           businessName,
         ],
@@ -262,15 +406,18 @@ function buildAdminTemplate(input: BuildTemplateInput): NotificationTemplate {
     case "admin_new_booking_request":
       return buildTemplate(
         "New AUTO VALET booking request",
-        "A paid booking request is waiting for admin review.",
+        "A booking request is waiting for admin review.",
         [
           "New AUTO VALET booking request",
-          `${valueOrFallback(booking.customerName, "Customer")} has paid a deposit and is waiting for review.`,
+          `${valueOrFallback(booking.customerName, "Customer")} has submitted a booking request and is waiting for review.`,
+          `Customer email:\n${valueOrFallback(booking.customerEmail, "Not provided")}`,
+          `Customer phone:\n${valueOrFallback(booking.customerPhone, "Not provided")}`,
           `Requested time:\n${formatRequestedTime(booking)}`,
           `Service:\n${formatServiceLine(booking)}`,
           `Zone status:\n${valueOrFallback(booking.zoneStatusLabel, "Check service area")}`,
           outsideZoneWarning,
-          `Deposit:\n${valueOrFallback(booking.depositPaid, "Recorded")}`,
+          `Estimated total:\n${valueOrFallback(booking.estimatedTotal, "To be confirmed")}`,
+          `Deposit:\n${valueOrFallback(booking.depositPaid, "To be confirmed")}`,
           actionUrl ? `Review link:\n${actionUrl}` : "Review link:\nOpen admin dashboard to approve, decline or suggest a new time.",
         ],
       );
@@ -281,6 +428,7 @@ function buildAdminTemplate(input: BuildTemplateInput): NotificationTemplate {
         [
           "Manual booking created",
           `Customer:\n${valueOrFallback(booking.customerName)}`,
+          `Customer email:\n${valueOrFallback(booking.customerEmail, "Not provided")}`,
           `Time:\n${formatRequestedTime(booking)}`,
           `Service:\n${formatServiceLine(booking)}`,
           `Status:\n${valueOrFallback(booking.statusLabel, "Pending or approved")}`,

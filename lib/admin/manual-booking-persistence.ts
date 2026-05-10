@@ -309,6 +309,7 @@ export async function createManualBooking(
 
     return {
       success: true,
+      bookingId,
       bookingReference,
       status: input.status,
     };

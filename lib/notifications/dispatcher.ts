@@ -1,5 +1,6 @@
 import { getNotificationProvider } from "./provider";
 import { buildNotificationTemplate } from "./templates";
+import { writeNotificationLog } from "./logging";
 import type {
   DispatchNotificationInput,
   NotificationProviderResult,
@@ -53,14 +54,18 @@ export async function dispatchNotification(
           body: buildSmsBody(input, template.subject),
         });
 
-    // TODO: Write notification_logs with event type, channel, recipient type, recipient,
-    // booking reference, provider message id, status and safe error details.
+    await writeNotificationLog(input, result);
+
     return result;
   } catch {
-    return {
+    const result: NotificationProviderResult = {
       success: false,
       code: "NOTIFICATION_DISPATCH_FAILED",
       message: "Notification could not be sent.",
     };
+
+    await writeNotificationLog(input, result);
+
+    return result;
   }
 }

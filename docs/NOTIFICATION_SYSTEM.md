@@ -2,7 +2,7 @@
 
 AUTO VALET notifications must be calm, clear and accurate. A deposit-paid booking is still a booking request until AUTO VALET approves it, so customer templates must never say confirmed except for approved bookings.
 
-This foundation adds provider abstractions, typed templates, a dispatcher and a notification log schema descriptor. Real delivery is disabled safely unless a provider is configured.
+This foundation adds provider abstractions, typed templates, a dispatcher and notification log persistence. Real delivery is disabled safely unless a provider is configured.
 
 ## Notification Events
 
@@ -88,27 +88,29 @@ Booking creation or payment processing must not fail just because notification d
 
 ## Environment Variables
 
-Email uses Resend later:
+Email uses SMTP. Microsoft 365 from GoDaddy should use SMTP AUTH with:
 
 ```text
-RESEND_API_KEY
-RESEND_FROM_EMAIL
+SMTP_HOST=smtp.office365.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_REQUIRE_TLS=true
+SMTP_USER=<mailbox email>
+SMTP_PASSWORD=<mailbox password or app password>
+SMTP_FROM_EMAIL=<mailbox email>
+SMTP_FROM_NAME=AUTO VALET
+SMTP_REPLY_TO=<optional reply-to mailbox>
+NOTIFICATION_ADMIN_EMAIL=<optional admin notification mailbox>
 ```
 
-If `RESEND_API_KEY` is missing, email returns:
+If the SMTP settings are missing, email returns:
 
 ```json
 {
   "success": false,
   "code": "EMAIL_PROVIDER_NOT_CONFIGURED",
-  "message": "Email provider is not configured yet."
+  "message": "SMTP email provider is not configured yet."
 }
-```
-
-If the Resend package is missing, the result is also provider-not-configured. The package should be installed before live sending:
-
-```bash
-npm install resend
 ```
 
 SMS is planned for Twilio or another provider. Current SMS result:
@@ -166,23 +168,24 @@ Before enabling SMS:
 
 ## Integration Points
 
-Current TODO markers are placed in:
+Currently wired:
+
+- Public booking request: dispatches customer `booking_request_received` and admin `admin_new_booking_request` after persistence.
+- Manual booking creation: dispatches customer `booking_request_received` or `booking_approved`, plus admin `manual_booking_created`.
+- Admin approval: dispatches customer `booking_approved`.
+- Admin decline: dispatches customer `booking_declined`.
+- Admin reschedule suggestion: dispatches customer `reschedule_suggested`.
+- Admin cancellation: dispatches customer `booking_cancelled`.
+- Final price adjustment: dispatches customer `final_price_adjusted`.
+- Balance payment: persists the balance payment and dispatches customer `balance_payment_recorded`.
+- No-show flow: dispatches customer `no_show_recorded`.
+
+Still pending because the underlying payment-provider flow is not implemented:
 
 - Payment webhook: dispatch customer `booking_request_received` and admin `admin_new_booking_request` after deposit webhook persistence.
 - Payment webhook: dispatch `payment_failed` or `payment_hold_expired` for failed/expired holds.
-- Manual booking creation: dispatch `manual_booking_created` after persistence.
-- Cancellation flow: dispatch `booking_cancelled`.
 - Refund flow: dispatch `deposit_refunded`.
 - Transfer flow: dispatch `deposit_transferred`.
-- Final price adjustment: dispatch `final_price_adjusted`.
-- Balance payment: dispatch `balance_payment_recorded`.
-- No-show flow: dispatch `no_show_recorded`.
-
-Future admin approve, decline and reschedule routes should dispatch:
-
-- `booking_approved`
-- `booking_declined`
-- `reschedule_suggested`
 
 ## Test Checklist
 
@@ -190,7 +193,7 @@ Future admin approve, decline and reschedule routes should dispatch:
 2. Approved template says confirmed.
 3. Admin new request template includes customer, time, service, vehicle, zone status and deposit status.
 4. Outside-zone admin template includes the warning.
-5. Email provider returns `EMAIL_PROVIDER_NOT_CONFIGURED` without `RESEND_API_KEY`.
+5. Email provider returns `EMAIL_PROVIDER_NOT_CONFIGURED` when SMTP settings are incomplete.
 6. SMS provider returns `SMS_PROVIDER_NOT_CONFIGURED`.
 7. Dispatcher catches provider errors and does not throw raw errors.
 8. Notification failures do not fail booking creation/payment status changes.

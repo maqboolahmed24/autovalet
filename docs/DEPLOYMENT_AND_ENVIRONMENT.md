@@ -30,7 +30,16 @@ STRIPE_WEBHOOK_SECRET
 Optional provider variables:
 
 ```text
-RESEND_API_KEY
+SMTP_HOST
+SMTP_PORT
+SMTP_SECURE
+SMTP_REQUIRE_TLS
+SMTP_USER
+SMTP_PASSWORD
+SMTP_FROM_EMAIL
+SMTP_FROM_NAME
+SMTP_REPLY_TO
+NOTIFICATION_ADMIN_EMAIL
 TWILIO_ACCOUNT_SID
 TWILIO_AUTH_TOKEN
 TWILIO_FROM_NUMBER
@@ -46,7 +55,7 @@ See `.env.example` for the canonical checklist. Do not commit real secrets.
 1. Create a staging deployment.
 2. Use a staging PostgreSQL database.
 3. Use Stripe test keys and test webhook endpoint.
-4. Use a verified email test domain or keep email disabled.
+4. Use a verified SMTP mailbox or keep email disabled.
 5. Keep analytics disabled until cookie/consent requirements are reviewed.
 6. Run the smoke test checklist after every deployment.
 
@@ -57,7 +66,7 @@ See `.env.example` for the canonical checklist. Do not commit real secrets.
 3. Seed services, add-ons, service zones and availability.
 4. Verify admin auth and owner 2FA.
 5. Configure Stripe live webhook signature verification.
-6. Configure email sender domain.
+6. Configure SMTP AUTH and verify the sender mailbox.
 7. Configure image storage.
 8. Configure backups, monitoring and alerting.
 9. Confirm legal/privacy pages are final.

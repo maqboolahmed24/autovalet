@@ -73,6 +73,7 @@ export const adminCalendarUsesMockData = false;
 const businessTimeZone = "Europe/London";
 const minimumDisplayedGapMinutes = 15;
 const paymentsEnabled = arePaymentsEnabled();
+const adminCalendarRangeDays = 28;
 
 export function getTodayInBusinessTimezone() {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -102,7 +103,7 @@ export async function buildAdminCalendarWeek(selectedDate: string): Promise<Admi
   const monday = addDays(selectedDate, -daysSinceMonday);
   const records = isDatabaseConfigured() ? await listBookingRecords() : [];
 
-  return Array.from({ length: 7 }, (_, index) => {
+  return Array.from({ length: adminCalendarRangeDays }, (_, index) => {
     const date = addDays(monday, index);
     const summary = getCalendarSummary(records.filter((record) => getBusinessDate(record.requestedStartAt) === date));
 

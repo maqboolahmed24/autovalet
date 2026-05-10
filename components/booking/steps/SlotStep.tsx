@@ -51,6 +51,8 @@ type SlotStepSelectorProps = {
   onChange: (patch: Partial<Pick<BookingDraft, "selectedDate" | "selectedSlotStart">>) => void;
 };
 
+const requestDateWindowDays = 28;
+
 function getDatePart(parts: Intl.DateTimeFormatPart[], type: string) {
   return parts.find((part) => part.type === type)?.value ?? "";
 }
@@ -71,7 +73,7 @@ function createDateOptions() {
     year: "numeric",
   });
 
-  for (let index = 1; index <= 7; index += 1) {
+  for (let index = 1; index <= requestDateWindowDays; index += 1) {
     const date = new Date();
     date.setDate(date.getDate() + index);
 
@@ -206,7 +208,7 @@ function SlotStepSelector({
 
   return (
     <div className="booking-step-content">
-      <div className="booking-date-strip" role="group" aria-label="Available request dates">
+      <div className="booking-date-strip" role="group" aria-label="Available request dates for the next 4 weeks">
         {dateOptions.map((date) => {
           const isSelected = selectedDate === date.value;
 

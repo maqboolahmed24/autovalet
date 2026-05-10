@@ -1,6 +1,7 @@
 import {
   parseCreateManualBookingInput,
 } from "../../../../lib/admin/manual-booking";
+import { getAdminBookingDetail } from "../../../../lib/admin/booking-detail";
 import { createManualBooking } from "../../../../lib/admin/manual-booking-persistence";
 import { getAvailabilityPersistence } from "../../../../lib/admin/availability";
 import { getAdminServicesPricing } from "../../../../lib/admin/services-pricing";
@@ -8,6 +9,12 @@ import { getServiceZoneValidationOptions } from "../../../../lib/admin/service-z
 import { requireAdmin, adminGuardErrorResponse } from "../../../../lib/auth/route-guards";
 import { getBlockingBookingRecords } from "../../../../lib/db/booking-repository";
 import { isDatabaseConfigured } from "../../../../lib/db/postgres";
+import {
+  buildNotificationSummaryFromAdminBooking,
+  createAdminBookingUrl,
+  createPublicBookingStatusUrl,
+} from "../../../../lib/notifications/booking-summary";
+import { dispatchManualBookingCreatedNotifications } from "../../../../lib/notifications/workflows";
 
 export const runtime = "nodejs";
 
@@ -109,6 +116,25 @@ export async function POST(request: Request) {
 
   if (!result.success) {
     return errorResponse(result.code, result.message, statusForManualBookingError(result.code), result.details);
+  }
+
+  try {
+    const booking = await getAdminBookingDetail(result.bookingId);
+
+    if (booking) {
+      await dispatchManualBookingCreatedNotifications(
+        buildNotificationSummaryFromAdminBooking(booking, {
+          statusLabel: result.status === "approved" ? "Confirmed" : "Waiting for review",
+        }),
+        {
+          customerActionUrl: createPublicBookingStatusUrl(result.bookingReference),
+          adminActionUrl: createAdminBookingUrl(result.bookingId),
+          customerEventType: result.status === "approved" ? "booking_approved" : "booking_request_received",
+        },
+      );
+    }
+  } catch {
+    // Manual booking creation must not fail because notification lookup or delivery failed.
   }
 
   return jsonResponse(

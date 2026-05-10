@@ -2,6 +2,12 @@ import { markNoShow } from "../../../../../../lib/admin/no-show";
 import { getAdminBookingDetail } from "../../../../../../lib/admin/booking-detail";
 import { requireAdmin, adminGuardErrorResponse } from "../../../../../../lib/auth/route-guards";
 import { isDatabaseConfigured } from "../../../../../../lib/db/postgres";
+import {
+  buildNotificationSummaryFromAdminBooking,
+  createAdminBookingUrl,
+  createPublicBookingStatusUrl,
+} from "../../../../../../lib/notifications/booking-summary";
+import { dispatchBookingUpdateNotifications } from "../../../../../../lib/notifications/workflows";
 import type { NoShowReason } from "../../../../../../lib/policies";
 
 export const runtime = "nodejs";
@@ -79,6 +85,14 @@ function isNoShowReason(value: unknown): value is NoShowReason {
   );
 }
 
+const noShowReasonLabels: Record<NoShowReason, string> = {
+  customer_unavailable: "Customer unavailable",
+  vehicle_inaccessible: "Vehicle inaccessible",
+  no_parking: "No suitable parking",
+  unsafe_location: "Unsafe location",
+  other: "Other",
+};
+
 export async function POST(request: Request, context: RouteContext) {
   const guard = await requireAdmin(request, { permission: "mark_no_show" });
 
@@ -127,6 +141,18 @@ export async function POST(request: Request, context: RouteContext) {
   if (!result.success) {
     return errorResponse(result.code, result.message, statusForNoShowError(result.code));
   }
+
+  await dispatchBookingUpdateNotifications(
+    "no_show_recorded",
+    buildNotificationSummaryFromAdminBooking(booking, {
+      statusLabel: "No-show or access issue recorded",
+    }),
+    {
+      reason: noShowReasonLabels[body.reason],
+      customerActionUrl: createPublicBookingStatusUrl(booking.reference),
+      adminActionUrl: createAdminBookingUrl(booking.id),
+    },
+  );
 
   return jsonResponse({
     success: true,

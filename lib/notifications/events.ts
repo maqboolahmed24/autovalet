@@ -28,8 +28,6 @@ export const notificationEvents = [
 export function getNotificationPlanForBookingEvent(
   eventType: BookingEventType,
 ): NotificationEventPlan[] {
-  // TODO: Future admin approve/decline/reschedule routes should call the dispatcher
-  // with booking_approved, booking_declined or reschedule_suggested after status persistence succeeds.
   switch (eventType) {
     case "booking_request_received":
     case "deposit_paid":

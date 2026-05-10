@@ -2,7 +2,12 @@ import { canTransitionBookingStatus } from "../booking/lifecycle";
 import type { DepositAction } from "../policies";
 import { arePaymentsEnabled } from "../config/features";
 import { BookingPersistenceError, declineBookingRecord } from "../db/booking-repository";
-import { dispatchNotification } from "../notifications/dispatcher";
+import {
+  buildNotificationSummaryFromAdminBooking,
+  createAdminBookingUrl,
+  createPublicBookingStatusUrl,
+} from "../notifications/booking-summary";
+import { dispatchBookingUpdateNotifications } from "../notifications/workflows";
 import type { AdminBookingDetailData } from "./booking-detail";
 
 export type DeclineReason =
@@ -99,30 +104,17 @@ function validateDecline(input: DeclineBookingInput, booking: AdminBookingDetail
 }
 
 async function dispatchDeclineNotification(booking: AdminBookingDetailData, reason: string) {
-  await dispatchNotification({
-    eventType: "booking_declined",
-    channel: "email",
-    recipientType: "customer",
-    to: booking.customer.email,
-    reason,
-    booking: {
-      bookingReference: booking.reference,
-      customerName: booking.customer.fullName,
-      customerEmail: booking.customer.email,
-      customerPhone: booking.customer.phone,
-      requestedDate: booking.requestedDateLabel,
-      requestedTime: booking.requestedTimeLabel,
-      serviceLabel: booking.serviceLabel,
-      vehicleLabel: booking.vehicle.label,
-      addressSummary: booking.location.postcode,
-      estimatedTotal: booking.payment.estimatedTotalLabel,
-      depositPaid: booking.payment.depositPaidLabel,
-      remainingBalance: booking.payment.balanceDueLabel,
+  await dispatchBookingUpdateNotifications(
+    "booking_declined",
+    buildNotificationSummaryFromAdminBooking(booking, {
       statusLabel: "Declined",
-      zoneStatusLabel: booking.location.zoneLabel,
-      isOutsideZoneRequest: booking.location.isOutsideZone,
+    }),
+    {
+      reason,
+      customerActionUrl: createPublicBookingStatusUrl(booking.reference),
+      adminActionUrl: createAdminBookingUrl(booking.id),
     },
-  });
+  );
 }
 
 export async function declineBooking(

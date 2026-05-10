@@ -39,7 +39,7 @@ Use one focused stack for the MVP:
 | Database | PostgreSQL |
 | Query layer | Drizzle ORM plus raw SQL migrations where PostgreSQL locking/range constraints are needed |
 | Payments | Stripe first; PayPal can be added later behind the payment provider interface |
-| Email | Resend first; SendGrid/Mailgun can be swapped behind the notification interface |
+| Email | SMTP first; Microsoft 365 from GoDaddy uses authenticated SMTP behind the notification interface |
 | SMS | Twilio later, behind the notification interface |
 | Image storage | Cloudinary or Supabase Storage, behind a media storage adapter |
 | Admin auth | Secure credentials auth with role checks and future-ready 2FA |
@@ -883,7 +883,11 @@ NEXT_PUBLIC_SITE_URL
 ADMIN_SESSION_SECRET
 STRIPE_SECRET_KEY
 STRIPE_WEBHOOK_SECRET
-RESEND_API_KEY
+SMTP_HOST
+SMTP_PORT
+SMTP_USER
+SMTP_PASSWORD
+SMTP_FROM_EMAIL
 SENTRY_DSN
 ANALYTICS_PROVIDER_KEY
 CLOUDINARY_URL or storage-provider equivalent
@@ -986,4 +990,3 @@ Before implementing any future feature:
 - Do not store card details.
 - Do not expose internal IDs in public URLs.
 - Write audit logs for admin approval, decline, reschedule, refund, manual booking, price adjustment, and payment recording.
-

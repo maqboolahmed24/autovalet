@@ -20,6 +20,49 @@ type DurationGuidanceItem = {
   text: string;
 };
 
+const maintenanceIncludedItems = [
+  "Interior vacuumed",
+  "Carpets vacuumed",
+  "Seats vacuumed",
+  "Boot vacuumed",
+  "Interior plastic cleaned",
+  "Centre console cleaned",
+  "Pedals restored",
+  "Steering wheel decon",
+  "Glass cleaned",
+  "Auto Valet air freshener",
+  "Alloys cleaned",
+  "Citrus pre wash",
+  "pH neutral snow foam",
+  "2 bucket safe wash",
+  "Hydrosealant",
+  "Interior sills cleaned",
+  "Microfibre towel dried",
+  "High gloss tyre shine",
+] as const;
+
+const deepCleanIncludedItems = [
+  "Interior vacuumed",
+  "Carpets wet vacced",
+  "Seats deep cleaned",
+  "Boot vacuumed",
+  "Interior plastic cleaned",
+  "Centre console cleaned",
+  "Pedals restored",
+  "Steering wheel decon",
+  "Glass cleaned",
+  "Auto Valet air freshener",
+  "Alloys cleaned",
+  "Citrus pre wash",
+  "pH zero snow foam",
+  "2 bucket safe wash",
+  "Hydrosealant",
+  "Interior sills cleaned",
+  "Exhaust tips polished",
+  "Microfibre towel dried and blow dried",
+  "High gloss tyre shine",
+] as const;
+
 const maintenanceRows: PricingRow[] = vehicleSizeOrder.map((vehicleSize) => {
   const variant = servicePackages.maintenance.variants[vehicleSize];
 
@@ -74,6 +117,15 @@ export function ServicesPageContent() {
                 </div>
               ))}
             </div>
+
+            <div className="services-page-card__included">
+              <h3>What's included?</h3>
+              <ul>
+                {maintenanceIncludedItems.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
           </article>
 
           <article
@@ -95,6 +147,15 @@ export function ServicesPageContent() {
                   <small>{row.duration}</small>
                 </div>
               ))}
+            </div>
+
+            <div className="services-page-card__included">
+              <h3>What's included?</h3>
+              <ul>
+                {deepCleanIncludedItems.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
             </div>
           </article>
         </div>

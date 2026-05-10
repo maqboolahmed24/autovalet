@@ -3,8 +3,8 @@ import { paymentStatuses } from "../../booking/statuses";
 export const paymentsTable = {
   name: "payments",
   columns: {
-    id: { type: "uuid", primaryKey: true, default: "gen_random_uuid()" },
-    bookingId: { name: "booking_id", type: "uuid", references: "bookings.id", nullable: false },
+    id: { type: "text", primaryKey: true },
+    bookingId: { name: "booking_id", type: "text", references: "bookings.id", nullable: false },
     gateway: { type: "text", nullable: false },
     gatewayPaymentId: { name: "gateway_payment_id", type: "text", nullable: true },
     gatewayCheckoutSessionId: { name: "gateway_checkout_session_id", type: "text", nullable: true },

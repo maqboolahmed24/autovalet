@@ -21,6 +21,12 @@ import {
   getAdminServicesPricing,
 } from "../../../lib/admin/services-pricing";
 import { getServiceZoneValidationOptions } from "../../../lib/admin/service-zones";
+import {
+  buildNotificationSummaryFromDraft,
+  createAdminBookingUrl,
+  createPublicBookingStatusUrl,
+} from "../../../lib/notifications/booking-summary";
+import { dispatchBookingRequestNotifications } from "../../../lib/notifications/workflows";
 import type { ZoneStatus } from "../../../lib/booking/types";
 import type { ZoneValidationResult } from "../../../lib/zones";
 
@@ -202,6 +208,23 @@ export async function POST(request: Request) {
       snapshot: requestSnapshot,
       zoneStatus: mapZoneStatus(zoneValidation),
     });
+
+    if (savedBooking.created) {
+      await dispatchBookingRequestNotifications(
+        buildNotificationSummaryFromDraft({
+          bookingReference: savedBooking.bookingReference,
+          draft: parsedDraft.draft,
+          estimatedTotalMinor: requestSnapshot.price.estimatedTotalMinor,
+          depositPaidMinor: 0,
+          balanceDueMinor: requestSnapshot.price.estimatedTotalMinor,
+          zoneStatus: mapZoneStatus(zoneValidation),
+        }),
+        {
+          customerActionUrl: createPublicBookingStatusUrl(savedBooking.bookingReference),
+          adminActionUrl: createAdminBookingUrl(savedBooking.bookingId),
+        },
+      );
+    }
 
     return jsonResponse(
       {

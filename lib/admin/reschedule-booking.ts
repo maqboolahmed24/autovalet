@@ -9,7 +9,12 @@ import { transaction } from "../db/postgres";
 import { calculateBookingDuration } from "../pricing";
 import type { AdminServicesPricingData } from "./services-pricing";
 import { calculateBookingDurationWithAdminPricing } from "./services-pricing";
-import { dispatchNotification } from "../notifications/dispatcher";
+import {
+  buildNotificationSummaryFromAdminBooking,
+  createAdminBookingUrl,
+  createPublicBookingStatusUrl,
+} from "../notifications/booking-summary";
+import { dispatchBookingUpdateNotifications } from "../notifications/workflows";
 import type { AdminBookingDetailData } from "./booking-detail";
 
 export type ProposeRescheduleInput = {
@@ -178,31 +183,19 @@ function validateReschedule(
 }
 
 async function dispatchRescheduleNotification(booking: AdminBookingDetailData, input: ProposeRescheduleInput) {
-  await dispatchNotification({
-    eventType: "reschedule_suggested",
-    channel: "email",
-    recipientType: "customer",
-    to: booking.customer.email,
-    reason: input.message,
-    actionUrl: `/booking/status/${encodeURIComponent(booking.reference)}`,
-    booking: {
-      bookingReference: booking.reference,
-      customerName: booking.customer.fullName,
-      customerEmail: booking.customer.email,
-      customerPhone: booking.customer.phone,
+  await dispatchBookingUpdateNotifications(
+    "reschedule_suggested",
+    buildNotificationSummaryFromAdminBooking(booking, {
       requestedDate: input.proposedDate,
       requestedTime: input.proposedStartTime,
-      serviceLabel: booking.serviceLabel,
-      vehicleLabel: booking.vehicle.label,
-      addressSummary: booking.location.postcode,
-      estimatedTotal: booking.payment.estimatedTotalLabel,
-      depositPaid: booking.payment.depositPaidLabel,
-      remainingBalance: booking.payment.balanceDueLabel,
       statusLabel: "New time suggested",
-      zoneStatusLabel: booking.location.zoneLabel,
-      isOutsideZoneRequest: booking.location.isOutsideZone,
+    }),
+    {
+      reason: input.message,
+      customerActionUrl: createPublicBookingStatusUrl(booking.reference),
+      adminActionUrl: createAdminBookingUrl(booking.id),
     },
-  });
+  );
 }
 
 export async function proposeReschedule(

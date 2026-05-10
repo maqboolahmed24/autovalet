@@ -40,17 +40,17 @@ export const servicePackages: Record<PackageId, ServicePackage> = {
     variants: {
       small: {
         vehicleSize: "small",
-        priceMinor: 16000,
+        priceMinor: 14000,
         durationMinutes: 150,
       },
       medium: {
         vehicleSize: "medium",
-        priceMinor: 16500,
+        priceMinor: 14500,
         durationMinutes: 180,
       },
       large_4x4: {
         vehicleSize: "large_4x4",
-        priceMinor: 17000,
+        priceMinor: 15000,
         durationMinutes: 210,
       },
     },

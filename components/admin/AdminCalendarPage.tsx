@@ -29,7 +29,7 @@ export function AdminCalendarPage({ day, weekDays, isMockData = false }: AdminCa
       />
 
       <section className="admin-dashboard__section" aria-labelledby="calendar-week-title">
-        <AdminSectionTitle eyebrow="Week" id="calendar-week-title" title="Choose a day" />
+        <AdminSectionTitle eyebrow="4 weeks" id="calendar-week-title" title="Choose a day" />
         <WeekStrip days={weekDays} selectedDate={day.date} />
       </section>
 

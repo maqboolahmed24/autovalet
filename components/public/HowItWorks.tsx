@@ -8,22 +8,22 @@ type ProcessStep = {
 
 const steps: ProcessStep[] = [
   {
-    number: "01",
+    number: "Step 1",
     title: "Choose your service",
     text: "Select your package, vehicle size and any extras.",
   },
   {
-    number: "02",
+    number: "Step 2",
     title: "Request your slot",
     text: "Pick a preferred date and time from available options.",
   },
   {
-    number: "03",
+    number: "Step 3",
     title: "Submit your request",
     text: "Your details are sent to AUTO VALET for review.",
   },
   {
-    number: "04",
+    number: "Step 4",
     title: "We confirm",
     text: "Every booking is manually reviewed before approval.",
   },

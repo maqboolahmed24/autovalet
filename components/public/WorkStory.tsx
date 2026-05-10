@@ -18,8 +18,8 @@ const storyItems: StoryItem[] = [
     imageUrl: "/media/auto-valet/interior-reset.webp",
   },
   {
-    label: "Premium cabin",
-    title: "High-end materials handled with the right level of care.",
+    label: "Alloys/wheels finish",
+    title: "Alloys, tyre walls and exterior edges finished with a sharp clean look.",
     imageUrl: "/media/auto-valet/red-interior.webp",
   },
   {

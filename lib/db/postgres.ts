@@ -292,6 +292,51 @@ async function createSchema() {
     CREATE INDEX IF NOT EXISTS customer_notes_created_at_idx
       ON customer_notes (created_at DESC);
 
+    CREATE TABLE IF NOT EXISTS payments (
+      id text PRIMARY KEY,
+      booking_id text NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+      gateway text NOT NULL,
+      gateway_payment_id text,
+      gateway_checkout_session_id text,
+      idempotency_key text UNIQUE,
+      amount_minor integer NOT NULL CHECK (amount_minor >= 0),
+      currency text NOT NULL DEFAULT 'GBP' CHECK (currency = 'GBP'),
+      status text NOT NULL,
+      payment_type text NOT NULL CHECK (payment_type IN ('deposit', 'balance', 'refund', 'transfer')),
+      paid_at timestamptz,
+      refunded_at timestamptz,
+      created_at timestamptz NOT NULL DEFAULT now()
+    );
+
+    CREATE INDEX IF NOT EXISTS payments_booking_id_idx
+      ON payments (booking_id);
+    CREATE INDEX IF NOT EXISTS payments_gateway_payment_id_idx
+      ON payments (gateway_payment_id);
+    CREATE UNIQUE INDEX IF NOT EXISTS payments_idempotency_key_idx
+      ON payments (idempotency_key)
+      WHERE idempotency_key IS NOT NULL;
+
+    CREATE TABLE IF NOT EXISTS notification_logs (
+      id text PRIMARY KEY,
+      event_type text NOT NULL,
+      channel text NOT NULL CHECK (channel IN ('email', 'sms')),
+      recipient_type text NOT NULL CHECK (recipient_type IN ('customer', 'admin')),
+      recipient text NOT NULL,
+      booking_reference text,
+      provider_message_id text,
+      status text NOT NULL CHECK (status IN ('sent', 'failed', 'provider_not_configured')),
+      error_code text,
+      error_message text,
+      created_at timestamptz NOT NULL DEFAULT now()
+    );
+
+    CREATE INDEX IF NOT EXISTS notification_logs_booking_reference_idx
+      ON notification_logs (booking_reference);
+    CREATE INDEX IF NOT EXISTS notification_logs_event_type_idx
+      ON notification_logs (event_type);
+    CREATE INDEX IF NOT EXISTS notification_logs_created_at_idx
+      ON notification_logs (created_at DESC);
+
     ALTER TABLE bookings
       ADD COLUMN IF NOT EXISTS cancelled_at timestamptz,
       ADD COLUMN IF NOT EXISTS cancellation_actor text,
