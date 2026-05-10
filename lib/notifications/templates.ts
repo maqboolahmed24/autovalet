@@ -7,7 +7,7 @@ import type {
 import { createAbsoluteUrl } from "../seo/site-config";
 
 const defaultBusinessName = "AUTO VALET";
-const logoPath = "/media/auto-valet/logo-wordmark.png";
+const logoPath = "/media/auto-valet/logo-mark.png";
 
 function valueOrFallback(value: string | undefined, fallback = "To be confirmed") {
   return value?.trim() || fallback;
@@ -66,7 +66,7 @@ function splitLabelValue(paragraph: string) {
 
 function renderTextParagraph(paragraph: string) {
   return `
-    <p style="margin:0 0 18px;color:#d8d4cc;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:15px;line-height:1.65;">
+    <p style="margin:0 0 18px;color:#383632;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:15px;line-height:1.65;">
       ${escapeHtml(paragraph).replace(/\n/g, "<br />")}
     </p>
   `;
@@ -79,8 +79,8 @@ function renderDetailBlock(label: string, value: string) {
     ? `
       <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-top:12px;">
         <tr>
-          <td style="border-radius:2px;background:#c8a96a;">
-            <a href="${escapedValue}" style="display:inline-block;padding:11px 16px;color:#080808;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:13px;font-weight:700;text-decoration:none;letter-spacing:0;">
+          <td style="border-radius:3px;background:#111111;">
+            <a href="${escapedValue}" style="display:inline-block;padding:11px 16px;color:#ffffff;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:13px;font-weight:700;text-decoration:none;letter-spacing:0;">
               Open link
             </a>
           </td>
@@ -90,13 +90,13 @@ function renderDetailBlock(label: string, value: string) {
     : "";
 
   return `
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 12px;border:1px solid #252525;border-radius:4px;background:#151515;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 12px;border:1px solid #e2ddd3;border-radius:4px;background:#fbfaf7;">
       <tr>
         <td style="padding:14px 16px;">
-          <div style="margin:0 0 5px;color:#c8a96a;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:11px;font-weight:700;line-height:1.3;text-transform:uppercase;letter-spacing:.08em;">
+          <div style="margin:0 0 5px;color:#8b6b32;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:11px;font-weight:700;line-height:1.3;text-transform:uppercase;letter-spacing:.08em;">
             ${escapedLabel}
           </div>
-          <div style="margin:0;color:#f4f1ea;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:15px;line-height:1.55;">
+          <div style="margin:0;color:#141414;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:15px;line-height:1.55;">
             ${escapedValue}
           </div>
           ${buttonHtml}
@@ -127,8 +127,8 @@ function htmlFromText(text: string, subject: string, preview: string) {
     .filter(Boolean);
   const logoUrl = createAbsoluteUrl(logoPath);
   const logoHtml = logoUrl
-    ? `<img src="${escapeHtml(logoUrl)}" width="120" alt="AUTO VALET" style="display:block;width:120px;max-width:120px;height:auto;border:0;outline:none;text-decoration:none;" />`
-    : `<div style="color:#f4f1ea;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:18px;font-weight:700;letter-spacing:.04em;">AUTO VALET</div>`;
+    ? `<img src="${escapeHtml(logoUrl)}" width="30" height="30" alt="AUTO VALET" style="display:block;width:30px;max-width:30px;height:30px;border:0;outline:none;text-decoration:none;" />`
+    : `<div style="color:#ffffff;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:14px;font-weight:800;letter-spacing:.04em;">AV</div>`;
   const bodyHtml = paragraphs.map(renderParagraph).join("");
 
   return `<!doctype html>
@@ -136,36 +136,52 @@ function htmlFromText(text: string, subject: string, preview: string) {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="dark light" />
-    <meta name="supported-color-schemes" content="dark light" />
+    <meta name="color-scheme" content="light" />
+    <meta name="supported-color-schemes" content="light" />
     <title>${escapeHtml(subject)}</title>
   </head>
-  <body style="margin:0;padding:0;background:#050505;">
+  <body style="margin:0;padding:0;background:#f4f1ea;">
     <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
       ${escapeHtml(preview)}
     </div>
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#050505;margin:0;padding:0;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f4f1ea;margin:0;padding:0;">
       <tr>
-        <td align="center" style="padding:32px 14px;">
+        <td align="center" style="padding:30px 14px;">
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:620px;border-collapse:separate;border-spacing:0;">
             <tr>
-              <td style="padding:0 0 18px;">
-                ${logoHtml}
+              <td style="padding:0 2px 16px;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                  <tr>
+                    <td style="width:46px;height:46px;border-radius:4px;background:#111111;text-align:center;vertical-align:middle;">
+                      <div style="display:inline-block;width:30px;height:30px;">
+                        ${logoHtml}
+                      </div>
+                    </td>
+                    <td style="padding-left:12px;vertical-align:middle;">
+                      <div style="margin:0;color:#111111;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:15px;font-weight:800;line-height:1.2;letter-spacing:.08em;">
+                        AUTO VALET
+                      </div>
+                      <div style="margin:2px 0 0;color:#8d877c;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:11px;line-height:1.4;letter-spacing:.08em;text-transform:uppercase;">
+                        Detailing
+                      </div>
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
             <tr>
-              <td style="border:1px solid #262626;border-radius:6px;background:#101010;padding:30px 26px;">
-                <div style="margin:0 0 8px;color:#c8a96a;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:12px;font-weight:700;line-height:1.4;text-transform:uppercase;letter-spacing:.1em;">
+              <td style="border:1px solid #e0d8ca;border-radius:6px;background:#ffffff;padding:30px 26px;">
+                <div style="margin:0 0 8px;color:#8b6b32;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:12px;font-weight:700;line-height:1.4;text-transform:uppercase;letter-spacing:.1em;">
                   AUTO VALET
                 </div>
-                <h1 style="margin:0 0 20px;color:#f4f1ea;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:24px;font-weight:700;line-height:1.25;letter-spacing:0;">
+                <h1 style="margin:0 0 20px;color:#111111;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:24px;font-weight:700;line-height:1.25;letter-spacing:0;">
                   ${escapeHtml(subject)}
                 </h1>
                 ${bodyHtml}
               </td>
             </tr>
             <tr>
-              <td style="padding:18px 2px 0;color:#8c877d;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:12px;line-height:1.55;">
+              <td style="padding:18px 2px 0;color:#8d877c;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:12px;line-height:1.55;">
                 AUTO VALET sends this email about your booking or admin account activity.
               </td>
             </tr>
