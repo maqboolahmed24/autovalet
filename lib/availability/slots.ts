@@ -11,6 +11,7 @@ import {
 } from "./working-hours";
 
 export const slotIncrementMinutes = 15;
+export const extendedRequestStartWindowMinutes = 120;
 
 export type CalendarBlockingBooking = {
   id: string;
@@ -26,6 +27,7 @@ export type AvailableSlot = {
   blockedUntil: string;
   serviceDurationMinutes: number;
   travelBufferMinutes: number;
+  isExtendedRequest: boolean;
 };
 
 export type GenerateSlotsInput = {
@@ -35,6 +37,8 @@ export type GenerateSlotsInput = {
   workingHoursRules?: WorkingHoursRule[];
   overrides?: AvailabilityOverride[];
   existingBookings?: CalendarBlockingBooking[];
+  allowExtendedServiceRequest?: boolean;
+  extendedRequestStartWindowMinutes?: number;
 };
 
 function getLocalPartsInTimezone(date: Date, timeZone = BUSINESS_TIMEZONE) {
@@ -147,6 +151,35 @@ function candidateOverlapsExistingBooking(
   });
 }
 
+function getLatestCandidateStartMinutes({
+  windowStartMinutes,
+  windowEndMinutes,
+  serviceDurationMinutes,
+  allowExtendedServiceRequest,
+  extendedStartWindowMinutes,
+}: {
+  windowStartMinutes: number;
+  windowEndMinutes: number;
+  serviceDurationMinutes: number;
+  allowExtendedServiceRequest: boolean;
+  extendedStartWindowMinutes: number;
+}) {
+  const strictLatestStartMinutes = windowEndMinutes - serviceDurationMinutes;
+
+  if (strictLatestStartMinutes >= windowStartMinutes) {
+    return strictLatestStartMinutes;
+  }
+
+  if (!allowExtendedServiceRequest || serviceDurationMinutes <= windowEndMinutes - windowStartMinutes) {
+    return null;
+  }
+
+  return Math.min(
+    windowEndMinutes - slotIncrementMinutes,
+    windowStartMinutes + Math.max(0, extendedStartWindowMinutes),
+  );
+}
+
 export function generateAvailableSlots({
   date,
   serviceDurationMinutes,
@@ -154,6 +187,8 @@ export function generateAvailableSlots({
   workingHoursRules,
   overrides = [],
   existingBookings = [],
+  allowExtendedServiceRequest = false,
+  extendedRequestStartWindowMinutes: inputExtendedRequestStartWindowMinutes = extendedRequestStartWindowMinutes,
 }: GenerateSlotsInput): AvailableSlot[] {
   if (serviceDurationMinutes <= 0) {
     return [];
@@ -174,15 +209,27 @@ export function generateAvailableSlots({
   for (const workingWindow of dayAvailability.workingWindows) {
     const windowStartMinutes = parseTimeToMinutes(workingWindow.startTime);
     const windowEndMinutes = parseTimeToMinutes(workingWindow.endTime);
+    const latestCandidateStartMinutes = getLatestCandidateStartMinutes({
+      windowStartMinutes,
+      windowEndMinutes,
+      serviceDurationMinutes,
+      allowExtendedServiceRequest,
+      extendedStartWindowMinutes: inputExtendedRequestStartWindowMinutes,
+    });
+
+    if (latestCandidateStartMinutes === null) {
+      continue;
+    }
 
     for (
       let candidateStartMinutes = windowStartMinutes;
-      candidateStartMinutes + serviceDurationMinutes <= windowEndMinutes;
+      candidateStartMinutes <= latestCandidateStartMinutes;
       candidateStartMinutes += slotIncrementMinutes
     ) {
       const label = addMinutesToTime("00:00", candidateStartMinutes);
       const serviceEndMinutes = candidateStartMinutes + serviceDurationMinutes;
       const blockedUntilMinutes = serviceEndMinutes + travelBufferMinutes;
+      const isExtendedRequest = serviceEndMinutes > windowEndMinutes;
 
       if (
         candidateOverlapsBlockedWindow(
@@ -208,6 +255,7 @@ export function generateAvailableSlots({
         blockedUntil: candidateBlockedUntil.toISOString(),
         serviceDurationMinutes,
         travelBufferMinutes,
+        isExtendedRequest,
       });
     }
   }

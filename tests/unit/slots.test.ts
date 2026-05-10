@@ -22,6 +22,24 @@ describe("slot generation", () => {
     expect(slots.some((slot) => slot.label === "16:15")).toBe(false);
   });
 
+  it("does not offer strict slots when the service is longer than the working day", () => {
+    const slots = generateAvailableSlots({ date: "2026-05-18", serviceDurationMinutes: 540 });
+
+    expect(slots.length).toBe(0);
+  });
+
+  it("can offer early extended request slots when the service is longer than the working day", () => {
+    const slots = generateAvailableSlots({
+      date: "2026-05-18",
+      serviceDurationMinutes: 540,
+      allowExtendedServiceRequest: true,
+    });
+
+    expect(slots[0]?.label).toBe("09:00");
+    expect(slots.at(-1)?.label).toBe("11:00");
+    expect(slots.every((slot) => slot.isExtendedRequest)).toBe(true);
+  });
+
   it("allows buffer to extend after closing", () => {
     const slot = generateAvailableSlots({ date: "2026-05-18", serviceDurationMinutes: 60 }).find(
       (candidate) => candidate.label === "16:00",

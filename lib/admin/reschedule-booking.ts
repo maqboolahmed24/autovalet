@@ -120,6 +120,7 @@ function proposedSlotIsAvailable(
     workingHoursRules: availability.workingHoursRules,
     overrides: availability.overrides,
     existingBookings: existingBookings.filter((existingBooking) => existingBooking.id !== booking.id),
+    allowExtendedServiceRequest: true,
   });
 
   return slots.some((slot) => slot.label === input.proposedStartTime);

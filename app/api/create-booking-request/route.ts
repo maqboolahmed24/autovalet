@@ -195,6 +195,7 @@ export async function POST(request: Request) {
     workingHoursRules: availability.rules,
     availabilityOverrides: availability.overrides,
     duration,
+    allowExtendedServiceRequest: true,
   });
 
   if (!slotIsStillAvailable) {

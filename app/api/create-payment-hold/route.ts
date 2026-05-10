@@ -290,6 +290,7 @@ export async function POST(request: Request) {
   const slotIsStillAvailable = isRequestedSlotStillAvailable({
     draft: parsedDraft.draft,
     existingBookings,
+    allowExtendedServiceRequest: true,
   });
 
   if (!slotIsStillAvailable) {

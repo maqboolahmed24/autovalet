@@ -142,12 +142,14 @@ export function isRequestedSlotStillAvailable({
   workingHoursRules,
   availabilityOverrides,
   duration: inputDuration,
+  allowExtendedServiceRequest = false,
 }: {
   draft: BookingDraft;
   existingBookings?: CalendarBlockingBooking[];
   workingHoursRules?: WorkingHoursRule[];
   availabilityOverrides?: AvailabilityOverride[];
   duration?: DurationBreakdown;
+  allowExtendedServiceRequest?: boolean;
 }) {
   const duration = inputDuration ?? calculateBookingDuration(draft);
 
@@ -166,6 +168,7 @@ export function isRequestedSlotStillAvailable({
     workingHoursRules,
     overrides: availabilityOverrides,
     existingBookings,
+    allowExtendedServiceRequest,
   });
 
   return slots.some((slot) => slot.label === draft.selectedSlotStart);

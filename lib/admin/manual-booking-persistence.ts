@@ -60,6 +60,7 @@ function calculatePersistentManualBookingPreview(
     workingHoursRules: options.workingHoursRules,
     overrides: options.availabilityOverrides,
     existingBookings: options.existingBookings ?? [],
+    allowExtendedServiceRequest: true,
   });
 
   return {

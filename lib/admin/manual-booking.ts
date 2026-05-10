@@ -385,6 +385,7 @@ export function calculateManualBookingPreview(
     workingHoursRules: availability.workingHoursRules,
     overrides: availability.overrides,
     existingBookings,
+    allowExtendedServiceRequest: true,
   });
 
   return {

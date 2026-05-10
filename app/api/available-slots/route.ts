@@ -210,6 +210,7 @@ export async function POST(request: Request) {
     workingHoursRules: availability.rules,
     overrides: availability.overrides,
     existingBookings,
+    allowExtendedServiceRequest: true,
   }).filter((slot) => Date.parse(slot.start) > now);
 
   return jsonResponse({
@@ -221,8 +222,10 @@ export async function POST(request: Request) {
       travelBufferMinutes: duration.travelBufferMinutes,
       slots,
     },
-    message: slots.length
-      ? "Available request times loaded."
-      : "No request times are available for this date.",
+    message: slots.some((slot) => slot.isExtendedRequest)
+      ? "Extended request times loaded."
+      : slots.length
+        ? "Available request times loaded."
+        : "No request times are available for this date.",
   });
 }

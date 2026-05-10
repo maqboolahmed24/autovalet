@@ -27,6 +27,24 @@ describe("POST /api/available-slots", () => {
     expect(body.data.slots[0].serviceDurationMinutes).toBe(95);
   });
 
+  it("returns extended request slots for services that do not fit inside the day", async () => {
+    const response = await POST(
+      jsonRequest({
+        date: "2026-05-18",
+        packageId: "deep_clean",
+        vehicles: [{ size: "medium", addons: [] }],
+        vehicleCount: 3,
+      }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.data.serviceDurationMinutes).toBe(540);
+    expect(body.data.slots.length).toBeGreaterThan(0);
+    expect(body.data.slots.every((slot: { isExtendedRequest: boolean }) => slot.isExtendedRequest)).toBe(true);
+  });
+
   it("rejects past requested dates", async () => {
     const response = await POST(
       jsonRequest({

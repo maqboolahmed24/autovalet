@@ -18,6 +18,7 @@ type AvailableSlot = {
   blockedUntil: string;
   serviceDurationMinutes: number;
   travelBufferMinutes: number;
+  isExtendedRequest: boolean;
 };
 
 type AvailableSlotsResponse =
@@ -264,10 +265,11 @@ function SlotStepSelector({
                 key={slot.start}
               >
                 <strong>{slot.label}</strong>
-                <span>Requested time</span>
+                <span>{slot.isExtendedRequest ? "Extended request" : "Requested time"}</span>
                 <p>
-                  Service estimate: {slot.serviceDurationMinutes} mins. Internal travel buffer is
-                  protected after the visit.
+                  {slot.isExtendedRequest
+                    ? `Service estimate: ${slot.serviceDurationMinutes} mins. We'll review the timing before confirming.`
+                    : `Service estimate: ${slot.serviceDurationMinutes} mins. Internal travel buffer is protected after the visit.`}
                 </p>
               </button>
             );
