@@ -8,6 +8,129 @@ import { createAbsoluteUrl } from "../seo/site-config";
 
 const defaultBusinessName = "AUTO VALET";
 const logoPath = "/media/auto-valet/logo-mark.png";
+const emailThemeStyles = `
+    <style>
+      :root {
+        color-scheme: light dark;
+        supported-color-schemes: light dark;
+      }
+
+      .email-body,
+      .email-shell {
+        background-color: #f4f1ea !important;
+      }
+
+      .email-card {
+        background-color: #ffffff !important;
+        border-color: #e0d8ca !important;
+      }
+
+      .email-copy,
+      .email-heading,
+      .email-brand-text,
+      .email-detail-value {
+        color: #141414 !important;
+      }
+
+      .email-muted {
+        color: #6f695f !important;
+      }
+
+      .email-detail {
+        background-color: #fbfaf7 !important;
+        border-color: #e2ddd3 !important;
+      }
+
+      .email-label {
+        color: #8b6b32 !important;
+      }
+
+      .email-button-cell {
+        background-color: #111111 !important;
+      }
+
+      .email-button-link {
+        color: #ffffff !important;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .email-body,
+        .email-shell {
+          background-color: #050505 !important;
+        }
+
+        .email-card {
+          background-color: #141414 !important;
+          border-color: #2b2b2b !important;
+        }
+
+        .email-copy,
+        .email-heading,
+        .email-brand-text,
+        .email-detail-value {
+          color: #f7f4ec !important;
+        }
+
+        .email-muted {
+          color: #b8b1a5 !important;
+        }
+
+        .email-detail {
+          background-color: #1d1d1d !important;
+          border-color: #303030 !important;
+        }
+
+        .email-label {
+          color: #d8ba73 !important;
+        }
+
+        .email-button-cell {
+          background-color: #d8ba73 !important;
+        }
+
+        .email-button-link {
+          color: #111111 !important;
+        }
+      }
+
+      [data-ogsc] .email-body,
+      [data-ogsc] .email-shell {
+        background-color: #050505 !important;
+      }
+
+      [data-ogsc] .email-card {
+        background-color: #141414 !important;
+        border-color: #2b2b2b !important;
+      }
+
+      [data-ogsc] .email-copy,
+      [data-ogsc] .email-heading,
+      [data-ogsc] .email-brand-text,
+      [data-ogsc] .email-detail-value {
+        color: #f7f4ec !important;
+      }
+
+      [data-ogsc] .email-muted {
+        color: #b8b1a5 !important;
+      }
+
+      [data-ogsc] .email-detail {
+        background-color: #1d1d1d !important;
+        border-color: #303030 !important;
+      }
+
+      [data-ogsc] .email-label {
+        color: #d8ba73 !important;
+      }
+
+      [data-ogsc] .email-button-cell {
+        background-color: #d8ba73 !important;
+      }
+
+      [data-ogsc] .email-button-link {
+        color: #111111 !important;
+      }
+    </style>`;
 
 function valueOrFallback(value: string | undefined, fallback = "To be confirmed") {
   return value?.trim() || fallback;
@@ -66,7 +189,7 @@ function splitLabelValue(paragraph: string) {
 
 function renderTextParagraph(paragraph: string) {
   return `
-    <p style="margin:0 0 18px;color:#383632;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:15px;line-height:1.65;">
+    <p class="email-copy" style="margin:0 0 18px;color:#383632;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:15px;line-height:1.65;">
       ${escapeHtml(paragraph).replace(/\n/g, "<br />")}
     </p>
   `;
@@ -79,8 +202,8 @@ function renderDetailBlock(label: string, value: string) {
     ? `
       <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-top:12px;">
         <tr>
-          <td style="border-radius:3px;background:#111111;">
-            <a href="${escapedValue}" style="display:inline-block;padding:11px 16px;color:#ffffff;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:13px;font-weight:700;text-decoration:none;letter-spacing:0;">
+          <td class="email-button-cell" style="border-radius:3px;background-color:#111111;">
+            <a class="email-button-link" href="${escapedValue}" style="display:inline-block;padding:11px 16px;color:#ffffff;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:13px;font-weight:700;text-decoration:none;letter-spacing:0;">
               Open link
             </a>
           </td>
@@ -90,13 +213,13 @@ function renderDetailBlock(label: string, value: string) {
     : "";
 
   return `
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 12px;border:1px solid #e2ddd3;border-radius:4px;background:#fbfaf7;">
+    <table class="email-detail" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#fbfaf7" style="margin:0 0 12px;border:1px solid #e2ddd3;border-radius:4px;background-color:#fbfaf7;">
       <tr>
         <td style="padding:14px 16px;">
-          <div style="margin:0 0 5px;color:#8b6b32;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:11px;font-weight:700;line-height:1.3;text-transform:uppercase;letter-spacing:.08em;">
+          <div class="email-label" style="margin:0 0 5px;color:#8b6b32;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:11px;font-weight:700;line-height:1.3;text-transform:uppercase;letter-spacing:.08em;">
             ${escapedLabel}
           </div>
-          <div style="margin:0;color:#141414;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:15px;line-height:1.55;">
+          <div class="email-detail-value" style="margin:0;color:#141414;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:15px;line-height:1.55;">
             ${escapedValue}
           </div>
           ${buttonHtml}
@@ -136,15 +259,16 @@ function htmlFromText(text: string, subject: string, preview: string) {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="light" />
-    <meta name="supported-color-schemes" content="light" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="supported-color-schemes" content="light dark" />
     <title>${escapeHtml(subject)}</title>
+${emailThemeStyles}
   </head>
-  <body style="margin:0;padding:0;background:#f4f1ea;">
+  <body class="email-body" bgcolor="#f4f1ea" style="margin:0;padding:0;background-color:#f4f1ea;color:#383632;">
     <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
       ${escapeHtml(preview)}
     </div>
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f4f1ea;margin:0;padding:0;">
+    <table class="email-shell" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#f4f1ea" style="background-color:#f4f1ea;margin:0;padding:0;">
       <tr>
         <td align="center" style="padding:30px 14px;">
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:620px;border-collapse:separate;border-spacing:0;">
@@ -158,10 +282,10 @@ function htmlFromText(text: string, subject: string, preview: string) {
                       </div>
                     </td>
                     <td style="padding-left:12px;vertical-align:middle;">
-                      <div style="margin:0;color:#111111;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:15px;font-weight:800;line-height:1.2;letter-spacing:.08em;">
+                      <div class="email-brand-text" style="margin:0;color:#111111;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:15px;font-weight:800;line-height:1.2;letter-spacing:.08em;">
                         AUTO VALET
                       </div>
-                      <div style="margin:2px 0 0;color:#8d877c;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:11px;line-height:1.4;letter-spacing:.08em;text-transform:uppercase;">
+                      <div class="email-muted" style="margin:2px 0 0;color:#6f695f;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:11px;line-height:1.4;letter-spacing:.08em;text-transform:uppercase;">
                         Detailing
                       </div>
                     </td>
@@ -170,18 +294,18 @@ function htmlFromText(text: string, subject: string, preview: string) {
               </td>
             </tr>
             <tr>
-              <td style="border:1px solid #e0d8ca;border-radius:6px;background:#ffffff;padding:30px 26px;">
-                <div style="margin:0 0 8px;color:#8b6b32;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:12px;font-weight:700;line-height:1.4;text-transform:uppercase;letter-spacing:.1em;">
+              <td class="email-card" bgcolor="#ffffff" style="border:1px solid #e0d8ca;border-radius:6px;background-color:#ffffff;padding:30px 26px;">
+                <div class="email-label" style="margin:0 0 8px;color:#8b6b32;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:12px;font-weight:700;line-height:1.4;text-transform:uppercase;letter-spacing:.1em;">
                   AUTO VALET
                 </div>
-                <h1 style="margin:0 0 20px;color:#111111;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:24px;font-weight:700;line-height:1.25;letter-spacing:0;">
+                <h1 class="email-heading" style="margin:0 0 20px;color:#111111;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:24px;font-weight:700;line-height:1.25;letter-spacing:0;">
                   ${escapeHtml(subject)}
                 </h1>
                 ${bodyHtml}
               </td>
             </tr>
             <tr>
-              <td style="padding:18px 2px 0;color:#8d877c;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:12px;line-height:1.55;">
+              <td class="email-muted" style="padding:18px 2px 0;color:#6f695f;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:12px;line-height:1.55;">
                 AUTO VALET sends this email about your booking or admin account activity.
               </td>
             </tr>
