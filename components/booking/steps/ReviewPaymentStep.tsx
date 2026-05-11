@@ -86,7 +86,7 @@ function ReviewPaymentContent({
           <h3>Location</h3>
           <dl>
             <div>
-              <dt>Postcode</dt>
+              <dt>Postcode / area</dt>
               <dd>{draft.postcode || "Not added"}</dd>
             </div>
             <div>

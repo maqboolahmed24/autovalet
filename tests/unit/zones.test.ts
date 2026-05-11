@@ -59,6 +59,14 @@ describe("service zone validation", () => {
     expect(result.matchType).toBe("region");
   });
 
+  it("matches region names entered instead of postcodes", () => {
+    const result = validateServiceZone({ postcode: "Croydon", vehicleCount: 1 }, { zones });
+
+    expect(result.allowed).toBe(true);
+    if (!result.allowed) throw new Error("Expected allowed zone result");
+    expect(result.matchType).toBe("region");
+  });
+
   it("blocks outside-zone requests below 3 vehicles", () => {
     const result = validateServiceZone({ postcode: "BR1 1AA", vehicleCount: 1 }, { zones });
 

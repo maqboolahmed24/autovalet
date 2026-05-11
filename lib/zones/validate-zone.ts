@@ -52,23 +52,22 @@ export function validateServiceZone(
   input: ZoneValidationInput,
   options: ZoneValidationOptions = {},
 ): ZoneValidationResult {
-  const normalizedPostcode = normalizePostcode(input.postcode);
+  const submittedPostcode = input.postcode.trim();
+  const explicitRegionName = input.regionName ? normalizeRegionName(input.regionName) : "";
+  const normalizedPostcode = submittedPostcode ? normalizePostcode(submittedPostcode) : "";
+  const hasFullPostcode = normalizedPostcode ? isValidFullUkPostcode(normalizedPostcode) : false;
 
-  if (!normalizedPostcode) {
-    throw new ZoneValidationError("POSTCODE_REQUIRED", "Please enter a postcode before checking the service area.");
-  }
-
-  if (!isValidFullUkPostcode(normalizedPostcode)) {
-    throw new ZoneValidationError("INVALID_INPUT", "Enter a valid UK postcode.");
+  if (!submittedPostcode && !explicitRegionName) {
+    throw new ZoneValidationError("POSTCODE_REQUIRED", "Please enter a postcode, town or city before checking the service area.");
   }
 
   const zones = options.zones ?? defaultServiceZones;
   const requiredVehicleCount = options.minOutsideZoneVehicleCount ?? DEFAULT_MIN_OUTSIDE_ZONE_VEHICLE_COUNT;
   const vehicleCount = Number.isFinite(input.vehicleCount) ? Math.max(Math.floor(input.vehicleCount), 0) : 0;
-  const outwardCode = getOutwardCode(normalizedPostcode);
-  const districtCode = getPostcodeDistrict(normalizedPostcode);
-  const regionName = input.regionName ? normalizeRegionName(input.regionName) : "";
-  const exactMatch = findExactPostcodeMatch(zones, normalizedPostcode);
+  const outwardCode = normalizedPostcode ? getOutwardCode(normalizedPostcode) : "";
+  const districtCode = normalizedPostcode ? getPostcodeDistrict(normalizedPostcode) : "";
+  const regionName = explicitRegionName || (!hasFullPostcode && submittedPostcode ? normalizeRegionName(submittedPostcode) : "");
+  const exactMatch = hasFullPostcode ? findExactPostcodeMatch(zones, normalizedPostcode) : undefined;
 
   if (exactMatch) {
     return standardZoneResult("exact_postcode", exactMatch.value);

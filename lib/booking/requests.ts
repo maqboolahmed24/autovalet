@@ -52,7 +52,7 @@ export function validateBookingDraftForRequest(draft: BookingDraft) {
 
   if (!draft.packageId) errors.push("Choose Maintenance or Deep Clean.");
   errors.push(...validatePrimaryVehicle(primaryVehicle));
-  if (!draft.postcode.trim()) errors.push("Enter the service postcode.");
+  if (!draft.postcode.trim()) errors.push("Enter the service postcode or area.");
   if (!draft.fullAddress.trim()) errors.push("Enter the full service address.");
   if (!draft.parkingAvailable) errors.push("Choose whether suitable parking is available.");
   if (draft.zoneCheckStatus === "unchecked") errors.push("Check the service area before submitting.");

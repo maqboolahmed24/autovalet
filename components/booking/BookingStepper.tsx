@@ -199,7 +199,7 @@ function validateStep(stepId: BookingStepId, draft: BookingDraft): string {
     case "addons":
       return "";
     case "location":
-      if (!draft.postcode.trim()) return "Enter the service postcode.";
+      if (!draft.postcode.trim()) return "Enter the service postcode or area.";
       if (!draft.fullAddress.trim()) return "Enter the full service address.";
       if (!draft.parkingAvailable) return "Choose whether suitable parking is available.";
       return "";

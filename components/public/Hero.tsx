@@ -32,6 +32,7 @@ export function Hero({ className, imageAlt = "", imageSrc }: HeroProps) {
                 <div className="hero-car__wheel hero-car__wheel--rear">
                   <img className="hero-car__wheel-image" src="/hero-car/car-wheel-rear.png" alt="" />
                 </div>
+                <div className="hero-car__brake-light" />
               </div>
             </div>
           </div>

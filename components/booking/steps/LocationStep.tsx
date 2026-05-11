@@ -71,8 +71,15 @@ const parkingOptions: ParkingOption[] = [
   },
 ];
 
-function normalizePostcodeInput(value: string) {
-  return value.toUpperCase().replace(/\s+/g, " ").trimStart();
+function normalizeServiceAreaInput(value: string) {
+  const normalizedSpacing = value.replace(/\s+/g, " ").trimStart();
+  const trimmedValue = normalizedSpacing.trim();
+
+  if (/^(GIR\s*0AA|[A-Z]{1,2}\d[A-Z\d]?\s*\d?[A-Z]{0,2})$/i.test(trimmedValue)) {
+    return normalizedSpacing.toUpperCase();
+  }
+
+  return normalizedSpacing;
 }
 
 function hasValidLookingUkPostcode(value: string) {
@@ -83,6 +90,20 @@ function hasValidLookingUkPostcode(value: string) {
   }
 
   return /^(GIR\s*0AA|[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2})$/.test(normalizedValue);
+}
+
+function hasValidLookingServiceAreaInput(value: string) {
+  const normalizedValue = value.trim().toUpperCase();
+
+  if (!normalizedValue) {
+    return true;
+  }
+
+  if (hasValidLookingUkPostcode(normalizedValue)) {
+    return true;
+  }
+
+  return /^[A-Z][A-Z0-9 '&.-]{1,}$/.test(normalizedValue);
 }
 
 function mapZoneStatusToDraftStatus(result: ZoneValidationResult): ZoneCheckStatus {
@@ -123,7 +144,7 @@ function getExistingZoneMessage(zoneCheckStatus: ZoneCheckStatus): ZoneCheckUiSt
 
   return {
     status: "idle",
-    message: "Check your postcode before submitting so AUTO VALET can review the service area.",
+    message: "Check your postcode, town or city before submitting so AUTO VALET can review the service area.",
   };
 }
 
@@ -138,7 +159,7 @@ function LocationStepForm({
   onChange,
 }: LocationStepFormProps) {
   const [zoneCheck, setZoneCheck] = useState<ZoneCheckUiState>(() => getExistingZoneMessage(zoneCheckStatus));
-  const showPostcodeFormatHint = postcode.trim().length > 0 && !hasValidLookingUkPostcode(postcode);
+  const showServiceAreaFormatHint = postcode.trim().length > 0 && !hasValidLookingServiceAreaInput(postcode);
   const showLimitedParkingWarning = parkingAvailable === "no";
   const showParkingReviewNote = parkingAvailable === "unknown";
   const canCheckZone = postcode.trim().length > 0 && zoneCheck.status !== "loading";
@@ -147,7 +168,7 @@ function LocationStepForm({
     if (!canCheckZone) {
       setZoneCheck({
         status: "error",
-        message: "Enter a postcode before checking the service area.",
+        message: "Enter a postcode, town or city before checking the service area.",
       });
       return;
     }
@@ -168,6 +189,7 @@ function LocationStepForm({
         },
         body: JSON.stringify({
           postcode,
+          regionName: postcode,
           vehicleCount,
         }),
       });
@@ -204,7 +226,7 @@ function LocationStepForm({
     <div className="booking-step-content">
       <div className="booking-field-grid booking-field-grid--single">
         <div className="form-field">
-          <label htmlFor="booking-postcode">Postcode</label>
+          <label htmlFor="booking-postcode">Postcode or city</label>
           <input
             id="booking-postcode"
             name="postcode"
@@ -212,20 +234,20 @@ function LocationStepForm({
             value={postcode}
             onChange={(event) => {
               onChange({
-                postcode: normalizePostcodeInput(event.target.value),
+                postcode: normalizeServiceAreaInput(event.target.value),
                 zoneCheckStatus: "unchecked",
               });
               setZoneCheck(getExistingZoneMessage("unchecked"));
             }}
-            placeholder="e.g. CR0 1AA"
+            placeholder="e.g. Oldham or your postcode"
             aria-describedby="booking-postcode-hint"
           />
           <p className="form-field__hint" id="booking-postcode-hint">
-            We check your service area before the request is submitted.
+            We check your postcode, town or city before the request is submitted.
           </p>
-          {showPostcodeFormatHint ? (
+          {showServiceAreaFormatHint ? (
             <p className="form-field__hint booking-field-warning" role="status">
-              This postcode format looks unusual. AUTO VALET will check the service area before submission.
+              Use a postcode, town or city so AUTO VALET can check the service area.
             </p>
           ) : null}
           <button
