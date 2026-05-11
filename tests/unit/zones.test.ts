@@ -67,6 +67,34 @@ describe("service zone validation", () => {
     expect(result.matchType).toBe("region");
   });
 
+  it("suggests close active region matches for misspelled city names", () => {
+    const result = validateServiceZone({ postcode: "Croyden", vehicleCount: 1 }, { zones });
+
+    expect(result.allowed).toBe(false);
+    expect(result.suggestions).toEqual([{ type: "region", value: "Croydon" }]);
+  });
+
+  it("does not suggest inactive region matches", () => {
+    const result = validateServiceZone(
+      { postcode: "Bromly", vehicleCount: 1 },
+      {
+        zones: [
+          ...zones,
+          {
+            id: "region-bromley",
+            type: "region",
+            value: "Bromley",
+            normalizedValue: "BROMLEY",
+            active: false,
+          },
+        ],
+      },
+    );
+
+    expect(result.allowed).toBe(false);
+    expect(result.suggestions).toEqual([]);
+  });
+
   it("blocks outside-zone requests below 3 vehicles", () => {
     const result = validateServiceZone({ postcode: "BR1 1AA", vehicleCount: 1 }, { zones });
 

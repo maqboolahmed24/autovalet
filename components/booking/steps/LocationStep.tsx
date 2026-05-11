@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { BookingDraft, ZoneCheckStatus } from "../../../lib/booking/types";
 import { trackAnalyticsEvent } from "../../../lib/analytics/provider";
-import type { ZoneValidationResult } from "../../../lib/zones";
+import type { ZoneValidationResult, ZoneValidationSuggestion } from "../../../lib/zones";
 import type { BookingStepProps } from "../BookingStepper";
 
 type LocationFields = Pick<
@@ -24,19 +24,11 @@ type LocationStepFormProps = LocationFields & {
   onChange: (patch: Partial<LocationFields>) => void;
 };
 
-type ZoneCheckUiState =
-  | {
-      status: "idle";
-      message: string;
-    }
-  | {
-      status: "loading";
-      message: string;
-    }
-  | {
-      status: "success" | "warning" | "blocked" | "error";
-      message: string;
-    };
+type ZoneCheckUiState = {
+  status: "idle" | "loading" | "success" | "warning" | "blocked" | "error";
+  message: string;
+  suggestions?: ZoneValidationSuggestion[];
+};
 
 type ApiSuccessResponse = {
   success: true;
@@ -164,8 +156,10 @@ function LocationStepForm({
   const showParkingReviewNote = parkingAvailable === "unknown";
   const canCheckZone = postcode.trim().length > 0 && zoneCheck.status !== "loading";
 
-  const checkServiceArea = async () => {
-    if (!canCheckZone) {
+  const checkServiceArea = async (serviceAreaValue = postcode) => {
+    const serviceAreaInput = normalizeServiceAreaInput(serviceAreaValue).trim();
+
+    if (!serviceAreaInput || zoneCheck.status === "loading") {
       setZoneCheck({
         status: "error",
         message: "Enter a postcode, town or city before checking the service area.",
@@ -176,6 +170,10 @@ function LocationStepForm({
     setZoneCheck({
       status: "loading",
       message: "Checking service area...",
+    });
+    onChange({
+      postcode: serviceAreaInput,
+      zoneCheckStatus: "unchecked",
     });
     trackAnalyticsEvent("postcode_submitted", {
       bookingFlowStep: "location",
@@ -188,8 +186,8 @@ function LocationStepForm({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          postcode,
-          regionName: postcode,
+          postcode: serviceAreaInput,
+          regionName: serviceAreaInput,
           vehicleCount,
         }),
       });
@@ -199,11 +197,13 @@ function LocationStepForm({
         setZoneCheck({
           status: "error",
           message: payload.error.message,
+          suggestions: [],
         });
         return;
       }
 
       onChange({
+        postcode: serviceAreaInput,
         zoneCheckStatus: mapZoneStatusToDraftStatus(payload.data),
       });
       trackAnalyticsEvent(payload.data.allowed ? "zone_validated" : "zone_failed", {
@@ -213,11 +213,13 @@ function LocationStepForm({
       setZoneCheck({
         status: getZoneUiStatus(payload.data),
         message: payload.data.message,
+        suggestions: payload.data.suggestions ?? [],
       });
     } catch {
       setZoneCheck({
         status: "error",
         message: "Service area could not be checked. Please try again.",
+        suggestions: [],
       });
     }
   };
@@ -253,7 +255,9 @@ function LocationStepForm({
           <button
             className="secondary-button booking-zone-check-button"
             type="button"
-            onClick={checkServiceArea}
+            onClick={() => {
+              void checkServiceArea();
+            }}
             disabled={!canCheckZone}
           >
             {zoneCheck.status === "loading" ? "Checking..." : "Check service area"}
@@ -267,6 +271,26 @@ function LocationStepForm({
             >
               {zoneCheck.message}
             </p>
+          ) : null}
+          {zoneCheck.suggestions?.length ? (
+            <div className="booking-zone-suggestions" role="status" aria-live="polite">
+              <span>Did you mean</span>
+              <div className="booking-zone-suggestions__actions">
+                {zoneCheck.suggestions.map((suggestion) => (
+                  <button
+                    className="booking-zone-suggestion"
+                    type="button"
+                    key={`${suggestion.type}-${suggestion.value}`}
+                    onClick={() => {
+                      void checkServiceArea(suggestion.value);
+                    }}
+                    disabled={zoneCheck.status === "loading"}
+                  >
+                    Use {suggestion.value}
+                  </button>
+                ))}
+              </div>
+            </div>
           ) : null}
         </div>
 

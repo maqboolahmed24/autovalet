@@ -29,6 +29,16 @@ describe("POST /api/validate-zone", () => {
     expect(body.data.matchType).toBe("region");
   });
 
+  it("returns active city recommendations for close misspellings", async () => {
+    const response = await POST(jsonRequest({ postcode: "Croyden", vehicleCount: 1 }));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.data.allowed).toBe(false);
+    expect(body.data.suggestions).toEqual([{ type: "region", value: "Croydon" }]);
+  });
+
   it("blocks outside-zone requests below 3 vehicles", async () => {
     const response = await POST(jsonRequest({ postcode: "BR1 1AA", vehicleCount: 1 }));
     const body = await response.json();

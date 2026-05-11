@@ -14,6 +14,11 @@ export type ZoneValidationInput = {
   vehicleCount: number;
 };
 
+export type ZoneValidationSuggestion = {
+  type: "region";
+  value: string;
+};
+
 export type ZoneValidationResult =
   | {
       allowed: true;
@@ -21,6 +26,7 @@ export type ZoneValidationResult =
       matchType: ServiceZoneType;
       matchedValue: string;
       message: string;
+      suggestions?: ZoneValidationSuggestion[];
     }
   | {
       allowed: true;
@@ -28,12 +34,14 @@ export type ZoneValidationResult =
       matchType: "volume_exception";
       requiredVehicleCount: number;
       message: string;
+      suggestions?: ZoneValidationSuggestion[];
     }
   | {
       allowed: false;
       zoneStatus: "outside_service_area";
       requiredVehicleCount: number;
       message: string;
+      suggestions?: ZoneValidationSuggestion[];
     };
 
 export type ZoneValidationOptions = {
