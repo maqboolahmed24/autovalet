@@ -4,6 +4,12 @@ import {
   isConfiguredAdminEmail,
   verifyAdminPassword,
 } from "../../../../../lib/auth/session";
+import {
+  checkAdminLoginRateLimit,
+  clearFailedAdminLogin,
+  getAdminLoginRateLimitKeys,
+  recordFailedAdminLogin,
+} from "../../../../../lib/auth/login-rate-limit";
 
 export const runtime = "nodejs";
 
@@ -22,11 +28,21 @@ type ApiErrorResponse = {
   };
 };
 
-function jsonResponse<TData>(body: ApiSuccessResponse<TData> | ApiErrorResponse, status = 200) {
-  return Response.json(body, { status });
+function jsonResponse<TData>(
+  body: ApiSuccessResponse<TData> | ApiErrorResponse,
+  status = 200,
+  headers?: HeadersInit,
+) {
+  return Response.json(body, { status, headers });
 }
 
-function errorResponse(code: string, message: string, status: number, details: Record<string, unknown> = {}) {
+function errorResponse(
+  code: string,
+  message: string,
+  status: number,
+  details: Record<string, unknown> = {},
+  headers?: HeadersInit,
+) {
   return jsonResponse(
     {
       success: false,
@@ -37,6 +53,7 @@ function errorResponse(code: string, message: string, status: number, details: R
       },
     },
     status,
+    headers,
   );
 }
 
@@ -69,9 +86,32 @@ export async function POST(request: Request) {
     return errorResponse(authStatus.code, authStatus.message, 501);
   }
 
-  if (!isConfiguredAdminEmail(email) || !verifyAdminPassword(password)) {
+  const rateLimitKeys = getAdminLoginRateLimitKeys(request, email);
+  const rateLimit = checkAdminLoginRateLimit(rateLimitKeys);
+
+  if (rateLimit.limited) {
+    return errorResponse(
+      "TOO_MANY_LOGIN_ATTEMPTS",
+      "Too many failed login attempts. Try again later.",
+      429,
+      {
+        retryAfterSeconds: rateLimit.retryAfterSeconds,
+      },
+      {
+        "Retry-After": String(rateLimit.retryAfterSeconds),
+      },
+    );
+  }
+
+  const emailMatches = isConfiguredAdminEmail(email);
+  const passwordMatches = verifyAdminPassword(password);
+
+  if (!emailMatches || !passwordMatches) {
+    recordFailedAdminLogin(rateLimitKeys);
     return errorResponse("INVALID_LOGIN", "Email or password is incorrect.", 401);
   }
+
+  clearFailedAdminLogin(rateLimitKeys);
 
   const response = jsonResponse({
     success: true,

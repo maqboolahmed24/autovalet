@@ -19,12 +19,32 @@ function getDatabaseUrl() {
   return process.env.DATABASE_URL?.trim() ?? "";
 }
 
+function getDatabaseHostname(databaseUrl: string) {
+  try {
+    return new URL(databaseUrl).hostname;
+  } catch {
+    return "";
+  }
+}
+
 function shouldUseSsl(databaseUrl: string) {
   if (process.env.PGSSLMODE === "disable") {
     return false;
   }
 
-  return !databaseUrl.includes("localhost") && !databaseUrl.includes("127.0.0.1");
+  const hostname = getDatabaseHostname(databaseUrl);
+
+  return hostname !== "localhost" && hostname !== "127.0.0.1" && hostname !== "::1" && hostname !== "[::1]";
+}
+
+export function getPostgresSslConfig(databaseUrl: string) {
+  if (!shouldUseSsl(databaseUrl)) {
+    return undefined;
+  }
+
+  return {
+    rejectUnauthorized: true,
+  };
 }
 
 function getPool() {
@@ -37,11 +57,7 @@ function getPool() {
   if (!globalWithPool.__autoValetPgPool) {
     globalWithPool.__autoValetPgPool = new Pool({
       connectionString: databaseUrl,
-      ssl: shouldUseSsl(databaseUrl)
-        ? {
-            rejectUnauthorized: false,
-          }
-        : undefined,
+      ssl: getPostgresSslConfig(databaseUrl),
     });
   }
 

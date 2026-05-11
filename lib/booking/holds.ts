@@ -107,10 +107,14 @@ export function calculateHoldExpiresAt(now = new Date()) {
 export function createPaymentHoldSnapshot({
   bookingReference,
   draft,
+  price: inputPrice,
+  duration: inputDuration,
   now = new Date(),
 }: {
   bookingReference: string;
   draft: BookingDraft;
+  price?: PriceBreakdown;
+  duration?: DurationBreakdown;
   now?: Date;
 }): PaymentHoldSnapshot {
   assertBookingTransition("zone_validated", "payment_hold", {
@@ -118,8 +122,8 @@ export function createPaymentHoldSnapshot({
     reason: "deposit checkout started",
   });
 
-  const price = calculateBookingPrice(draft);
-  const duration = calculateBookingDuration(draft);
+  const price = inputPrice ?? calculateBookingPrice(draft);
+  const duration = inputDuration ?? calculateBookingDuration(draft);
   const requestedStart = createUtcDateFromBusinessTime(draft.selectedDate, draft.selectedSlotStart);
   const serviceEndsAt = new Date(requestedStart.getTime() + duration.serviceDurationMinutes * 60_000);
   const blockedUntil = new Date(requestedStart.getTime() + duration.blockedDurationMinutes * 60_000);

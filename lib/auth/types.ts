@@ -57,6 +57,6 @@ export type AdminAuthStatus =
     }
   | {
       configured: false;
-      code: "ADMIN_AUTH_NOT_CONFIGURED";
+      code: "ADMIN_AUTH_NOT_CONFIGURED" | "ADMIN_AUTH_WEAK_SECRET";
       message: string;
     };

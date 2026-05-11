@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { getSafeAdminRedirectPath } from "../../lib/auth/redirects";
 
 type AdminLoginFormProps = {
   authConfigured: boolean;
@@ -51,7 +52,7 @@ export function AdminLoginForm({ authConfigured }: AdminLoginFormProps) {
         tone: "success",
         message: "Signed in.",
       });
-      window.location.href = new URLSearchParams(window.location.search).get("next") || "/admin";
+      window.location.href = getSafeAdminRedirectPath(new URLSearchParams(window.location.search).get("next"));
     } catch {
       setState({
         tone: "warning",

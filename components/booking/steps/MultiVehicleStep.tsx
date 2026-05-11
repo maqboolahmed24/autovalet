@@ -56,6 +56,7 @@ function MultiVehicleStepSelector({
             <button
               className={`selectable-card booking-count-card${isSelected ? " is-selected" : ""}`}
               type="button"
+              aria-label={option.label}
               aria-pressed={isSelected}
               onClick={() => onChange(option.value)}
               key={option.value}

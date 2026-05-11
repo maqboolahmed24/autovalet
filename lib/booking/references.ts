@@ -1,3 +1,5 @@
+const publicReferenceSuffixLength = 8;
+
 function randomReferenceSuffix(length: number) {
   const characters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   const cryptoObject = globalThis.crypto;
@@ -18,7 +20,7 @@ export function createBookingReference(sequenceNumber?: number) {
     return `AV-${year}-${String(sequenceNumber).padStart(4, "0")}`;
   }
 
-  return `AV-${year}-${randomReferenceSuffix(4)}`;
+  return `AV-${year}-${randomReferenceSuffix(publicReferenceSuffixLength)}`;
 }
 
 export function isPublicBookingReference(value: unknown) {

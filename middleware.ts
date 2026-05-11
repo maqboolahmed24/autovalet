@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { verifySignedAdminSessionValue } from "./lib/auth/session-cookie";
+import { isAdminSessionSecretStrong, verifySignedAdminSessionValue } from "./lib/auth/session-cookie";
 
 const adminSessionCookieName = "av_admin_session";
 
@@ -18,7 +18,7 @@ export async function middleware(request: NextRequest) {
     const sessionCookie = request.cookies.get(adminSessionCookieName)?.value ?? "";
     const sessionSecret = getAdminSessionSecret();
 
-    if (sessionCookie && sessionSecret) {
+    if (sessionCookie && isAdminSessionSecretStrong(sessionSecret)) {
       const session = await verifySignedAdminSessionValue(sessionCookie, sessionSecret);
 
       if (session) {

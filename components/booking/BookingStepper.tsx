@@ -200,6 +200,7 @@ function validateStep(stepId: BookingStepId, draft: BookingDraft): string {
       return "";
     case "location":
       if (!draft.postcode.trim()) return "Enter the service postcode or area.";
+      if (draft.zoneCheckStatus === "unchecked") return "Check the service area before continuing.";
       if (!draft.fullAddress.trim()) return "Enter the full service address.";
       if (!draft.parkingAvailable) return "Choose whether suitable parking is available.";
       return "";
@@ -251,7 +252,6 @@ export function BookingStepper() {
   const canContinue = validationMessage.length === 0;
   const isFirstStep = currentStepIndex === 0;
   const isLastStep = currentStepIndex === bookingSteps.length - 1;
-  const showUncheckedZoneWarning = currentStep.id === "review" && draft.zoneCheckStatus === "unchecked";
   const paymentsEnabled = false;
 
   useEffect(() => {
@@ -483,12 +483,6 @@ export function BookingStepper() {
                       bookingSubmitError={bookingSubmitError}
                     />
                   </BookingStepShell>
-
-                  {showUncheckedZoneWarning ? (
-                    <p className="booking-step-note booking-step-note--warning" role="status">
-                      Service area has not been checked yet. AUTO VALET will still review your location before approval.
-                    </p>
-                  ) : null}
 
                   <div
                     className={`booking-actions${isLastStep ? " booking-actions--review" : ""}`}

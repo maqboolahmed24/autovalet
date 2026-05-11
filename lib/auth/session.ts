@@ -2,6 +2,8 @@ import { createHash, scryptSync, timingSafeEqual } from "node:crypto";
 import { getPermissionsForRole, isAdminRole } from "./permissions";
 import {
   createSignedAdminSessionValue,
+  isAdminSessionSecretStrong,
+  minAdminSessionSecretLength,
   verifySignedAdminSessionValue,
   type SignedAdminSessionPayload,
 } from "./session-cookie";
@@ -35,9 +37,19 @@ function getAdminSessionSecret() {
 }
 
 export function getAdminAuthStatus(): AdminAuthStatus {
-  if (getAdminEmail() && getAdminPasswordHash() && getAdminSessionSecret()) {
+  const sessionSecret = getAdminSessionSecret();
+
+  if (getAdminEmail() && getAdminPasswordHash() && isAdminSessionSecretStrong(sessionSecret)) {
     return {
       configured: true,
+    };
+  }
+
+  if (getAdminEmail() && getAdminPasswordHash() && sessionSecret) {
+    return {
+      configured: false,
+      code: "ADMIN_AUTH_WEAK_SECRET",
+      message: `ADMIN_SESSION_SECRET must be at least ${minAdminSessionSecretLength} characters.`,
     };
   }
 

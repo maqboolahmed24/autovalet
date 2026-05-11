@@ -8,8 +8,14 @@ export type SignedAdminSessionPayload = {
   exp: number;
 };
 
+export const minAdminSessionSecretLength = 32;
+
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
+
+export function isAdminSessionSecretStrong(secret: string) {
+  return secret.trim().length >= minAdminSessionSecretLength;
+}
 
 function base64UrlEncode(bytes: Uint8Array) {
   let binary = "";
@@ -33,6 +39,13 @@ function base64UrlDecode(value: string) {
   return bytes;
 }
 
+function copyToArrayBuffer(bytes: Uint8Array) {
+  const buffer = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(buffer).set(bytes);
+
+  return buffer;
+}
+
 async function signSessionPayload(payload: string, secret: string) {
   const key = await crypto.subtle.importKey(
     "raw",
@@ -44,6 +57,26 @@ async function signSessionPayload(payload: string, secret: string) {
   const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
 
   return base64UrlEncode(new Uint8Array(signature));
+}
+
+async function verifySessionPayloadSignature(payload: string, signature: string, secret: string) {
+  let signatureBytes: Uint8Array;
+
+  try {
+    signatureBytes = base64UrlDecode(signature);
+  } catch {
+    return false;
+  }
+
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["verify"],
+  );
+
+  return crypto.subtle.verify("HMAC", key, copyToArrayBuffer(signatureBytes), encoder.encode(payload));
 }
 
 function isSignedAdminSessionPayload(value: unknown): value is SignedAdminSessionPayload {
@@ -67,15 +100,19 @@ export async function createSignedAdminSessionValue(payload: SignedAdminSessionP
 }
 
 export async function verifySignedAdminSessionValue(value: string, secret: string) {
-  const [encodedPayload, signature] = value.split(".");
+  const sessionParts = value.split(".");
+
+  if (sessionParts.length !== 2) {
+    return null;
+  }
+
+  const [encodedPayload, signature] = sessionParts;
 
   if (!encodedPayload || !signature) {
     return null;
   }
 
-  const expectedSignature = await signSessionPayload(encodedPayload, secret);
-
-  if (signature !== expectedSignature) {
+  if (!(await verifySessionPayloadSignature(encodedPayload, signature, secret))) {
     return null;
   }
 
@@ -97,4 +134,3 @@ export async function verifySignedAdminSessionValue(value: string, secret: strin
 
   return parsedPayload;
 }
-

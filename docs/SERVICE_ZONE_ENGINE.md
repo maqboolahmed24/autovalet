@@ -167,13 +167,13 @@ The Multi-Vehicle step:
 - Converts a blocked outside-zone state to volume-allowed when the customer selects 3+ vehicles.
 - Converts it back to blocked if the count drops below 3.
 
-The stepper blocks moving past the vehicle-count step only when:
+The stepper blocks moving past the location step until the service area has been checked. It then blocks moving past the vehicle-count step only when:
 
 ```text
 zoneCheckStatus === "outside_zone_blocked" && vehicleCount < 3
 ```
 
-Unchecked service area does not block yet, but the review step shows a warning.
+Unchecked service area does not reach review because the booking-request API rejects unchecked submissions.
 
 ## Future Admin-Managed Zones
 
