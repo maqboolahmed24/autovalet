@@ -36,7 +36,7 @@ const cookieSections: PolicySection[] = [
   {
     title: "Contact",
     paragraphs: [
-      "Use the Contact page for cookie or privacy questions once AUTO VALET has supplied the business contact details.",
+      "Use the business phone number or business email shown on the Contact page for cookie or privacy questions.",
     ],
   },
 ];

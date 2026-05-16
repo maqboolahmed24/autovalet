@@ -45,6 +45,10 @@ function getParkingLabel(parkingAvailable: BookingDraft["parkingAvailable"]) {
   return parkingAvailable ? parkingLabels[parkingAvailable] : "Not selected";
 }
 
+function getRequirementLabel(isAvailable: boolean) {
+  return isAvailable ? "Confirmed" : "Not confirmed";
+}
+
 function ReviewPaymentContent({
   draft,
   onSubmit,
@@ -96,6 +100,18 @@ function ReviewPaymentContent({
             <div>
               <dt>Parking</dt>
               <dd>{getParkingLabel(draft.parkingAvailable)}</dd>
+            </div>
+            <div>
+              <dt>Water access</dt>
+              <dd>{getRequirementLabel(draft.accessToWaterAvailable)}</dd>
+            </div>
+            <div>
+              <dt>Electricity access</dt>
+              <dd>{getRequirementLabel(draft.accessToElectricityAvailable)}</dd>
+            </div>
+            <div>
+              <dt>Accessible parking location</dt>
+              <dd>{getRequirementLabel(draft.accessibleParkingLocation)}</dd>
             </div>
             {draft.parkingNotes ? (
               <div>

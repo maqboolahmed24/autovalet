@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { siteConfig } from "../../lib/seo/site-config";
 import { BrandLogo } from "./BrandLogo";
 
 const footerLinks = [
@@ -23,7 +24,7 @@ export function PublicFooter() {
       <div className="public-footer__inner">
         <div className="public-footer__brand">
           <BrandLogo variant="wordmark" />
-          <p>Premium mobile detailing at your location.</p>
+          <p className="public-footer__tagline">#NOTYOURAVERAGEDETAILER</p>
         </div>
 
         <nav className="public-footer__links" aria-label="Footer navigation">
@@ -35,7 +36,10 @@ export function PublicFooter() {
         </nav>
 
         <div className="public-footer__note">
-          <p>AUTO VALET operates within selected service areas.</p>
+          <p>Operating region: {siteConfig.business.operatingRegion}.</p>
+          <p>
+            {siteConfig.business.legalName} - Company number {siteConfig.business.companyNumber}.
+          </p>
           <p>Bookings are reviewed before confirmation.</p>
         </div>
 

@@ -35,6 +35,7 @@ export type NotificationBookingSummary = {
   statusLabel?: string;
   zoneStatusLabel?: string;
   isOutsideZoneRequest?: boolean;
+  accessRequirements?: string;
 };
 
 export type NotificationTemplate = {

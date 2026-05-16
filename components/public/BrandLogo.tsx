@@ -15,8 +15,8 @@ export function BrandLogo({ className, onClick, variant = "inline" }: BrandLogoP
         <img
           alt=""
           className="brand-logo__wordmark"
-          height="858"
-          src="/media/auto-valet/logo-wordmark.webp"
+          height="745"
+          src="/media/auto-valet/logo-wordmark-clean.webp"
           width="1121"
         />
       ) : (

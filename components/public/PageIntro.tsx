@@ -4,14 +4,21 @@ type PageIntroProps = {
   eyebrow?: string;
   title: ReactNode;
   children?: ReactNode;
+  className?: string;
   variant?: "default" | "compact";
 };
 
-export function PageIntro({ eyebrow, title, children, variant = "default" }: PageIntroProps) {
-  const className = `page-intro section${variant === "compact" ? " page-intro--compact" : ""}`;
+export function PageIntro({ eyebrow, title, children, className, variant = "default" }: PageIntroProps) {
+  const introClassName = [
+    "page-intro section",
+    variant === "compact" ? "page-intro--compact" : "",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
-    <section className={className}>
+    <section className={introClassName}>
       <div className="section__inner page-intro__inner">
         {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
         <h1>{title}</h1>

@@ -1,29 +1,49 @@
 import Link from "next/link";
+import { siteConfig } from "../../lib/seo/site-config";
 
 type ContactCard = {
   title: string;
   text: string;
+  href?: string;
   meta?: string;
+  details?: {
+    label: string;
+    value: string;
+  }[];
 };
 
 const contactCards: ContactCard[] = [
   {
-    title: "Phone",
-    text: "Add business phone number",
-    meta: "Real phone number not supplied yet.",
+    title: "Business phone number",
+    text: siteConfig.business.phone,
+    href: siteConfig.business.phoneHref,
   },
   {
-    title: "Email",
-    text: "Add business email address",
-    meta: "Real email address not supplied yet.",
+    title: "Business Email",
+    text: siteConfig.business.email,
+    href: siteConfig.business.emailHref,
   },
   {
-    title: "Service area guidance",
-    text: "AUTO VALET operates within selected approved postcode and regional zones.",
+    title: "Operating Region",
+    text: siteConfig.business.operatingRegion,
   },
   {
-    title: "Outside-zone requests",
-    text: "Outside-zone requests may be considered for 3+ vehicles at the same address.",
+    title: "Company",
+    text: siteConfig.business.legalName,
+    details: [
+      {
+        label: "Company number",
+        value: siteConfig.business.companyNumber,
+      },
+      {
+        label: "Place of Registration",
+        value: siteConfig.business.placeOfRegistration,
+      },
+    ],
+  },
+  {
+    title: "Registered office address",
+    text: siteConfig.business.registeredOfficeAddress,
   },
   {
     title: "Access and parking",
@@ -39,8 +59,26 @@ export function ContactPageContent() {
           {contactCards.map((card) => (
             <article className="premium-card public-info-card contact-card" key={card.title}>
               <p className="eyebrow">{card.title}</p>
-              <h2>{card.text}</h2>
+              <h2>
+                {card.href ? (
+                  <a className="contact-card__link" href={card.href}>
+                    {card.text}
+                  </a>
+                ) : (
+                  card.text
+                )}
+              </h2>
               {card.meta ? <p>{card.meta}</p> : null}
+              {card.details ? (
+                <dl className="contact-card__details">
+                  {card.details.map((detail) => (
+                    <div key={detail.label}>
+                      <dt>{detail.label}</dt>
+                      <dd>{detail.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              ) : null}
             </article>
           ))}
         </div>

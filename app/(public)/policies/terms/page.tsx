@@ -1,6 +1,7 @@
 import { PageIntro } from "../../../../components/public/PageIntro";
 import { PolicyPageContent, type PolicySection } from "../../../../components/public/PolicyPageContent";
 import { createPublicMetadata } from "../../../../lib/seo/public-metadata";
+import { siteConfig } from "../../../../lib/seo/site-config";
 
 export const metadata = createPublicMetadata("terms");
 
@@ -45,7 +46,7 @@ const termsSections: PolicySection[] = [
   {
     title: "Service area limits",
     paragraphs: [
-      "AUTO VALET operates within selected approved postcode and regional zones.",
+      `AUTO VALET operates within ${siteConfig.business.operatingRegion}.`,
       "Outside-zone requests may be considered for 3+ vehicles at the same address, but they are not guaranteed to be accepted.",
     ],
   },
@@ -61,6 +62,7 @@ const termsSections: PolicySection[] = [
     paragraphs: [
       "AUTO VALET aims to complete work carefully and professionally. The final result can depend on vehicle age, material condition, previous damage, staining and contamination.",
       "Customers should tell AUTO VALET about known defects, leaks, unsafe access, delicate materials or electrical issues before the work begins.",
+      "Auto Valet Detailing accepts no responsibility for any loss or damage caused during or after the completion of this service.",
     ],
   },
 ];

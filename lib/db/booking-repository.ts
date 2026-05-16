@@ -70,6 +70,9 @@ export type BookingListRecord = {
   postcode: string;
   zoneStatus: ZoneStatus;
   parkingAvailable: ParkingAvailability;
+  accessToWaterAvailable: boolean;
+  accessToElectricityAvailable: boolean;
+  accessibleParkingLocation: boolean;
   parkingNotes: string;
   accessNotes: string;
   extraNotes: string;
@@ -122,6 +125,9 @@ type BookingRow = {
   zone_status: string;
   vehicle_count: number;
   parking_available: string;
+  access_to_water_available: boolean | null;
+  access_to_electricity_available: boolean | null;
+  accessible_parking_location: boolean | null;
   parking_notes: string | null;
   access_notes: string | null;
   extra_notes: string | null;
@@ -244,6 +250,9 @@ function mapBookingRow(row: BookingRow): BookingListRecord {
     postcode: row.postcode,
     zoneStatus: asZoneStatus(row.zone_status),
     parkingAvailable: asParkingAvailability(row.parking_available),
+    accessToWaterAvailable: Boolean(row.access_to_water_available),
+    accessToElectricityAvailable: Boolean(row.access_to_electricity_available),
+    accessibleParkingLocation: Boolean(row.accessible_parking_location),
     parkingNotes: row.parking_notes ?? "",
     accessNotes: row.access_notes ?? "",
     extraNotes: row.extra_notes ?? "",
@@ -449,6 +458,9 @@ export async function createBookingRequestRecord(
           zone_status,
           vehicle_count,
           parking_available,
+          access_to_water_available,
+          access_to_electricity_available,
+          accessible_parking_location,
           parking_notes,
           access_notes,
           extra_notes,
@@ -458,7 +470,7 @@ export async function createBookingRequestRecord(
           $1, $2, $3, $4, 'pending_admin_review', 'public_booking', $5,
           $6::timestamptz, $7::timestamptz, $8::timestamptz,
           $9, $10, $11, NULL, 0, 0, $11, 0, 'GBP',
-          $12, $13, $14, $15, $16, $17, $18, $19, $20, $21
+          $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24
         )
       `,
       [
@@ -479,6 +491,9 @@ export async function createBookingRequestRecord(
         zoneStatus,
         draft.vehicleCount,
         draft.parkingAvailable,
+        draft.accessToWaterAvailable,
+        draft.accessToElectricityAvailable,
+        draft.accessibleParkingLocation,
         draft.parkingNotes.trim(),
         draft.accessNotes.trim(),
         draft.extraNotes.trim(),
@@ -556,6 +571,9 @@ const bookingListSelect = `
     b.zone_status,
     b.vehicle_count,
     b.parking_available,
+    b.access_to_water_available,
+    b.access_to_electricity_available,
+    b.accessible_parking_location,
     b.parking_notes,
     b.access_notes,
     b.extra_notes,

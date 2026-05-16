@@ -134,7 +134,7 @@ export function ServicesPageContent() {
           >
             <p className="eyebrow">{servicePackages.deep_clean.label}</p>
             <h2 id="deep-clean-title">Deep Clean</h2>
-            <p>A more complete reset for vehicles needing deeper attention.</p>
+            <p>A deeper level of clean for vehicles needing deeper attention.</p>
             <p className="services-page-card__range">
               Deep Clean pricing ranges from {formatServicePriceRange("deep_clean")} depending on vehicle size and condition.
             </p>

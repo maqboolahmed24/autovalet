@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { siteConfig } from "../../lib/seo/site-config";
 import { SectionHeading } from "./SectionHeading";
 
 type ServiceAreaNoticeItem = {
@@ -8,8 +9,8 @@ type ServiceAreaNoticeItem = {
 
 const notices: ServiceAreaNoticeItem[] = [
   {
-    title: "Selected service areas",
-    text: "We operate within approved postcode and regional zones.",
+    title: "Operating region",
+    text: `We operate within ${siteConfig.business.operatingRegion}.`,
   },
   {
     title: "Outside-zone requests",
@@ -33,14 +34,35 @@ export function ServiceAreaNotice() {
     >
       <div className="section__inner">
         <div className="premium-card service-area-notice__card">
-          <SectionHeading
-            eyebrow="Before you book"
-            title="Booking requests are reviewed before confirmation."
-            titleId="service-area-notice-title"
-          >
-            Your requested slot is reviewed alongside your location, vehicle details and selected
-            service before any appointment is confirmed.
-          </SectionHeading>
+          <div className="service-area-notice__intro">
+            <SectionHeading
+              eyebrow="Before you book"
+              title="Booking requests are reviewed before confirmation."
+              titleId="service-area-notice-title"
+            >
+              Your requested slot is reviewed alongside your location, vehicle details and selected
+              service before any appointment is confirmed.
+            </SectionHeading>
+
+            <aside className="service-area-notice__cta" aria-labelledby="service-area-cta-title">
+              <p className="eyebrow">Request a booking</p>
+              <h3 id="service-area-cta-title">Ready when your car is.</h3>
+              <p>Choose your service, request your preferred slot, and we'll review it before confirming.</p>
+
+              <div className="service-area-notice__actions">
+                <Link aria-describedby="service-area-cta-note" className="primary-button" href="/booking">
+                  Request a Booking
+                </Link>
+                <Link className="secondary-button" href="/faq">
+                  Read FAQs
+                </Link>
+              </div>
+
+              <p className="service-area-notice__note" id="service-area-cta-note">
+                Requests are reviewed before approval.
+              </p>
+            </aside>
+          </div>
 
           <div className="service-area-notice__grid">
             {notices.map((notice) => (
@@ -49,15 +71,6 @@ export function ServiceAreaNotice() {
                 <p>{notice.text}</p>
               </article>
             ))}
-          </div>
-
-          <div className="service-area-notice__actions">
-            <Link className="primary-button" href="/booking">
-              Request a Booking
-            </Link>
-            <Link className="secondary-button" href="/faq">
-              Read FAQs
-            </Link>
           </div>
         </div>
       </div>

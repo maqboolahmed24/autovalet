@@ -6,10 +6,9 @@ import { BrandLogo } from "./BrandLogo";
 import { MobileMenu, type PublicNavLink } from "./MobileMenu";
 
 const publicNavLinks: PublicNavLink[] = [
+  { href: "/", label: "Home" },
   { href: "/services", label: "Services" },
   { href: "/gallery", label: "Gallery" },
-  { href: "/#how-it-works", label: "How it works" },
-  { href: "/#pricing", label: "Pricing" },
 ];
 
 export function PublicHeader() {

@@ -1,3 +1,5 @@
+import { siteConfig } from "../../lib/seo/site-config";
+
 type FaqItem = {
   question: string;
   answer: string;
@@ -62,7 +64,7 @@ export const faqGroups: FaqGroup[] = [
     items: [
       {
         question: "What areas do you cover?",
-        answer: "AUTO VALET operates within selected approved postcode and regional zones.",
+        answer: `AUTO VALET operates within ${siteConfig.business.operatingRegion}.`,
       },
       {
         question: "What if I am outside the usual service area?",

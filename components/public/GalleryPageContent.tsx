@@ -1,4 +1,11 @@
 import Link from "next/link";
+import { GalleryStackMedia } from "./GalleryStackMedia";
+
+export type GalleryStackImage = {
+  imageUrl: string;
+  altText: string;
+  subject: string;
+};
 
 export type GalleryItem = {
   id: string;
@@ -7,6 +14,7 @@ export type GalleryItem = {
   serviceType: string;
   vehicleType?: string;
   imageUrl?: string;
+  imageStack?: GalleryStackImage[];
   beforeImageUrl?: string;
   afterImageUrl?: string;
   altText?: string;
@@ -61,9 +69,15 @@ const placeholderGalleryItems: GalleryItem[] = [
 ];
 
 function GalleryMedia({ item }: { item: GalleryItem }) {
+  const canShowStack =
+    !item.isPlaceholder && item.hasMarketingConsent && item.imageStack && item.imageStack.length > 1;
   const canShowBeforeAfter =
     !item.isPlaceholder && item.hasMarketingConsent && item.beforeImageUrl && item.afterImageUrl;
   const canShowSingleImage = !item.isPlaceholder && item.hasMarketingConsent && item.imageUrl;
+
+  if (canShowStack) {
+    return <GalleryStackMedia item={item} />;
+  }
 
   if (canShowBeforeAfter) {
     return (
@@ -86,13 +100,6 @@ function GalleryMedia({ item }: { item: GalleryItem }) {
   );
 }
 
-function getGalleryItemStateLabel(item: GalleryItem) {
-  if (item.isPlaceholder) return "Placeholder";
-  if (!item.hasMarketingConsent) return "Consent pending";
-
-  return item.isFeatured ? "Featured" : "Selected";
-}
-
 type GalleryPageContentProps = {
   items?: GalleryItem[];
 };
@@ -106,24 +113,26 @@ export function GalleryPageContent({ items = placeholderGalleryItems }: GalleryP
         <div className="gallery-page__heading">
           <p className="eyebrow">{hasRealItems ? "Gallery" : "Placeholder gallery"}</p>
           <h2 id="gallery-page-title">
-            {hasRealItems ? "Recent finishes from mobile detailing work." : "Image spaces ready for approved customer work."}
+            {hasRealItems ? "Recent work, grouped by vehicle." : "Image spaces ready for approved customer work."}
           </h2>
           <p>
             {hasRealItems
-              ? "Exterior angles and cabin details show the finish, trim and interior reset after a careful clean."
+              ? "Same-car stacks keep exterior angles, trim, wheels and cabin details together so every finish is easy to read."
               : "Placeholder cards are shown until real gallery images are uploaded with customer photo consent."}
           </p>
         </div>
 
         <div className="gallery-page__grid motion-stagger">
           {items.map((item) => (
-            <article className="premium-card gallery-card" key={item.id}>
+            <article
+              className={`premium-card gallery-card${item.imageStack?.length ? " gallery-card--stack" : ""}`}
+              key={item.id}
+            >
               <GalleryMedia item={item} />
 
               <div className="gallery-card__body">
                 <div className="gallery-card__meta">
                   <p className="eyebrow">{item.serviceType}</p>
-                  <span>{getGalleryItemStateLabel(item)}</span>
                 </div>
                 <h3>{item.title}</h3>
                 <p>{item.description}</p>
@@ -145,7 +154,7 @@ export function GalleryPageContent({ items = placeholderGalleryItems }: GalleryP
         <section className="premium-card gallery-page__cta" aria-labelledby="gallery-cta-title">
           <div>
             <p className="eyebrow">Request a booking</p>
-            <h2 id="gallery-cta-title">Have a vehicle ready for detail?</h2>
+            <h2 id="gallery-cta-title">Is your vehicle ready for detailing?</h2>
             <p>Request your preferred slot and we'll review the booking before confirming.</p>
           </div>
 

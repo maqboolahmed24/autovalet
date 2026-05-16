@@ -15,15 +15,10 @@ const steps: ProcessStep[] = [
   {
     number: "Step 2",
     title: "Request your slot",
-    text: "Pick a preferred date and time from available options.",
+    text: "Pick a preferred date and time, then submit your details for review.",
   },
   {
     number: "Step 3",
-    title: "Submit your request",
-    text: "Your details are sent to AUTO VALET for review.",
-  },
-  {
-    number: "Step 4",
     title: "We confirm",
     text: "Every booking is manually reviewed before approval.",
   },
@@ -34,7 +29,7 @@ export function HowItWorks() {
     <section className="section how-it-works" id="how-it-works" aria-labelledby="how-it-works-title">
       <div className="section__inner">
         <SectionHeading eyebrow="How it works" title="A simple request process." titleId="how-it-works-title">
-          Choose your service, request your preferred time, submit the details, and wait for approval.
+          Choose your service, request your preferred time with your details, and wait for approval.
         </SectionHeading>
 
         <ol className="how-it-works__list motion-stagger">

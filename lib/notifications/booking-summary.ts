@@ -36,6 +36,18 @@ function getZoneStatusLabel(zoneStatus: ZoneStatus) {
   return "Standard service zone";
 }
 
+function formatAccessRequirements(input: {
+  accessToWaterAvailable: boolean;
+  accessToElectricityAvailable: boolean;
+  accessibleParkingLocation: boolean;
+}) {
+  return [
+    `Water access: ${input.accessToWaterAvailable ? "Confirmed" : "Not confirmed"}`,
+    `Electricity access: ${input.accessToElectricityAvailable ? "Confirmed" : "Not confirmed"}`,
+    `Accessible parking location: ${input.accessibleParkingLocation ? "Confirmed" : "Not confirmed"}`,
+  ].join("\n");
+}
+
 export function createPublicBookingStatusUrl(bookingReference: string) {
   return createAbsoluteUrl(`/booking/status/${encodeURIComponent(bookingReference)}`);
 }
@@ -64,6 +76,7 @@ export function buildNotificationSummaryFromAdminBooking(
     statusLabel: booking.statusLabel,
     zoneStatusLabel: booking.location.zoneLabel,
     isOutsideZoneRequest: booking.location.isOutsideZone,
+    accessRequirements: formatAccessRequirements(booking.location),
     ...override,
   };
 }
@@ -103,5 +116,6 @@ export function buildNotificationSummaryFromDraft(input: {
     statusLabel: input.statusLabel ?? "Waiting for review",
     zoneStatusLabel: getZoneStatusLabel(input.zoneStatus),
     isOutsideZoneRequest: input.zoneStatus !== "standard_zone",
+    accessRequirements: formatAccessRequirements(input.draft),
   };
 }

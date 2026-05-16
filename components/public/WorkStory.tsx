@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 type StoryItem = {
   label: string;
   title: string;
@@ -36,7 +38,10 @@ export function WorkStory() {
         <div className="work-story__copy motion-fade-up">
           <p className="eyebrow">Recent Work</p>
           <h2 id="work-story-title">Detail you can see. Care you can feel.</h2>
-          <p>A quiet, careful process designed to reset the vehicle and leave a refined finish.</p>
+          <p>A careful, refined process designed to restore the vehicle with a clean, finished feel.</p>
+          <Link className="secondary-button work-story__gallery-link" href="/gallery">
+            View Gallery
+          </Link>
         </div>
 
         <div className="work-story__media" aria-label="AUTO VALET work highlights" role="list">

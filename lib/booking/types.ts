@@ -73,6 +73,9 @@ export type BookingDraft = {
   postcode: string;
   fullAddress: string;
   parkingAvailable: ParkingAvailability | "";
+  accessToWaterAvailable: boolean;
+  accessToElectricityAvailable: boolean;
+  accessibleParkingLocation: boolean;
   parkingNotes: string;
   accessNotes: string;
   zoneCheckStatus: ZoneCheckStatus;

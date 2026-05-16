@@ -107,6 +107,9 @@ async function createSchema() {
       zone_status text NOT NULL,
       vehicle_count integer NOT NULL DEFAULT 1,
       parking_available text NOT NULL,
+      access_to_water_available boolean NOT NULL DEFAULT false,
+      access_to_electricity_available boolean NOT NULL DEFAULT false,
+      accessible_parking_location boolean NOT NULL DEFAULT false,
       parking_notes text,
       access_notes text,
       extra_notes text,
@@ -126,6 +129,13 @@ async function createSchema() {
       ON bookings (created_at DESC);
     CREATE INDEX IF NOT EXISTS bookings_normalized_postcode_idx
       ON bookings (normalized_postcode);
+
+    ALTER TABLE bookings
+      ADD COLUMN IF NOT EXISTS access_to_water_available boolean NOT NULL DEFAULT false;
+    ALTER TABLE bookings
+      ADD COLUMN IF NOT EXISTS access_to_electricity_available boolean NOT NULL DEFAULT false;
+    ALTER TABLE bookings
+      ADD COLUMN IF NOT EXISTS accessible_parking_location boolean NOT NULL DEFAULT false;
 
     CREATE TABLE IF NOT EXISTS vehicles (
       id text PRIMARY KEY,

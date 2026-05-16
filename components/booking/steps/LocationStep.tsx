@@ -8,7 +8,15 @@ import type { BookingStepProps } from "../BookingStepper";
 
 type LocationFields = Pick<
   BookingDraft,
-  "postcode" | "fullAddress" | "parkingAvailable" | "parkingNotes" | "accessNotes" | "zoneCheckStatus"
+  | "postcode"
+  | "fullAddress"
+  | "parkingAvailable"
+  | "accessToWaterAvailable"
+  | "accessToElectricityAvailable"
+  | "accessibleParkingLocation"
+  | "parkingNotes"
+  | "accessNotes"
+  | "zoneCheckStatus"
 >;
 
 type ParkingAvailability = Exclude<BookingDraft["parkingAvailable"], "">;
@@ -144,6 +152,9 @@ function LocationStepForm({
   postcode,
   fullAddress,
   parkingAvailable,
+  accessToWaterAvailable,
+  accessToElectricityAvailable,
+  accessibleParkingLocation,
   parkingNotes,
   accessNotes,
   zoneCheckStatus,
@@ -334,6 +345,47 @@ function LocationStepForm({
         </div>
       </div>
 
+      <fieldset className="booking-fieldset booking-access-requirements">
+        <legend>Access requirements</legend>
+        <p className="form-field__hint">Please confirm you can provide these on-site requirements.</p>
+
+        <label className="booking-checkbox-card">
+          <input
+            type="checkbox"
+            checked={accessToWaterAvailable}
+            onChange={(event) => onChange({ accessToWaterAvailable: event.target.checked })}
+          />
+          <span>
+            <strong>I can provide access to water</strong>
+            <small>Water access is needed for the mobile detailing visit.</small>
+          </span>
+        </label>
+
+        <label className="booking-checkbox-card">
+          <input
+            type="checkbox"
+            checked={accessToElectricityAvailable}
+            onChange={(event) => onChange({ accessToElectricityAvailable: event.target.checked })}
+          />
+          <span>
+            <strong>I can provide access to electricity</strong>
+            <small>Electricity access is mandatory for the booking request.</small>
+          </span>
+        </label>
+
+        <label className="booking-checkbox-card">
+          <input
+            type="checkbox"
+            checked={accessibleParkingLocation}
+            onChange={(event) => onChange({ accessibleParkingLocation: event.target.checked })}
+          />
+          <span>
+            <strong>Vehicle is in an accessible parking location</strong>
+            <small>The vehicle must be reachable safely at the agreed location.</small>
+          </span>
+        </label>
+      </fieldset>
+
       <div className="booking-field-grid">
         <div className="form-field">
           <label htmlFor="parking-notes">Parking notes</label>
@@ -373,10 +425,6 @@ function LocationStepForm({
           AUTO VALET can review parking details before approval. Add anything useful in the notes.
         </p>
       ) : null}
-
-      <p className="booking-step-note">
-        Please make sure the vehicle is accessible and suitable parking is available nearby.
-      </p>
     </div>
   );
 }
@@ -394,6 +442,9 @@ export function LocationStep({ draft, updateDraft }: BookingStepProps) {
       postcode={draft.postcode}
       fullAddress={draft.fullAddress}
       parkingAvailable={draft.parkingAvailable}
+      accessToWaterAvailable={draft.accessToWaterAvailable}
+      accessToElectricityAvailable={draft.accessToElectricityAvailable}
+      accessibleParkingLocation={draft.accessibleParkingLocation}
       parkingNotes={draft.parkingNotes}
       accessNotes={draft.accessNotes}
       zoneCheckStatus={draft.zoneCheckStatus}

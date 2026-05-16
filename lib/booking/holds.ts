@@ -59,6 +59,9 @@ export function validateBookingDraftForPaymentHold(draft: BookingDraft) {
   if (!draft.postcode.trim()) errors.push("Enter the service postcode or area.");
   if (!draft.fullAddress.trim()) errors.push("Enter the full service address.");
   if (!draft.parkingAvailable) errors.push("Choose whether suitable parking is available.");
+  if (!draft.accessToWaterAvailable) errors.push("Confirm water access is available.");
+  if (!draft.accessToElectricityAvailable) errors.push("Confirm electricity access is available.");
+  if (!draft.accessibleParkingLocation) errors.push("Confirm the vehicle is in an accessible parking location.");
   if (draft.zoneCheckStatus === "unchecked") errors.push("Check the service area before payment.");
   if (draft.vehicleCount < 1) errors.push("Choose at least one vehicle.");
 

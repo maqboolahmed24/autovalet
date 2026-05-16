@@ -18,8 +18,17 @@ export const siteConfig = {
     "Premium mobile car detailing at your location. Request maintenance cleans, deep cleans and finishing extras with manual booking approval.",
   business: {
     name: "AUTO VALET",
+    legalName: "AUTO VALET DETAILING LTD",
+    phone: "07340542578",
+    phoneHref: "tel:07340542578",
+    email: "admin@autovaledetailing.co.uk",
+    emailHref: "mailto:admin@autovaledetailing.co.uk",
+    operatingRegion: "Greater Manchester and Surrounding areas",
+    companyNumber: "17037650",
+    registeredOfficeAddress: "43 Milnstone Road, Rochdale, England, OL11 1EB",
+    placeOfRegistration: "Registered in England and Wales",
     currency: "GBP",
-    areaServed: ["Selected service areas"],
+    areaServed: ["Greater Manchester and Surrounding areas"],
   },
 } as const;
 

@@ -38,6 +38,9 @@ const validDraft = {
   postcode: "CR0 1AA",
   fullAddress: "10 Example Road",
   parkingAvailable: "yes",
+  accessToWaterAvailable: true,
+  accessToElectricityAvailable: true,
+  accessibleParkingLocation: true,
   parkingNotes: "",
   accessNotes: "",
   zoneCheckStatus: "standard_zone",
@@ -81,6 +84,23 @@ describe("POST /api/create-booking-request", () => {
           selectedSlotStart: "09:00",
         },
         idempotencyKey: "client_test_key_789",
+      }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.success).toBe(false);
+    expect(body.error.code).toBe("BOOKING_VALIDATION_FAILED");
+  });
+
+  it("requires access requirement confirmations before persistence", async () => {
+    const response = await POST(
+      jsonRequest({
+        draft: {
+          ...validDraft,
+          accessToElectricityAvailable: false,
+        },
+        idempotencyKey: "client_test_key_access",
       }),
     );
     const body = await response.json();

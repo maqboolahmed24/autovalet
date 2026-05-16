@@ -21,6 +21,9 @@ test.describe("customer booking flow", () => {
     await page.getByRole("button", { name: /check service area/i }).click();
     await page.getByLabel(/full address/i).fill("10 Example Road");
     await page.getByRole("button", { name: /^yes/i }).click();
+    await page.getByLabel(/access to water/i).check();
+    await page.getByLabel(/access to electricity/i).check();
+    await page.getByLabel(/accessible parking location/i).check();
     await page.getByRole("button", { name: /continue/i }).click();
 
     await page.getByRole("button", { name: /^1$/i }).click();

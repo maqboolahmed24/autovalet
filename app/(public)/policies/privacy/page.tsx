@@ -71,7 +71,7 @@ const privacySections: PolicySection[] = [
   {
     title: "Contact",
     paragraphs: [
-      "Use the contact details shown on the Contact page once AUTO VALET has supplied the business phone number and email address.",
+      "Use the business phone number or business email shown on the Contact page for privacy questions.",
     ],
   },
 ];

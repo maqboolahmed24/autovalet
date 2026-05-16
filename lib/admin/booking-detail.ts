@@ -51,6 +51,9 @@ export type AdminBookingDetailData = {
     zoneLabel: string;
     isOutsideZone: boolean;
     parkingAvailable: string;
+    accessToWaterAvailable: boolean;
+    accessToElectricityAvailable: boolean;
+    accessibleParkingLocation: boolean;
     parkingNotes?: string;
     accessNotes?: string;
   };
@@ -503,6 +506,11 @@ function buildRecordApprovalChecks(record: BookingDetailRecord): ApprovalCheck[]
   );
   const vehicleComplete = Boolean(record.vehicleMake.trim() && record.vehicleModel.trim() && record.vehicleSize);
   const isOutsideZone = record.zoneStatus !== "standard_zone";
+  const accessRequirementsConfirmed =
+    record.parkingAvailable === "yes" &&
+    record.accessToWaterAvailable &&
+    record.accessToElectricityAvailable &&
+    record.accessibleParkingLocation;
 
   return [
     {
@@ -539,11 +547,11 @@ function buildRecordApprovalChecks(record: BookingDetailRecord): ApprovalCheck[]
     },
     {
       label: "Parking/access details reviewed",
-      state: record.parkingAvailable === "yes" ? "success" : "warning",
+      state: accessRequirementsConfirmed ? "success" : "warning",
       message:
-        record.parkingAvailable === "yes"
-          ? "Parking is marked as available."
-          : "Parking or access may need admin review.",
+        accessRequirementsConfirmed
+          ? "Parking, water, electricity and vehicle access are confirmed."
+          : "Parking, water, electricity or vehicle access may need admin review.",
     },
     {
       label: "Price may vary notice",
@@ -605,6 +613,9 @@ function buildDetailFromRecord(record: BookingDetailRecord): AdminBookingDetailD
       zoneLabel,
       isOutsideZone: record.zoneStatus !== "standard_zone",
       parkingAvailable: getParkingLabel(record.parkingAvailable),
+      accessToWaterAvailable: record.accessToWaterAvailable,
+      accessToElectricityAvailable: record.accessToElectricityAvailable,
+      accessibleParkingLocation: record.accessibleParkingLocation,
       parkingNotes: record.parkingNotes,
       accessNotes: record.accessNotes,
     },
@@ -704,6 +715,9 @@ function buildMockBookingDetail(seed: MockBookingSeed): AdminBookingDetailData {
       zoneLabel: seed.isOutsideZone ? "Outside-zone request" : "Standard service zone",
       isOutsideZone: seed.isOutsideZone,
       parkingAvailable: seed.parkingAvailable,
+      accessToWaterAvailable: true,
+      accessToElectricityAvailable: true,
+      accessibleParkingLocation: seed.parkingAvailable === "Yes",
       parkingNotes: seed.parkingAvailable === "Yes" ? "Driveway available." : "Customer is unsure about parking.",
       accessNotes: seed.isOutsideZone ? "Check travel time and vehicle count before approval." : "Vehicle accessible from driveway.",
     },

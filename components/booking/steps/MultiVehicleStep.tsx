@@ -78,8 +78,8 @@ function MultiVehicleStepSelector({
           <p>3+ vehicles may qualify for outside-zone review if this location is outside the usual area.</p>
         ) : (
           <p>
-            AUTO VALET operates within selected service areas. Outside-zone requests may be considered for 3+
-            vehicles.
+            AUTO VALET operates within Greater Manchester and Surrounding areas. Outside-zone requests may be
+            considered for 3+ vehicles.
           </p>
         )}
       </div>

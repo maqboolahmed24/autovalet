@@ -555,6 +555,7 @@ function buildAdminTemplate(input: BuildTemplateInput): NotificationTemplate {
           `Requested time:\n${formatRequestedTime(booking)}`,
           `Service:\n${formatServiceLine(booking)}`,
           `Zone status:\n${valueOrFallback(booking.zoneStatusLabel, "Check service area")}`,
+          booking.accessRequirements ? `Access requirements:\n${booking.accessRequirements}` : "",
           outsideZoneWarning,
           `Estimated total:\n${valueOrFallback(booking.estimatedTotal, "To be confirmed")}`,
           `Deposit:\n${valueOrFallback(booking.depositPaid, "To be confirmed")}`,

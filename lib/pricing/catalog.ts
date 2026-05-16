@@ -36,7 +36,7 @@ export const servicePackages: Record<PackageId, ServicePackage> = {
   deep_clean: {
     id: "deep_clean",
     label: "Deep Clean",
-    description: "A more complete reset.",
+    description: "A deeper level of clean",
     variants: {
       small: {
         vehicleSize: "small",

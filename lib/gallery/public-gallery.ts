@@ -3,6 +3,92 @@ import { isDatabaseConfigured, query } from "../db/postgres";
 
 const publicGalleryItems: GalleryItem[] = [
   {
+    id: "brabus-g-class-detail-stack",
+    title: "Brabus G-Class Detail Stack",
+    description:
+      "A same-vehicle set covering the wash stage, carbon trim, gloss details, rear quarter and red cabin finish.",
+    serviceType: "Deep Clean",
+    vehicleType: "Brabus G-Class",
+    imageStack: [
+      {
+        imageUrl: "/media/auto-valet/gallery/brabus-g-class/front-wash.webp",
+        altText: "White Brabus G-Class during exterior wash stage outside the detailing bay",
+        subject: "Wash stage",
+      },
+      {
+        imageUrl: "/media/auto-valet/gallery/brabus-g-class/carbon-arch.webp",
+        altText: "Carbon arch, wheel and side trim detail on a white Brabus G-Class",
+        subject: "Carbon arch",
+      },
+      {
+        imageUrl: "/media/auto-valet/gallery/brabus-g-class/side-gloss.webp",
+        altText: "Red leather Brabus G-Class cabin after interior detailing",
+        subject: "Red cabin",
+      },
+      {
+        imageUrl: "/media/auto-valet/gallery/brabus-g-class/rear-quarter.webp",
+        altText: "Rear quarter, wheel and Brabus trim on a white G-Class after detailing",
+        subject: "Rear quarter",
+      },
+      {
+        imageUrl: "/media/auto-valet/gallery/brabus-g-class/red-cabin.webp",
+        altText: "Glossy side panel and window reflections on a white Brabus G-Class",
+        subject: "Side gloss",
+      },
+      {
+        imageUrl: "/media/auto-valet/gallery/brabus-g-class/side-profile.webp",
+        altText: "White Brabus G-Class side profile showing clean bodywork and carbon trim",
+        subject: "Side profile",
+      },
+    ],
+    isPlaceholder: false,
+    isFeatured: true,
+    hasMarketingConsent: true,
+  },
+  {
+    id: "audi-rs3-detail-stack",
+    title: "Audi RS 3 Detail Stack",
+    description:
+      "A same-car set showing paint clarity, wheel finish, rear-quarter reflections and the cleaned cabin presentation.",
+    serviceType: "Exterior + Interior",
+    vehicleType: "Audi RS 3",
+    imageStack: [
+      {
+        imageUrl: "/media/auto-valet/gallery/audi-rs3/rear-side-gloss.webp",
+        altText: "White Audi RS 3 rear side panel and wheel after detailing",
+        subject: "Rear side gloss",
+      },
+      {
+        imageUrl: "/media/auto-valet/gallery/audi-rs3/front-wheel-finish.webp",
+        altText: "White Audi RS 3 front wing, mirror and wheel finish",
+        subject: "Front wheel finish",
+      },
+      {
+        imageUrl: "/media/auto-valet/gallery/audi-rs3/rear-wheel-detail.webp",
+        altText: "White Audi RS 3 rear wheel, side glass and panel finish",
+        subject: "Rear wheel detail",
+      },
+      {
+        imageUrl: "/media/auto-valet/gallery/audi-rs3/cabin-wide.webp",
+        altText: "Audi RS 3 cabin, seats, dashboard and console after interior care",
+        subject: "Cabin reset",
+      },
+      {
+        imageUrl: "/media/auto-valet/gallery/audi-rs3/cockpit-detail.webp",
+        altText: "Audi RS 3 cockpit detail with clean dashboard and steering wheel",
+        subject: "Cockpit detail",
+      },
+      {
+        imageUrl: "/media/auto-valet/gallery/audi-rs3/dash-detail.webp",
+        altText: "Audi RS 3 dashboard and steering wheel detail after interior care",
+        subject: "Dash detail",
+      },
+    ],
+    isPlaceholder: false,
+    isFeatured: true,
+    hasMarketingConsent: true,
+  },
+  {
     id: "ferrari-exterior-finish",
     title: "Exterior Finish",
     description: "A glossy red exterior finish focused on paintwork, glass and wheel detail.",
@@ -44,6 +130,28 @@ const publicGalleryItems: GalleryItem[] = [
     vehicleType: "BMW",
     imageUrl: "/media/auto-valet/final-finish.webp",
     altText: "Grey BMW final exterior finish after valeting",
+    isPlaceholder: false,
+    hasMarketingConsent: true,
+  },
+  {
+    id: "brabus-front-detail",
+    title: "Brabus Front Detail",
+    description: "A front exterior angle showing the washed bodywork, carbon trim and wheel finish.",
+    serviceType: "Deep Clean",
+    vehicleType: "Brabus G-Class",
+    imageUrl: "/media/auto-valet/gallery/single/brabus-front-detail.webp",
+    altText: "White Brabus G-Class front exterior and carbon trim during detailing",
+    isPlaceholder: false,
+    hasMarketingConsent: true,
+  },
+  {
+    id: "audi-side-reflection",
+    title: "Audi Side Reflection",
+    description: "A close side detail showing clean paint reflection, mirror trim and panel finish.",
+    serviceType: "Exterior",
+    vehicleType: "Audi RS 3",
+    imageUrl: "/media/auto-valet/gallery/single/audi-front-quarter.webp",
+    altText: "White Audi RS 3 side panel and mirror reflection after detailing",
     isPlaceholder: false,
     hasMarketingConsent: true,
   },

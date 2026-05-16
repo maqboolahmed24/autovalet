@@ -24,6 +24,14 @@ function getParkingTone(parkingAvailable: string) {
   return parkingAvailable === "Yes" ? "success" : "warning";
 }
 
+function getRequirementTone(isConfirmed: boolean) {
+  return isConfirmed ? "success" : "warning";
+}
+
+function getRequirementLabel(isConfirmed: boolean) {
+  return isConfirmed ? "Confirmed" : "Not confirmed";
+}
+
 export function AdminBookingDetail({
   booking,
   backHref = "/admin/requests",
@@ -93,6 +101,21 @@ export function AdminBookingDetail({
               label="Parking"
               tone={getParkingTone(booking.location.parkingAvailable)}
               value={booking.location.parkingAvailable}
+            />
+            <InfoRow
+              label="Water access"
+              tone={getRequirementTone(booking.location.accessToWaterAvailable)}
+              value={getRequirementLabel(booking.location.accessToWaterAvailable)}
+            />
+            <InfoRow
+              label="Electricity access"
+              tone={getRequirementTone(booking.location.accessToElectricityAvailable)}
+              value={getRequirementLabel(booking.location.accessToElectricityAvailable)}
+            />
+            <InfoRow
+              label="Accessible parking location"
+              tone={getRequirementTone(booking.location.accessibleParkingLocation)}
+              value={getRequirementLabel(booking.location.accessibleParkingLocation)}
             />
             <InfoRow label="Parking notes" value={booking.location.parkingNotes} />
             <InfoRow label="Access notes" value={booking.location.accessNotes} />
