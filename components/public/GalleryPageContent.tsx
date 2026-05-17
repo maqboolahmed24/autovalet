@@ -113,11 +113,11 @@ export function GalleryPageContent({ items = placeholderGalleryItems }: GalleryP
         <div className="gallery-page__heading">
           <p className="eyebrow">{hasRealItems ? "Gallery" : "Placeholder gallery"}</p>
           <h2 id="gallery-page-title">
-            {hasRealItems ? "Recent work, grouped by vehicle." : "Image spaces ready for approved customer work."}
+            {hasRealItems ? "A closer look at the finish." : "Image spaces ready for approved customer work."}
           </h2>
           <p>
             {hasRealItems
-              ? "Same-car stacks keep exterior angles, trim, wheels and cabin details together so every finish is easy to read."
+              ? "Explore paintwork, wheels, trim and cabin details from recent AUTO VALET work."
               : "Placeholder cards are shown until real gallery images are uploaded with customer photo consent."}
           </p>
         </div>

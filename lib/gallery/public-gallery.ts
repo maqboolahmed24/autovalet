@@ -6,7 +6,7 @@ const publicGalleryItems: GalleryItem[] = [
     id: "brabus-g-class-detail-stack",
     title: "Brabus G-Class Detail Stack",
     description:
-      "A same-vehicle set covering the wash stage, carbon trim, gloss details, rear quarter and red cabin finish.",
+      "A same-vehicle set covering the wash stage, clean arch, gloss details, rear quarter and red cabin finish.",
     serviceType: "Deep Clean",
     vehicleType: "Brabus G-Class",
     imageStack: [
@@ -16,9 +16,9 @@ const publicGalleryItems: GalleryItem[] = [
         subject: "Wash stage",
       },
       {
-        imageUrl: "/media/auto-valet/gallery/brabus-g-class/carbon-arch.webp",
-        altText: "Carbon arch, wheel and side trim detail on a white Brabus G-Class",
-        subject: "Carbon arch",
+        imageUrl: "/media/auto-valet/gallery/brabus-g-class/clean-arch.webp",
+        altText: "Clean arch, wheel and side trim detail on a white Brabus G-Class",
+        subject: "Clean arch",
       },
       {
         imageUrl: "/media/auto-valet/gallery/brabus-g-class/side-gloss.webp",
