@@ -25,7 +25,7 @@ const contactCards: ContactCard[] = [
   },
   {
     title: "Operating Region",
-    text: siteConfig.business.operatingRegion,
+    text: siteConfig.business.serviceAreaLabel,
   },
   {
     title: "Company",

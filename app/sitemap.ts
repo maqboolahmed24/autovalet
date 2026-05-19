@@ -5,6 +5,7 @@ import { createAbsoluteUrl } from "../lib/seo/site-config";
 const sitemapRouteKeys = [
   "home",
   "services",
+  "serviceArea",
   "gallery",
   "booking",
   "faq",

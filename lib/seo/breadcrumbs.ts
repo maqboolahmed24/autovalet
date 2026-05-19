@@ -23,6 +23,10 @@ export const publicBreadcrumbs = {
     { name: "Home", path: "/" },
     { name: "Services", path: "/services" },
   ],
+  serviceArea: [
+    { name: "Home", path: "/" },
+    { name: "Service Areas", path: "/service-area" },
+  ],
   gallery: [
     { name: "Home", path: "/" },
     { name: "Gallery", path: "/gallery" },

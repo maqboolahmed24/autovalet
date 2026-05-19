@@ -1,21 +1,14 @@
 import type { ServiceZone } from "./types";
+import { greaterManchesterServiceAreas } from "../service-areas";
 
 export const DEFAULT_MIN_OUTSIDE_ZONE_VEHICLE_COUNT = 3;
 
-// TODO: Replace placeholder default zones with admin-managed zones before launch.
 export const defaultServiceZones: ServiceZone[] = [
-  {
-    id: "zone-cr0",
-    type: "district",
-    value: "CR0",
-    normalizedValue: "CR0",
-    active: true,
-  },
-  {
-    id: "zone-croydon",
+  ...greaterManchesterServiceAreas.map<ServiceZone>((area) => ({
+    id: `zone-${area.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
     type: "region",
-    value: "Croydon",
-    normalizedValue: "CROYDON",
+    value: area,
+    normalizedValue: area.toUpperCase(),
     active: true,
-  },
+  })),
 ];

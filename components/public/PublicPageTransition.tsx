@@ -5,6 +5,5 @@ type PublicPageTransitionProps = {
 };
 
 export function PublicPageTransition({ children }: PublicPageTransitionProps) {
-  return <div className="public-page-transition motion-fade-up">{children}</div>;
+  return <div className="public-page-transition">{children}</div>;
 }
-

@@ -1,4 +1,5 @@
 import type { ZoneCheckStatus } from "../../../lib/booking/types";
+import { siteConfig } from "../../../lib/seo/site-config";
 import { DEFAULT_MIN_OUTSIDE_ZONE_VEHICLE_COUNT } from "../../../lib/zones";
 import type { BookingStepProps } from "../BookingStepper";
 
@@ -78,7 +79,7 @@ function MultiVehicleStepSelector({
           <p>3+ vehicles may qualify for outside-zone review if this location is outside the usual area.</p>
         ) : (
           <p>
-            AUTO VALET operates within Greater Manchester and Surrounding areas. Outside-zone requests may be
+            AUTO VALET operates across {siteConfig.business.serviceAreaLabel}. Outside-zone requests may be
             considered for 3+ vehicles.
           </p>
         )}

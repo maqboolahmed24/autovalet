@@ -25,12 +25,36 @@ export function Hero({ className, imageAlt = "", imageSrc }: HeroProps) {
             <div className="hero__vehicle-stage" aria-hidden="true">
               <div className="hero-car">
                 <div className="hero-car__shadow" />
-                <img className="hero-car__image" src="/hero-car/car-full-v2.png" alt="" />
+                <img
+                  alt=""
+                  className="hero-car__image"
+                  decoding="async"
+                  fetchPriority="high"
+                  height="1024"
+                  sizes="(max-width: 759px) 100vw, (max-width: 1179px) 72vw, 58vw"
+                  src="/hero-car/car-full-v2.webp"
+                  srcSet="/hero-car/car-full-v2-512.webp 512w, /hero-car/car-full-v2-768.webp 768w, /hero-car/car-full-v2.webp 1536w"
+                  width="1536"
+                />
                 <div className="hero-car__wheel hero-car__wheel--front">
-                  <img className="hero-car__wheel-image" src="/hero-car/car-wheel-v2.png" alt="" />
+                  <img
+                    alt=""
+                    className="hero-car__wheel-image"
+                    decoding="async"
+                    height="250"
+                    src="/hero-car/car-wheel-v2.webp"
+                    width="250"
+                  />
                 </div>
                 <div className="hero-car__wheel hero-car__wheel--rear">
-                  <img className="hero-car__wheel-image" src="/hero-car/car-wheel-rear-v2.png" alt="" />
+                  <img
+                    alt=""
+                    className="hero-car__wheel-image"
+                    decoding="async"
+                    height="250"
+                    src="/hero-car/car-wheel-rear-v2.webp"
+                    width="250"
+                  />
                 </div>
                 <div className="hero-car__brake-light" />
               </div>
@@ -44,11 +68,13 @@ export function Hero({ className, imageAlt = "", imageSrc }: HeroProps) {
         <p className="eyebrow hero__eyebrow">AUTO VALET</p>
 
         <h1 className="hero__title" id="home-hero-title">
-          Premium mobile detailing,
-          <span>wherever your car is parked.</span>
+          Mobile car detailing
+          <span>in Rochdale and Greater Manchester.</span>
         </h1>
 
-        <p className="hero__text">Maintenance cleans, deep cleans and finishing extras delivered with care.</p>
+        <p className="hero__text">
+          Maintenance cleans, deep cleans and finishing extras delivered across the Greater Manchester service area.
+        </p>
 
         <div className="hero__action">
           <Link aria-describedby="home-hero-note" className="primary-button" href="/booking">

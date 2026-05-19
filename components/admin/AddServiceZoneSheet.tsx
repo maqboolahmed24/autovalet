@@ -100,7 +100,7 @@ export function AddServiceZoneSheet({ onClose }: AddServiceZoneSheetProps) {
 
         <label className="admin-field">
           <span>Value</span>
-          <input value={value} onChange={(event) => setValue(event.target.value)} placeholder="e.g. CR0 or Croydon" />
+          <input value={value} onChange={(event) => setValue(event.target.value)} placeholder="e.g. OL11 or Rochdale" />
         </label>
 
         <label className="admin-field">

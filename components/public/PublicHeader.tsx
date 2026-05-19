@@ -8,6 +8,7 @@ import { MobileMenu, type PublicNavLink } from "./MobileMenu";
 const publicNavLinks: PublicNavLink[] = [
   { href: "/", label: "Home" },
   { href: "/services", label: "Services" },
+  { href: "/service-area", label: "Areas" },
   { href: "/gallery", label: "Gallery" },
 ];
 

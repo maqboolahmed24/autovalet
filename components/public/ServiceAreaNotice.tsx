@@ -10,7 +10,7 @@ type ServiceAreaNoticeItem = {
 const notices: ServiceAreaNoticeItem[] = [
   {
     title: "Operating region",
-    text: `We operate within ${siteConfig.business.operatingRegion}.`,
+    text: `We operate across ${siteConfig.business.serviceAreaLabel}.`,
   },
   {
     title: "Outside-zone requests",
@@ -56,6 +56,9 @@ export function ServiceAreaNotice() {
                 <Link className="secondary-button" href="/faq">
                   Read FAQs
                 </Link>
+                <Link className="secondary-button" href="/service-area">
+                  View Service Areas
+                </Link>
               </div>
 
               <p className="service-area-notice__note" id="service-area-cta-note">
@@ -72,6 +75,12 @@ export function ServiceAreaNotice() {
               </article>
             ))}
           </div>
+
+          <ul className="service-area-notice__areas" aria-label="Greater Manchester service areas">
+            {siteConfig.business.serviceAreas.map((area) => (
+              <li key={area}>{area}</li>
+            ))}
+          </ul>
         </div>
       </div>
     </section>

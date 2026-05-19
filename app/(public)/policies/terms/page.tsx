@@ -46,7 +46,7 @@ const termsSections: PolicySection[] = [
   {
     title: "Service area limits",
     paragraphs: [
-      `AUTO VALET operates within ${siteConfig.business.operatingRegion}.`,
+      `AUTO VALET operates across ${siteConfig.business.serviceAreaLabel}.`,
       "Outside-zone requests may be considered for 3+ vehicles at the same address, but they are not guaranteed to be accepted.",
     ],
   },

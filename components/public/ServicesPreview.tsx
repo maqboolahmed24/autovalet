@@ -4,6 +4,7 @@ import {
   formatMoneyGBP,
   servicePackages,
 } from "../../lib/pricing";
+import { siteConfig } from "../../lib/seo/site-config";
 import { SectionHeading } from "./SectionHeading";
 
 const featuredAddonLabels = addonList.slice(0, 5).map((addon) => addon.label);
@@ -17,7 +18,8 @@ export function ServicesPreview() {
     <section className="section services-preview" id="pricing" aria-labelledby="services-preview-title">
       <div className="section__inner">
         <SectionHeading eyebrow="Services & pricing" title="Choose the level of care." titleId="services-preview-title">
-          Maintenance cleans, deep cleans and finishing extras in one place. Full size-based pricing stays on the services page.
+          Mobile valeting, deep cleans and finishing extras for vehicles across {siteConfig.business.serviceAreaLabel}.
+          Full size-based pricing stays on the services page.
         </SectionHeading>
 
         <div className="services-preview__grid motion-stagger">

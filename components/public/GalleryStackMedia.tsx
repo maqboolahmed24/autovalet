@@ -20,7 +20,14 @@ export function GalleryStackMedia({ item }: { item: GalleryItem }) {
     <div className="gallery-stack" aria-label={`${item.title} image stack`}>
       <div className="gallery-stack__stage">
         <figure className="gallery-stack__hero" key={selectedImage.imageUrl}>
-          <img alt={selectedImage.altText} src={selectedImage.imageUrl} />
+          <img
+            alt={selectedImage.altText}
+            decoding="async"
+            height="2000"
+            loading="lazy"
+            src={selectedImage.imageUrl}
+            width="1600"
+          />
           <figcaption
             aria-label={`${formatStackIndex(selectedIndex)} ${selectedImage.subject}`}
             className="gallery-stack__caption"
@@ -44,7 +51,7 @@ export function GalleryStackMedia({ item }: { item: GalleryItem }) {
                   onClick={() => setSelectedIndex(index)}
                   type="button"
                 >
-                  <img alt="" src={image.imageUrl} />
+                  <img alt="" decoding="async" height="2000" loading="lazy" src={image.imageUrl} width="1600" />
                   <span className="gallery-stack__thumb-label">
                     <span>{formatStackIndex(index)}</span>
                     <span>{image.subject}</span>

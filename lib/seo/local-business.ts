@@ -10,10 +10,17 @@ export function createLocalBusinessJsonLd() {
     legalName: siteConfig.business.legalName,
     telephone: siteConfig.business.phone,
     email: siteConfig.business.email,
-    address: siteConfig.business.registeredOfficeAddress,
+    address: {
+      "@type": "PostalAddress",
+      ...siteConfig.business.postalAddress,
+    },
     ...(url ? { url } : {}),
-    areaServed: siteConfig.business.areaServed,
+    areaServed: siteConfig.business.areaServed.map((area) => ({
+      "@type": "AdministrativeArea",
+      name: area,
+    })),
+    description: `Premium mobile car detailing and valeting across ${siteConfig.business.serviceAreaLabel}.`,
     priceRange: "££",
-    serviceType: "Premium mobile car detailing",
+    serviceType: "Premium mobile car detailing and valeting",
   };
 }

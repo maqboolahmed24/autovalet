@@ -53,7 +53,15 @@ export function WorkStory() {
                 }`}
               >
                 {item.imageUrl ? (
-                  <img alt={`AUTO VALET ${item.label}`} className="work-story-card__image" src={item.imageUrl} />
+                  <img
+                    alt={`AUTO VALET ${item.label}`}
+                    className="work-story-card__image"
+                    decoding="async"
+                    height="1300"
+                    loading="lazy"
+                    src={item.imageUrl}
+                    width="1100"
+                  />
                 ) : (
                   <span className="work-story-card__placeholder-note">Image coming soon</span>
                 )}

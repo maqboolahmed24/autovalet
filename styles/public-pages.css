@@ -186,6 +186,37 @@
   margin-top: var(--space-6);
 }
 
+.service-area-page__intro .section-heading {
+  margin-bottom: var(--space-6);
+}
+
+.service-area-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.service-area-list li {
+  min-height: 48px;
+  padding: 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--text-soft);
+  font-size: var(--text-sm);
+  font-weight: 850;
+}
+
+.service-area-page__cta {
+  border-color: var(--accent-border);
+  background:
+    linear-gradient(145deg, rgba(200, 169, 106, 0.12), rgba(255, 255, 255, 0.035)),
+    var(--bg-card);
+}
+
 .data-request-form {
   gap: var(--space-5);
 }
@@ -236,5 +267,9 @@
   .public-info-actions .primary-button,
   .public-info-actions .secondary-button {
     width: auto;
+  }
+
+  .service-area-list {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }

@@ -35,7 +35,7 @@ const validDraft = {
       addons: ["engine_bay_clean"],
     },
   ],
-  postcode: "CR0 1AA",
+  postcode: "Rochdale",
   fullAddress: "10 Example Road",
   parkingAvailable: "yes",
   accessToWaterAvailable: true,
@@ -45,7 +45,7 @@ const validDraft = {
   accessNotes: "",
   zoneCheckStatus: "standard_zone",
   vehicleCount: 1,
-  selectedDate: "2026-05-18",
+  selectedDate: "2026-05-25",
   selectedSlotStart: "09:00",
   customer: {
     fullName: "Sarah Wilson",

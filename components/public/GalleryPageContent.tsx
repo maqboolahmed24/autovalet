@@ -82,14 +82,38 @@ function GalleryMedia({ item }: { item: GalleryItem }) {
   if (canShowBeforeAfter) {
     return (
       <div className="gallery-card__image gallery-card__comparison">
-        <img alt={`Before ${item.altText ?? item.title}`} src={item.beforeImageUrl} />
-        <img alt={`After ${item.altText ?? item.title}`} src={item.afterImageUrl} />
+        <img
+          alt={`Before ${item.altText ?? item.title}`}
+          decoding="async"
+          height="1300"
+          loading="lazy"
+          src={item.beforeImageUrl}
+          width="1100"
+        />
+        <img
+          alt={`After ${item.altText ?? item.title}`}
+          decoding="async"
+          height="1300"
+          loading="lazy"
+          src={item.afterImageUrl}
+          width="1100"
+        />
       </div>
     );
   }
 
   if (canShowSingleImage) {
-    return <img alt={item.altText ?? item.title} className="gallery-card__image" src={item.imageUrl} />;
+    return (
+      <img
+        alt={item.altText ?? item.title}
+        className="gallery-card__image"
+        decoding="async"
+        height="1300"
+        loading="lazy"
+        src={item.imageUrl}
+        width="1100"
+      />
+    );
   }
 
   return (

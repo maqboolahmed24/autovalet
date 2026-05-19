@@ -4,6 +4,7 @@ import { BrandLogo } from "./BrandLogo";
 
 const footerLinks = [
   { href: "/services", label: "Services" },
+  { href: "/service-area", label: "Service Areas" },
   { href: "/booking", label: "Booking" },
   { href: "/gallery", label: "Gallery" },
   { href: "/faq", label: "FAQ" },
@@ -36,7 +37,7 @@ export function PublicFooter() {
         </nav>
 
         <div className="public-footer__note">
-          <p>Operating region: {siteConfig.business.operatingRegion}.</p>
+          <p>Operating region: {siteConfig.business.serviceAreaLabel}.</p>
           <p>
             {siteConfig.business.legalName} - Company number {siteConfig.business.companyNumber}.
           </p>

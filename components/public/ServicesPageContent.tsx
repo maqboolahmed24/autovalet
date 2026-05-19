@@ -7,6 +7,7 @@ import {
   vehicleSizeLabels,
   vehicleSizeOrder,
 } from "../../lib/pricing";
+import { siteConfig } from "../../lib/seo/site-config";
 import { SectionHeading } from "./SectionHeading";
 
 type PricingRow = {
@@ -106,7 +107,9 @@ export function ServicesPageContent() {
           <article className="premium-card services-page-card" aria-labelledby="maintenance-clean-title">
             <p className="eyebrow">{servicePackages.maintenance.label}</p>
             <h2 id="maintenance-clean-title">Maintenance Clean</h2>
-            <p>A refined routine clean for vehicles needing regular care.</p>
+            <p>
+              A refined routine mobile valet for vehicles across {siteConfig.business.serviceAreaLabel}.
+            </p>
 
             <div className="services-page-card__rows" aria-label="Maintenance Clean pricing and durations">
               {maintenanceRows.map((row) => (
@@ -134,7 +137,11 @@ export function ServicesPageContent() {
           >
             <p className="eyebrow">{servicePackages.deep_clean.label}</p>
             <h2 id="deep-clean-title">Deep Clean</h2>
-            <p>A deeper level of clean for vehicles needing deeper attention.</p>
+            <p>
+              A deeper mobile detailing service for vehicles needing extra attention across
+              {" "}
+              {siteConfig.business.operatingRegion}.
+            </p>
             <p className="services-page-card__range">
               Deep Clean pricing ranges from {formatServicePriceRange("deep_clean")} depending on vehicle size and condition.
             </p>
@@ -200,13 +207,18 @@ export function ServicesPageContent() {
             <h2 id="services-notice-title">Before you request a slot</h2>
             <p>
               Prices may vary depending on vehicle condition on arrival. No online payment is taken
-              when you submit a booking request. Appointments are confirmed only after manual approval.
+              when you submit a booking request. Appointments across {siteConfig.business.serviceAreaLabel}
+              {" "}
+              are confirmed only after manual approval.
             </p>
           </div>
 
           <div className="services-page__actions">
             <Link className="primary-button" href="/booking">
               Request a Booking
+            </Link>
+            <Link className="secondary-button" href="/service-area">
+              View Service Areas
             </Link>
             <Link className="secondary-button" href="/faq">
               Read FAQs

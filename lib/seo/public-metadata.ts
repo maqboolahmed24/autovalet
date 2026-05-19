@@ -6,6 +6,7 @@ const noindexRoutes: PublicRouteKey[] = ["bookingStatus"];
 export type PublicRouteKey =
   | "home"
   | "services"
+  | "serviceArea"
   | "gallery"
   | "booking"
   | "faq"
@@ -32,32 +33,44 @@ export const publicRouteMetadata: Record<
 > = {
   home: {
     path: "/",
-    title: siteConfig.defaultTitle,
-    description: siteConfig.defaultDescription,
+    title: "Mobile Car Detailing Rochdale & Greater Manchester | AUTO VALET",
+    description:
+      "Premium mobile car detailing and valeting across Rochdale and Greater Manchester, with maintenance cleans, deep cleans and finishing extras.",
     purpose: "Premium introduction and booking request CTA.",
   },
   services: {
     path: "/services",
-    title: "Services | AUTO VALET",
-    description: "View AUTO VALET maintenance cleans, deep cleans, add-ons, and condition-based pricing notes.",
+    title: "Mobile Car Valeting Services Rochdale | AUTO VALET",
+    description:
+      "View mobile car valeting and detailing services for Rochdale and Greater Manchester, including maintenance cleans, deep cleans and add-ons.",
     purpose: "Services, pricing, add-ons, and condition disclaimer.",
+  },
+  serviceArea: {
+    path: "/service-area",
+    title: "Mobile Car Detailing Service Areas in Greater Manchester | AUTO VALET",
+    description:
+      "AUTO VALET covers Rochdale, Manchester, Oldham, Bury, Bolton, Salford, Stockport, Tameside, Trafford and Wigan.",
+    purpose: "Service area towns, postcode guidance, and outside-zone review rules.",
   },
   gallery: {
     path: "/gallery",
-    title: "Gallery | AUTO VALET",
-    description: "Before and after AUTO VALET work, with premium placeholders until real customer images are available.",
+    title: "Mobile Car Detailing Gallery Rochdale | AUTO VALET",
+    description:
+      "See AUTO VALET detailing work for vehicles across Rochdale and Greater Manchester, including exterior finishes, interiors and wheels.",
     purpose: "Before/after and placeholder work.",
   },
   booking: {
     path: "/booking",
-    title: "Request a Booking | AUTO VALET",
-    description: "Submit an AUTO VALET booking request. Appointments are confirmed after manual approval.",
+    title: "Request Mobile Car Valeting in Greater Manchester | AUTO VALET",
+    description:
+      "Submit a mobile car detailing request for Rochdale or Greater Manchester. AUTO VALET reviews every appointment before confirmation.",
     purpose: "Multi-step booking request.",
   },
   faq: {
     path: "/faq",
-    title: "FAQ | AUTO VALET",
-    description: "Answers about approval, pricing, service zones, cancellation, and mobile detailing access.",
+    title: "Mobile Car Detailing FAQs | AUTO VALET Rochdale",
+    description:
+      "Answers about AUTO VALET mobile detailing in Rochdale and Greater Manchester, including approval, pricing, service areas and access.",
     purpose: "Explain approval, pricing, service zone, and cancellation rules.",
   },
   policies: {
@@ -98,8 +111,9 @@ export const publicRouteMetadata: Record<
   },
   contact: {
     path: "/contact",
-    title: "Contact | AUTO VALET",
-    description: "Contact AUTO VALET and review service area guidance for mobile detailing requests.",
+    title: "Contact AUTO VALET | Mobile Detailing Rochdale",
+    description:
+      "Contact AUTO VALET for mobile car detailing and valeting across Rochdale and Greater Manchester service areas.",
     purpose: "Contact and service area guidance.",
   },
   bookingSuccess: {

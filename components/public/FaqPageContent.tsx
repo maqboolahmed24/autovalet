@@ -10,6 +10,8 @@ type FaqGroup = {
   items: FaqItem[];
 };
 
+const serviceAreaList = siteConfig.business.serviceAreas.join(", ");
+
 export const faqGroups: FaqGroup[] = [
   {
     title: "Booking requests",
@@ -64,7 +66,7 @@ export const faqGroups: FaqGroup[] = [
     items: [
       {
         question: "What areas do you cover?",
-        answer: `AUTO VALET operates within ${siteConfig.business.operatingRegion}.`,
+        answer: `AUTO VALET covers ${siteConfig.business.serviceAreaLabel}, including ${serviceAreaList}.`,
       },
       {
         question: "What if I am outside the usual service area?",

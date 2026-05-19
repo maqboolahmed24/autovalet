@@ -245,10 +245,6 @@
 }
 
 @media (min-width: 900px) {
-  .work-story {
-    min-height: 300svh;
-  }
-
   .work-story__sticky {
     grid-template-columns: 0.85fr 1.15fr;
     align-items: start;
@@ -257,14 +253,14 @@
   }
 
   .work-story__copy {
-    position: sticky;
-    top: calc(var(--space-20) + 64px);
-    padding-top: var(--space-4);
+    position: relative;
+    top: auto;
+    padding-top: 0;
   }
 
   .work-story__media {
-    gap: var(--space-20);
-    padding-block: var(--space-6) var(--space-24);
+    gap: var(--space-12);
+    padding-block: var(--space-6) var(--space-12);
   }
 
   .work-story-card {
@@ -601,6 +597,27 @@
 .service-area-notice__actions .primary-button,
 .service-area-notice__actions .secondary-button {
   width: 100%;
+}
+
+.service-area-notice__areas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-6) 0 0;
+  margin: var(--space-6) 0 0;
+  border-top: 1px solid var(--border-subtle);
+  list-style: none;
+}
+
+.service-area-notice__areas li {
+  padding: 9px 11px;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-pill);
+  background: rgba(200, 169, 106, 0.08);
+  color: var(--text-soft);
+  font-size: var(--text-xs);
+  font-weight: 850;
+  line-height: 1;
 }
 
 @media (min-width: 760px) {
