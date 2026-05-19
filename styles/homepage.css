@@ -174,7 +174,10 @@
 
 .work-story-card {
   display: grid;
+  --work-card-x: 0px;
+  --work-card-y: 0px;
   gap: var(--space-3);
+  transform: translate3d(var(--work-card-x), var(--work-card-y), 0);
 }
 
 .work-story-card__placeholder {
@@ -245,6 +248,10 @@
 }
 
 @media (min-width: 900px) {
+  .work-story {
+    min-height: 245svh;
+  }
+
   .work-story__sticky {
     grid-template-columns: 0.85fr 1.15fr;
     align-items: start;
@@ -253,18 +260,19 @@
   }
 
   .work-story__copy {
-    position: relative;
-    top: auto;
-    padding-top: 0;
+    position: sticky;
+    top: calc(var(--space-20) + 64px);
+    padding-top: var(--space-4);
   }
 
   .work-story__media {
-    gap: var(--space-12);
-    padding-block: var(--space-6) var(--space-12);
+    gap: var(--space-16);
+    padding-block: var(--space-6) var(--space-24);
   }
 
   .work-story-card {
     width: min(44vw, 520px);
+    will-change: transform, opacity;
   }
 
   .work-story-card--1,
@@ -274,16 +282,49 @@
 
   .work-story-card--2 {
     justify-self: start;
-    transform: translateX(6%);
+    --work-card-x: 6%;
   }
 
   .work-story-card--4 {
     justify-self: center;
-    transform: translateX(8%);
+    --work-card-x: 8%;
   }
 
   .work-story-card__placeholder {
-    min-height: min(70svh, 620px);
+    min-height: min(64svh, 580px);
+  }
+
+  @supports (animation-timeline: view()) {
+    .work-story-card {
+      animation: work-card-scroll-reveal both linear;
+      animation-timeline: view(block);
+      animation-range: entry -8% cover 46%;
+    }
+
+    .work-story-card--2 {
+      animation-range: entry -4% cover 50%;
+    }
+
+    .work-story-card--3 {
+      animation-range: entry 0% cover 54%;
+    }
+
+    .work-story-card--4 {
+      animation-range: entry 4% cover 58%;
+    }
+
+    .work-story-card__image {
+      animation: work-image-scroll-settle both linear;
+      animation-timeline: view(block);
+      animation-range: entry -8% cover 58%;
+      transform-origin: center;
+    }
+
+    .work-story-card__caption {
+      animation: work-caption-scroll-reveal both linear;
+      animation-timeline: view(block);
+      animation-range: entry 8% cover 48%;
+    }
   }
 }
 
@@ -294,6 +335,48 @@
 
   .work-story-card {
     transform: none !important;
+  }
+}
+
+@keyframes work-card-scroll-reveal {
+  0% {
+    opacity: 0.36;
+    transform: translate3d(var(--work-card-x), 72px, 0) scale(0.96);
+  }
+
+  42%,
+  74% {
+    opacity: 1;
+    transform: translate3d(var(--work-card-x), 0, 0) scale(1);
+  }
+
+  100% {
+    opacity: 0.72;
+    transform: translate3d(var(--work-card-x), -28px, 0) scale(0.985);
+  }
+}
+
+@keyframes work-image-scroll-settle {
+  0% {
+    transform: scale(1.08);
+  }
+
+  60%,
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes work-caption-scroll-reveal {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  45%,
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
