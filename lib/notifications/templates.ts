@@ -4,10 +4,8 @@ import type {
   NotificationEventType,
   NotificationTemplate,
 } from "./types";
-import { createAbsoluteUrl } from "../seo/site-config";
 
 const defaultBusinessName = "AUTO VALET";
-const logoPath = "/media/auto-valet/logo-mark.png";
 const emailThemeStyles = `
     <style>
       :root {
@@ -53,6 +51,16 @@ const emailThemeStyles = `
         color: #ffffff !important;
       }
 
+      .email-logo-cell,
+      .email-logo-mark {
+        background-color: #111111 !important;
+      }
+
+      .email-logo-mark {
+        border-color: #ffffff !important;
+        color: #ffffff !important;
+      }
+
       @media (prefers-color-scheme: dark) {
         .email-body,
         .email-shell {
@@ -90,6 +98,16 @@ const emailThemeStyles = `
 
         .email-button-link {
           color: #111111 !important;
+        }
+
+        .email-logo-cell,
+        .email-logo-mark {
+          background-color: #111111 !important;
+        }
+
+        .email-logo-mark {
+          border-color: #ffffff !important;
+          color: #ffffff !important;
         }
       }
 
@@ -129,6 +147,16 @@ const emailThemeStyles = `
 
       [data-ogsc] .email-button-link {
         color: #111111 !important;
+      }
+
+      [data-ogsc] .email-logo-cell,
+      [data-ogsc] .email-logo-mark {
+        background-color: #111111 !important;
+      }
+
+      [data-ogsc] .email-logo-mark {
+        border-color: #ffffff !important;
+        color: #ffffff !important;
       }
     </style>`;
 
@@ -248,10 +276,6 @@ function htmlFromText(text: string, subject: string, preview: string) {
     .split("\n\n")
     .map((paragraph) => paragraph.trim())
     .filter(Boolean);
-  const logoUrl = createAbsoluteUrl(logoPath);
-  const logoHtml = logoUrl
-    ? `<img src="${escapeHtml(logoUrl)}" width="30" height="30" alt="AUTO VALET" style="display:block;width:30px;max-width:30px;height:30px;border:0;outline:none;text-decoration:none;" />`
-    : `<div style="color:#ffffff;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:14px;font-weight:800;letter-spacing:.04em;">AV</div>`;
   const bodyHtml = paragraphs.map(renderParagraph).join("");
 
   return `<!doctype html>
@@ -276,9 +300,9 @@ ${emailThemeStyles}
               <td style="padding:0 2px 16px;">
                 <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                   <tr>
-                    <td style="width:46px;height:46px;border-radius:4px;background:#111111;text-align:center;vertical-align:middle;">
-                      <div style="display:inline-block;width:30px;height:30px;">
-                        ${logoHtml}
+                    <td class="email-logo-cell" style="width:46px;height:46px;border-radius:4px;background-color:#111111;text-align:center;vertical-align:middle;">
+                      <div class="email-logo-mark" aria-label="AUTO VALET" style="display:inline-block;width:28px;height:28px;border:1px solid #ffffff;background-color:#111111;color:#ffffff;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:14px;font-weight:800;line-height:28px;letter-spacing:0;text-align:center;">
+                        AV
                       </div>
                     </td>
                     <td style="padding-left:12px;vertical-align:middle;">

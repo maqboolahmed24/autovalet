@@ -47,3 +47,19 @@ test("notification email HTML keeps readable defaults for clients without dark-m
   assert.match(template.html, /class="email-detail"[^>]*background-color:#fbfaf7/);
   assert.match(template.html, /class="email-detail-value"[^>]*color:#141414/);
 });
+
+test("notification email logo stays fixed across light and dark themes", () => {
+  const template = buildNotificationTemplate({
+    eventType: "booking_request_received",
+    recipientType: "customer",
+    booking,
+  });
+
+  assert.ok(template.html);
+  assert.doesNotMatch(template.html, /logo-mark\.png/);
+  assert.match(template.html, /class="email-logo-cell"[^>]*background-color:#111111/);
+  assert.match(template.html, /class="email-logo-mark"[^>]*border:1px solid #ffffff/);
+  assert.match(template.html, /class="email-logo-mark"[^>]*color:#ffffff/);
+  assert.match(template.html, /@media \(prefers-color-scheme: dark\)[\s\S]*\.email-logo-mark/);
+  assert.match(template.html, /\[data-ogsc\] \.email-logo-mark/);
+});
