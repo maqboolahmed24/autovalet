@@ -49,7 +49,7 @@ export const publicRouteMetadata: Record<
     path: "/service-area",
     title: "Mobile Car Detailing Service Areas in Greater Manchester | AUTO VALET",
     description:
-      "AUTO VALET covers Rochdale, Manchester, Oldham, Bury, Bolton, Salford, Stockport, Tameside, Trafford and Wigan.",
+      "AUTO VALET covers Rochdale, Manchester, Oldham, Bury, Bolton, Salford, Stockport, Tameside and Trafford.",
     purpose: "Service area towns, postcode guidance, and outside-zone review rules.",
   },
   gallery: {

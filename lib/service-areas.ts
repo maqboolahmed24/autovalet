@@ -8,5 +8,4 @@ export const greaterManchesterServiceAreas = [
   "Stockport",
   "Tameside",
   "Trafford",
-  "Wigan",
 ] as const;
