@@ -1,6 +1,8 @@
 import type { GalleryItem } from "../../components/public/GalleryPageContent";
 import { isDatabaseConfigured, query } from "../db/postgres";
 
+const clientUpdateGalleryBase = "/media/auto-valet/gallery/client-update-june-2026";
+
 const publicGalleryItems: GalleryItem[] = [
   {
     id: "brabus-g-class-detail-stack",
@@ -86,6 +88,189 @@ const publicGalleryItems: GalleryItem[] = [
     ],
     isPlaceholder: false,
     isFeatured: true,
+    hasMarketingConsent: true,
+  },
+  {
+    id: "green-audi-avant-finish-stack",
+    title: "Green Audi Avant Finish Stack",
+    description:
+      "A complete exterior and cabin view showing wheel detail, paint reflections, glass and the finished rear stance.",
+    serviceType: "Exterior + Interior",
+    vehicleType: "Audi Avant",
+    imageStack: [
+      {
+        imageUrl: `${clientUpdateGalleryBase}/img-3952.webp`,
+        altText: "Green Audi Avant rear quarter, glass and wheel finish after detailing",
+        subject: "Rear quarter",
+      },
+      {
+        imageUrl: `${clientUpdateGalleryBase}/img-3948.webp`,
+        altText: "Green Audi Avant cabin and front seats after interior detailing",
+        subject: "Cabin finish",
+      },
+      {
+        imageUrl: `${clientUpdateGalleryBase}/img-3946.webp`,
+        altText: "Green Audi Avant front wheel and brake detail after exterior care",
+        subject: "Front wheel",
+      },
+      {
+        imageUrl: `${clientUpdateGalleryBase}/img-3945.webp`,
+        altText: "Green Audi Avant side panel and rear wheel reflections after detailing",
+        subject: "Side gloss",
+      },
+      {
+        imageUrl: `${clientUpdateGalleryBase}/img-3943.webp`,
+        altText: "Green Audi Avant rear stance and road reflections after detailing",
+        subject: "Rear stance",
+      },
+    ],
+    isPlaceholder: false,
+    isFeatured: true,
+    hasMarketingConsent: true,
+  },
+  {
+    id: "white-audi-finish-stack",
+    title: "White Audi Finish Stack",
+    description:
+      "A sharp exterior presentation paired with a red cabin detail for a clean, finished handover view.",
+    serviceType: "Exterior + Interior",
+    vehicleType: "Audi",
+    imageStack: [
+      {
+        imageUrl: `${clientUpdateGalleryBase}/img-6172.webp`,
+        altText: "White Audi exterior after detailing beside the AUTO VALET van",
+        subject: "Exterior finish",
+      },
+      {
+        imageUrl: `${clientUpdateGalleryBase}/img-6156.webp`,
+        altText: "White Audi red leather cabin after interior detailing",
+        subject: "Red cabin",
+      },
+    ],
+    isPlaceholder: false,
+    isFeatured: true,
+    hasMarketingConsent: true,
+  },
+  {
+    id: "lamborghini-urus-finish-stack",
+    title: "Lamborghini Urus Finish Stack",
+    description:
+      "A black Urus set showing exterior gloss, wheel finish, rear stance and a clean cabin presentation.",
+    serviceType: "Exterior + Interior",
+    vehicleType: "Lamborghini Urus",
+    imageStack: [
+      {
+        imageUrl: `${clientUpdateGalleryBase}/img-2639.webp`,
+        altText: "Black Lamborghini Urus front three-quarter view after detailing",
+        subject: "Front stance",
+      },
+      {
+        imageUrl: `${clientUpdateGalleryBase}/img-2701-urus-front.webp`,
+        altText: "Black Lamborghini Urus front finish and sky reflections after detailing",
+        subject: "Front gloss",
+      },
+      {
+        imageUrl: `${clientUpdateGalleryBase}/img-2699-urus-rear.webp`,
+        altText: "Black Lamborghini Urus rear view after detailing on a driveway",
+        subject: "Rear gloss",
+      },
+      {
+        imageUrl: `${clientUpdateGalleryBase}/img-4663.webp`,
+        altText: "Lamborghini Urus cabin and centre console after interior detailing",
+        subject: "Cabin reset",
+      },
+    ],
+    isPlaceholder: false,
+    isFeatured: true,
+    hasMarketingConsent: true,
+  },
+  {
+    id: "black-g-class-finish-stack",
+    title: "Black G-Class Finish Stack",
+    description:
+      "A black G-Class exterior and red cabin pair showing the final stance and interior reset together.",
+    serviceType: "Exterior + Interior",
+    vehicleType: "Mercedes-Benz G-Class",
+    imageStack: [
+      {
+        imageUrl: `${clientUpdateGalleryBase}/img-1220.webp`,
+        altText: "Black Mercedes-Benz G-Class rear exterior after detailing",
+        subject: "Rear finish",
+      },
+      {
+        imageUrl: `${clientUpdateGalleryBase}/img-1204.webp`,
+        altText: "Mercedes-Benz G-Class red and black cabin after interior detailing",
+        subject: "Cabin reset",
+      },
+    ],
+    isPlaceholder: false,
+    isFeatured: true,
+    hasMarketingConsent: true,
+  },
+  {
+    id: "grey-porsche-finish-stack",
+    title: "Grey Porsche Finish Stack",
+    description:
+      "A two-angle Porsche finish showing the front paintwork, wheel detail and clean final presentation.",
+    serviceType: "Exterior",
+    vehicleType: "Porsche",
+    imageStack: [
+      {
+        imageUrl: `${clientUpdateGalleryBase}/img-0851.webp`,
+        altText: "Grey Porsche front three-quarter exterior after detailing",
+        subject: "Front angle",
+      },
+      {
+        imageUrl: `${clientUpdateGalleryBase}/img-0850.webp`,
+        altText: "Grey Porsche front bumper and wheel finish after detailing",
+        subject: "Front detail",
+      },
+    ],
+    isPlaceholder: false,
+    hasMarketingConsent: true,
+  },
+  {
+    id: "bmw-m340i-finish-stack",
+    title: "BMW M340i Finish Stack",
+    description:
+      "A grey BMW M340i set showing rear gloss, side reflections and the finished driveway presentation.",
+    serviceType: "Exterior",
+    vehicleType: "BMW M340i",
+    imageStack: [
+      {
+        imageUrl: `${clientUpdateGalleryBase}/ed176041-bmw-rear.webp`,
+        altText: "Grey BMW M340i rear quarter and side reflection after detailing",
+        subject: "Rear gloss",
+      },
+      {
+        imageUrl: `${clientUpdateGalleryBase}/76a8c84f-bmw-collage.webp`,
+        altText: "Grey BMW M340i exterior angles after detailing",
+        subject: "Finished angles",
+      },
+    ],
+    isPlaceholder: false,
+    hasMarketingConsent: true,
+  },
+  {
+    id: "blue-paint-check",
+    title: "Blue Paint Check",
+    description: "A close inspection moment showing gloss and clarity during exterior finishing.",
+    serviceType: "Exterior",
+    vehicleType: "BMW",
+    imageUrl: `${clientUpdateGalleryBase}/img-6027.webp`,
+    altText: "Blue vehicle paint and wheel detail being checked through a phone camera",
+    isPlaceholder: false,
+    hasMarketingConsent: true,
+  },
+  {
+    id: "luxury-cabin-detail",
+    title: "Luxury Cabin Detail",
+    description: "A clean cabin detail showing leather, console trim and glass after interior care.",
+    serviceType: "Interior",
+    vehicleType: "Luxury vehicle",
+    imageUrl: `${clientUpdateGalleryBase}/img-2653.webp`,
+    altText: "Luxury vehicle cabin with clean leather and centre console after detailing",
+    isPlaceholder: false,
     hasMarketingConsent: true,
   },
   {
