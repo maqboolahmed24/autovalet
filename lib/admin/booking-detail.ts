@@ -508,7 +508,6 @@ function buildRecordApprovalChecks(record: BookingDetailRecord): ApprovalCheck[]
   const isOutsideZone = record.zoneStatus !== "standard_zone";
   const accessRequirementsConfirmed =
     record.parkingAvailable === "yes" &&
-    record.accessToWaterAvailable &&
     record.accessToElectricityAvailable &&
     record.accessibleParkingLocation;
 
@@ -550,8 +549,8 @@ function buildRecordApprovalChecks(record: BookingDetailRecord): ApprovalCheck[]
       state: accessRequirementsConfirmed ? "success" : "warning",
       message:
         accessRequirementsConfirmed
-          ? "Parking, water, electricity and vehicle access are confirmed."
-          : "Parking, water, electricity or vehicle access may need admin review.",
+          ? "Parking, electricity and vehicle access are confirmed."
+          : "Parking, electricity or vehicle access may need admin review.",
     },
     {
       label: "Price may vary notice",

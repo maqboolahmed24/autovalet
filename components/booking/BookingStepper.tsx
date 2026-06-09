@@ -206,7 +206,6 @@ function validateStep(stepId: BookingStepId, draft: BookingDraft): string {
       if (draft.zoneCheckStatus === "unchecked") return "Check the service area before continuing.";
       if (!draft.fullAddress.trim()) return "Enter the full service address.";
       if (!draft.parkingAvailable) return "Choose whether suitable parking is available.";
-      if (!draft.accessToWaterAvailable) return "Confirm water access is available.";
       if (!draft.accessToElectricityAvailable) return "Confirm electricity access is available.";
       if (!draft.accessibleParkingLocation) return "Confirm the vehicle is in an accessible parking location.";
       return "";

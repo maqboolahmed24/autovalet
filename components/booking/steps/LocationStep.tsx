@@ -347,7 +347,7 @@ function LocationStepForm({
 
       <fieldset className="booking-fieldset booking-access-requirements">
         <legend>Access requirements</legend>
-        <p className="form-field__hint">Please confirm you can provide these on-site requirements.</p>
+        <p className="form-field__hint">Please confirm the on-site access available for the visit.</p>
 
         <label className="booking-checkbox-card">
           <input
@@ -357,7 +357,7 @@ function LocationStepForm({
           />
           <span>
             <strong>I can provide access to water</strong>
-            <small>Water access is needed for the mobile detailing visit.</small>
+            <small>Water access is helpful where available, but it is not mandatory.</small>
           </span>
         </label>
 
