@@ -21,7 +21,7 @@ export const siteConfig = {
   business: {
     name: "AUTO VALET",
     legalName: "AUTO VALET DETAILING LTD",
-    phone: "07340542578",
+    phone: "07340 542578",
     phoneHref: "tel:07340542578",
     email: "admin@autovaletdetailing.co.uk",
     emailHref: "mailto:admin@autovaletdetailing.co.uk",

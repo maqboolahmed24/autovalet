@@ -4,6 +4,7 @@ import type {
   NotificationEventType,
   NotificationTemplate,
 } from "./types";
+import { siteConfig } from "../seo/site-config";
 
 const defaultBusinessName = "AUTO VALET";
 const emailThemeStyles = `
@@ -360,6 +361,10 @@ function bookingReferenceLine(booking: NotificationBookingSummary) {
   return `Booking reference:\n${booking.bookingReference}`;
 }
 
+function customerContactLine() {
+  return `Need help?\nCall ${siteConfig.business.phone}\nEmail ${siteConfig.business.email}`;
+}
+
 function buildCustomerTemplate(input: BuildTemplateInput): NotificationTemplate {
   const businessName = input.businessName ?? defaultBusinessName;
   const booking = input.booking;
@@ -380,6 +385,7 @@ function buildCustomerTemplate(input: BuildTemplateInput): NotificationTemplate 
           `Deposit:\n${valueOrFallback(booking.depositPaid, "To be confirmed")}`,
           "Your appointment is not confirmed yet. AUTO VALET will review your location, vehicle details and requested time before approval.",
           actionUrl ? `View booking status:\n${actionUrl}` : "",
+          customerContactLine(),
           bookingReferenceLine(booking),
           businessName,
         ],
@@ -398,6 +404,7 @@ function buildCustomerTemplate(input: BuildTemplateInput): NotificationTemplate 
           `Estimated remaining balance:\n${valueOrFallback(booking.remainingBalance, "To be confirmed")}`,
           "Please make sure the vehicle is accessible and suitable parking is available nearby.",
           actionUrl ? `View booking status:\n${actionUrl}` : "",
+          customerContactLine(),
           bookingReferenceLine(booking),
           businessName,
         ],
@@ -413,6 +420,7 @@ function buildCustomerTemplate(input: BuildTemplateInput): NotificationTemplate 
           "Deposit action:\nRefund or transfer information will be handled according to the deposit policy.",
           "You can contact AUTO VALET if you would like to arrange a different date or location.",
           actionUrl ? `View booking status:\n${actionUrl}` : "",
+          customerContactLine(),
           bookingReferenceLine(booking),
           businessName,
         ],
@@ -426,6 +434,7 @@ function buildCustomerTemplate(input: BuildTemplateInput): NotificationTemplate 
           "Your requested time is not available, but AUTO VALET can offer a new time.",
           `Suggested time:\n${formatRequestedTime(booking)}`,
           actionUrl ? `Review the new time:\n${actionUrl}` : "",
+          customerContactLine(),
           bookingReferenceLine(booking),
           businessName,
         ],
@@ -440,6 +449,7 @@ function buildCustomerTemplate(input: BuildTemplateInput): NotificationTemplate 
           reason ? `Reason:\n${reason}` : "",
           "Any deposit action will follow the published cancellation policy.",
           actionUrl ? `View booking status:\n${actionUrl}` : "",
+          customerContactLine(),
           bookingReferenceLine(booking),
           businessName,
         ],
@@ -453,6 +463,7 @@ function buildCustomerTemplate(input: BuildTemplateInput): NotificationTemplate 
           "Your AUTO VALET deposit refund has been recorded.",
           `Deposit:\n${valueOrFallback(booking.depositPaid, "Refund amount recorded")}`,
           reason ? `Reason:\n${reason}` : "",
+          customerContactLine(),
           bookingReferenceLine(booking),
           businessName,
         ],
@@ -465,6 +476,7 @@ function buildCustomerTemplate(input: BuildTemplateInput): NotificationTemplate 
           customerGreeting(booking),
           "Your AUTO VALET deposit has been transferred to a future booking or rescheduled appointment.",
           reason ? `Reason:\n${reason}` : "",
+          customerContactLine(),
           bookingReferenceLine(booking),
           businessName,
         ],
@@ -477,6 +489,7 @@ function buildCustomerTemplate(input: BuildTemplateInput): NotificationTemplate 
           customerGreeting(booking),
           "Your AUTO VALET deposit payment could not be completed.",
           "No booking request has been submitted. You can return to the booking form and choose a requested time again.",
+          customerContactLine(),
           businessName,
         ],
       );
@@ -488,6 +501,7 @@ function buildCustomerTemplate(input: BuildTemplateInput): NotificationTemplate 
           customerGreeting(booking),
           "Your temporary payment hold has expired, so the requested slot has been released.",
           "You can start again and choose a new requested time.",
+          customerContactLine(),
           businessName,
         ],
       );
@@ -501,6 +515,7 @@ function buildCustomerTemplate(input: BuildTemplateInput): NotificationTemplate 
           `Appointment:\n${formatRequestedTime(booking)}`,
           "Please make sure the vehicle is accessible and suitable parking is available nearby.",
           `Estimated remaining balance:\n${valueOrFallback(booking.remainingBalance, "To be confirmed")}`,
+          customerContactLine(),
           bookingReferenceLine(booking),
           businessName,
         ],
@@ -515,6 +530,7 @@ function buildCustomerTemplate(input: BuildTemplateInput): NotificationTemplate 
           `Remaining balance:\n${valueOrFallback(booking.remainingBalance, "To be confirmed")}`,
           reason ? `Reason:\n${reason}` : "",
           actionUrl ? `View booking status:\n${actionUrl}` : "",
+          customerContactLine(),
           businessName,
         ],
       );
@@ -527,6 +543,7 @@ function buildCustomerTemplate(input: BuildTemplateInput): NotificationTemplate 
           "Your AUTO VALET balance payment has been recorded.",
           `Remaining balance:\n${valueOrFallback(booking.remainingBalance, "Updated")}`,
           actionUrl ? `View booking status:\n${actionUrl}` : "",
+          customerContactLine(),
           bookingReferenceLine(booking),
           businessName,
         ],
@@ -541,6 +558,7 @@ function buildCustomerTemplate(input: BuildTemplateInput): NotificationTemplate 
           reason ? `Reason:\n${reason}` : "",
           "Any deposit action will follow the published policy.",
           actionUrl ? `View booking status:\n${actionUrl}` : "",
+          customerContactLine(),
           bookingReferenceLine(booking),
           businessName,
         ],
@@ -553,6 +571,7 @@ function buildCustomerTemplate(input: BuildTemplateInput): NotificationTemplate 
           customerGreeting(booking),
           `There is an update about booking ${booking.bookingReference}.`,
           booking.statusLabel ? `Status:\n${booking.statusLabel}` : "",
+          customerContactLine(),
           businessName,
         ],
       );
