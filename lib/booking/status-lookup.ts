@@ -9,6 +9,9 @@ export type PublicBookingStatus = {
   statusLabel: string;
   serviceLabel: string;
   requestedStartLabel: string;
+  rescheduleProposedStartLabel?: string;
+  rescheduleMessage?: string;
+  canRespondToReschedule: boolean;
 };
 
 type BookingStatusRow = {
@@ -16,6 +19,8 @@ type BookingStatusRow = {
   status: string;
   package_id: string;
   requested_start_at: Date | string;
+  reschedule_proposed_start_at: Date | string | null;
+  reschedule_message: string | null;
 };
 
 function toBookingStatus(value: string): BookingStatus {
@@ -44,7 +49,7 @@ export async function getPublicBookingStatus(reference: string): Promise<PublicB
 
   const result = await query<BookingStatusRow>(
     `
-      SELECT reference, status, package_id, requested_start_at
+      SELECT reference, status, package_id, requested_start_at, reschedule_proposed_start_at, reschedule_message
       FROM bookings
       WHERE reference = $1
       LIMIT 1
@@ -65,5 +70,10 @@ export async function getPublicBookingStatus(reference: string): Promise<PublicB
     statusLabel: getCustomerBookingStatusLabel(status),
     serviceLabel: getServicePackage(toPackageId(row.package_id)).label,
     requestedStartLabel: formatBusinessDateTime(row.requested_start_at),
+    rescheduleProposedStartLabel: row.reschedule_proposed_start_at
+      ? formatBusinessDateTime(row.reschedule_proposed_start_at)
+      : undefined,
+    rescheduleMessage: row.reschedule_message?.trim() || undefined,
+    canRespondToReschedule: status === "reschedule_requested" && Boolean(row.reschedule_proposed_start_at),
   };
 }

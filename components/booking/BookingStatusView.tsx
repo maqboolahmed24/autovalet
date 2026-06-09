@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { PublicBookingStatus } from "../../lib/booking/status-lookup";
+import { RescheduleResponseActions } from "./RescheduleResponseActions";
 
 type BookingStatusViewProps = {
   reference?: string;
@@ -11,6 +12,18 @@ function getStatusTone(status?: PublicBookingStatus["status"]) {
   if (status === "declined" || status === "cancelled_by_admin" || status === "cancelled_by_customer") return "danger";
 
   return "warning";
+}
+
+function getStatusBody(booking: PublicBookingStatus) {
+  if (booking.canRespondToReschedule && booking.rescheduleProposedStartLabel) {
+    return "AUTO VALET has offered a new appointment time. Accept it to confirm the booking, or let AUTO VALET know it does not work.";
+  }
+
+  if (booking.status === "approved") {
+    return `${booking.serviceLabel} is confirmed for ${booking.requestedStartLabel}.`;
+  }
+
+  return `${booking.serviceLabel} requested for ${booking.requestedStartLabel}. Admin review is required before any appointment is confirmed.`;
 }
 
 export function BookingStatusView({ reference, booking }: BookingStatusViewProps) {
@@ -38,27 +51,49 @@ export function BookingStatusView({ reference, booking }: BookingStatusViewProps
                 {booking?.statusLabel ?? "Not found"}
               </strong>
             </div>
+            {booking?.rescheduleProposedStartLabel ? (
+              <div>
+                <span>Suggested time</span>
+                <strong>{booking.rescheduleProposedStartLabel}</strong>
+              </div>
+            ) : null}
           </div>
 
           <div className="booking-outcome__body">
             {booking ? (
-              <p>
-                {booking.serviceLabel} requested for {booking.requestedStartLabel}. Admin review is
-                required before any appointment is confirmed.
-              </p>
+              <>
+                <p>{getStatusBody(booking)}</p>
+                {booking.canRespondToReschedule && booking.rescheduleProposedStartLabel ? (
+                  <div className="booking-reschedule-offer">
+                    <div>
+                      <span>Original request</span>
+                      <strong>{booking.requestedStartLabel}</strong>
+                    </div>
+                    <div>
+                      <span>New offer</span>
+                      <strong>{booking.rescheduleProposedStartLabel}</strong>
+                    </div>
+                    {booking.rescheduleMessage ? <p>{booking.rescheduleMessage}</p> : null}
+                  </div>
+                ) : null}
+              </>
             ) : (
               <p>Check the reference or contact AUTO VALET if you need help with a booking request.</p>
             )}
           </div>
 
-          <div className="booking-outcome__actions">
-            <Link className="primary-button" href="/booking">
-              Request another booking
-            </Link>
-            <Link className="secondary-button" href="/">
-              Back to home
-            </Link>
-          </div>
+          {booking?.canRespondToReschedule && displayReference ? (
+            <RescheduleResponseActions reference={displayReference} />
+          ) : (
+            <div className="booking-outcome__actions">
+              <Link className="primary-button" href="/booking">
+                Request another booking
+              </Link>
+              <Link className="secondary-button" href="/">
+                Back to home
+              </Link>
+            </div>
+          )}
         </article>
       </div>
     </section>
